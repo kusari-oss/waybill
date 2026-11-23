@@ -1,0 +1,4011 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:hackage/aeson",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "aeson",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/aeson",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/aeson-better-errors",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          }
+        ]
+      },
+      "name": "aeson-better-errors",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\"]"
+        }
+      ],
+      "purl": "pkg:hackage/aeson-better-errors",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/ansi-terminal",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "ansi-terminal",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/ansi-terminal",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/array",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          }
+        ]
+      },
+      "name": "array",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\"]"
+        }
+      ],
+      "purl": "pkg:hackage/array",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/async",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "async",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/async",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base-noprelude",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/base/loot-base.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/demo/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/prelude/loot-prelude.cabal"
+          }
+        ]
+      },
+      "name": "base-noprelude",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/demo/package.yaml\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\",\"code/prelude/loot-prelude.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/base\",\"code/config\",\"code/crypto\",\"code/demo\",\"code/log\",\"code/network\",\"code/prelude\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base-noprelude",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base16-bytestring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          }
+        ]
+      },
+      "name": "base16-bytestring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base16-bytestring",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/bytestring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "bytestring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\",\"code/log\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/bytestring",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/caps",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/demo/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "caps",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/demo\",\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/caps",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/co-log",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "co-log",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/co-log",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/co-log-core",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "co-log-core",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/co-log-core",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/co-log-sys",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "co-log-sys",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/co-log-sys",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/componentm",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "componentm",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/componentm",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cryptonite",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          }
+        ]
+      },
+      "name": "cryptonite",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cryptonite",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/data-default",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "data-default",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/data-default",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/dependent-map",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "dependent-map",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/dependent-map",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/dependent-sum",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "dependent-sum",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/dependent-sum",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/dlist",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "dlist",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/dlist",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/exceptions",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          }
+        ]
+      },
+      "name": "exceptions",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\"]"
+        }
+      ],
+      "purl": "pkg:hackage/exceptions",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/fmt",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/demo/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "fmt",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/demo\",\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/fmt",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hedgehog",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "hedgehog",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/crypto\",\"code/log\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hedgehog",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hslogger",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "hslogger",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hslogger",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hspec",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "hspec",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hspec",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/lens",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "lens",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/lens",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/lifted-async",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "lifted-async",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/lifted-async",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/loot-base@0.0.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/base/loot-base.cabal"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "loot-base",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/base/loot-base.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/base\"]"
+        }
+      ],
+      "purl": "pkg:hackage/loot-base@0.0.0.0",
+      "type": "library",
+      "version": "0.0.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/loot-config@0.0.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "loot-config",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\"]"
+        }
+      ],
+      "purl": "pkg:hackage/loot-config@0.0.0.0",
+      "type": "library",
+      "version": "0.0.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/loot-crypto@0.0.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "loot-crypto",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\"]"
+        }
+      ],
+      "purl": "pkg:hackage/loot-crypto@0.0.0.0",
+      "type": "library",
+      "version": "0.0.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/loot-demo",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/demo/package.yaml"
+          }
+        ]
+      },
+      "name": "loot-demo",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/demo/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/demo\"]"
+        }
+      ],
+      "purl": "pkg:hackage/loot-demo",
+      "type": "library",
+      "version": "0.0.0-unknown"
+    },
+    {
+      "bom-ref": "pkg:hackage/loot-log@0.0.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "loot-log",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/loot-log@0.0.0.0",
+      "type": "library",
+      "version": "0.0.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/loot-network@0.0.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "loot-network",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/loot-network@0.0.0.0",
+      "type": "library",
+      "version": "0.0.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/loot-prelude@0.0.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/prelude/loot-prelude.cabal"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "loot-prelude",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/prelude/loot-prelude.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/prelude\"]"
+        }
+      ],
+      "purl": "pkg:hackage/loot-prelude@0.0.0.0",
+      "type": "library",
+      "version": "0.0.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/memory",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          }
+        ]
+      },
+      "name": "memory",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\"]"
+        }
+      ],
+      "purl": "pkg:hackage/memory",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/microlens",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "microlens",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/microlens",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/microlens-th",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "microlens-th",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/microlens-th",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/monad-control",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "monad-control",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/monad-control",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/mtl",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "mtl",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\",\"code/log\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/mtl",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/network",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "network",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/network",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/optparse-applicative",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          }
+        ]
+      },
+      "name": "optparse-applicative",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\"]"
+        }
+      ],
+      "purl": "pkg:hackage/optparse-applicative",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/random",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "random",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/random",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/reflection",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "reflection",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/reflection",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/safe-exceptions",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "safe-exceptions",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/safe-exceptions",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/serialise",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "serialise",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/serialise",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/singletons",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "singletons",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/singletons",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/singletons-base",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "singletons-base",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/singletons-base",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/stm",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "stm",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/stm",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tagged",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/base/loot-base.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "tagged",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/base/loot-base.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/base\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tagged",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/base/loot-base.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "tasty",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/base\",\"code/config\",\"code/crypto\",\"code/log\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty-discover",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/base/loot-base.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "tasty-discover",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/base\",\"code/config\",\"code/crypto\",\"code/log\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty-discover",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty-hedgehog",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "tasty-hedgehog",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/crypto\",\"code/log\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty-hedgehog",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty-hspec",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "tasty-hspec",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty-hspec",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty-hunit",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "tasty-hunit",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/crypto\",\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty-hunit",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/text",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "text",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/log\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/text",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/text-icu",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/crypto/loot-crypto.cabal"
+          }
+        ]
+      },
+      "name": "text-icu",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/crypto\"]"
+        }
+      ],
+      "purl": "pkg:hackage/text-icu",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/time",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "time",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/time",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/universum",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/prelude/loot-prelude.cabal"
+          }
+        ]
+      },
+      "name": "universum",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/prelude/loot-prelude.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/prelude\"]"
+        }
+      ],
+      "purl": "pkg:hackage/universum",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/unordered-containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "unordered-containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\",\"code/log\",\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/unordered-containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/validation",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          }
+        ]
+      },
+      "name": "validation",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\"]"
+        }
+      ],
+      "purl": "pkg:hackage/validation",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/vinyl",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/config/loot-config.cabal"
+          }
+        ]
+      },
+      "name": "vinyl",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/config/loot-config.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/config\"]"
+        }
+      ],
+      "purl": "pkg:hackage/vinyl",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/yaml",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/demo/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/log/loot-log.cabal"
+          }
+        ]
+      },
+      "name": "yaml",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/demo\",\"code/log\"]"
+        }
+      ],
+      "purl": "pkg:hackage/yaml",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/zeromq4-haskell",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/network/loot-network.cabal"
+          }
+        ]
+      },
+      "name": "zeromq4-haskell",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"code/network/loot-network.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"code/network\"]"
+        }
+      ],
+      "purl": "pkg:hackage/zeromq4-haskell",
+      "type": "library"
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "hpack-lootbox@2cd7b1e"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "hpack-lootbox@2cd7b1e"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:hackage/loot-base@0.0.0.0",
+        "pkg:hackage/loot-config@0.0.0.0",
+        "pkg:hackage/loot-crypto@0.0.0.0",
+        "pkg:hackage/loot-demo",
+        "pkg:hackage/loot-log@0.0.0.0",
+        "pkg:hackage/loot-network@0.0.0.0",
+        "pkg:hackage/loot-prelude@0.0.0.0"
+      ],
+      "ref": "hpack-lootbox@2cd7b1e"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/aeson"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/aeson-better-errors"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/ansi-terminal"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/array"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/async"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base-noprelude"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base16-bytestring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/bytestring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/caps"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/co-log"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/co-log-core"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/co-log-sys"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/componentm"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cryptonite"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/data-default"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/dependent-map"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/dependent-sum"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/dlist"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/exceptions"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/fmt"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hedgehog"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hslogger"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hspec"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/lens"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/lifted-async"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base-noprelude",
+        "pkg:hackage/loot-prelude@0.0.0.0",
+        "pkg:hackage/tagged",
+        "pkg:hackage/tasty",
+        "pkg:hackage/tasty-discover"
+      ],
+      "ref": "pkg:hackage/loot-base@0.0.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/aeson-better-errors",
+        "pkg:hackage/base-noprelude",
+        "pkg:hackage/data-default",
+        "pkg:hackage/fmt",
+        "pkg:hackage/hedgehog",
+        "pkg:hackage/loot-base@0.0.0.0",
+        "pkg:hackage/loot-prelude@0.0.0.0",
+        "pkg:hackage/microlens",
+        "pkg:hackage/optparse-applicative",
+        "pkg:hackage/tasty",
+        "pkg:hackage/tasty-discover",
+        "pkg:hackage/tasty-hedgehog",
+        "pkg:hackage/tasty-hunit",
+        "pkg:hackage/text",
+        "pkg:hackage/unordered-containers",
+        "pkg:hackage/validation",
+        "pkg:hackage/vinyl"
+      ],
+      "ref": "pkg:hackage/loot-config@0.0.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/array",
+        "pkg:hackage/base-noprelude",
+        "pkg:hackage/base16-bytestring",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/cryptonite",
+        "pkg:hackage/exceptions",
+        "pkg:hackage/hedgehog",
+        "pkg:hackage/loot-prelude@0.0.0.0",
+        "pkg:hackage/memory",
+        "pkg:hackage/mtl",
+        "pkg:hackage/safe-exceptions",
+        "pkg:hackage/tasty",
+        "pkg:hackage/tasty-discover",
+        "pkg:hackage/tasty-hedgehog",
+        "pkg:hackage/tasty-hunit",
+        "pkg:hackage/text-icu"
+      ],
+      "ref": "pkg:hackage/loot-crypto@0.0.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base-noprelude",
+        "pkg:hackage/caps",
+        "pkg:hackage/fmt",
+        "pkg:hackage/loot-config@0.0.0.0",
+        "pkg:hackage/loot-log@0.0.0.0",
+        "pkg:hackage/loot-prelude@0.0.0.0",
+        "pkg:hackage/yaml"
+      ],
+      "ref": "pkg:hackage/loot-demo"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/ansi-terminal",
+        "pkg:hackage/base-noprelude",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/caps",
+        "pkg:hackage/co-log",
+        "pkg:hackage/co-log-core",
+        "pkg:hackage/co-log-sys",
+        "pkg:hackage/componentm",
+        "pkg:hackage/dlist",
+        "pkg:hackage/fmt",
+        "pkg:hackage/hedgehog",
+        "pkg:hackage/hslogger",
+        "pkg:hackage/loot-base@0.0.0.0",
+        "pkg:hackage/loot-prelude@0.0.0.0",
+        "pkg:hackage/microlens",
+        "pkg:hackage/microlens-th",
+        "pkg:hackage/monad-control",
+        "pkg:hackage/mtl",
+        "pkg:hackage/network",
+        "pkg:hackage/tasty",
+        "pkg:hackage/tasty-discover",
+        "pkg:hackage/tasty-hedgehog",
+        "pkg:hackage/tasty-hunit",
+        "pkg:hackage/text",
+        "pkg:hackage/unordered-containers",
+        "pkg:hackage/yaml"
+      ],
+      "ref": "pkg:hackage/loot-log@0.0.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/async",
+        "pkg:hackage/base-noprelude",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/containers",
+        "pkg:hackage/data-default",
+        "pkg:hackage/dependent-map",
+        "pkg:hackage/dependent-sum",
+        "pkg:hackage/hedgehog",
+        "pkg:hackage/hspec",
+        "pkg:hackage/lens",
+        "pkg:hackage/lifted-async",
+        "pkg:hackage/loot-base@0.0.0.0",
+        "pkg:hackage/loot-log@0.0.0.0",
+        "pkg:hackage/loot-prelude@0.0.0.0",
+        "pkg:hackage/mtl",
+        "pkg:hackage/random",
+        "pkg:hackage/reflection",
+        "pkg:hackage/safe-exceptions",
+        "pkg:hackage/serialise",
+        "pkg:hackage/singletons",
+        "pkg:hackage/singletons-base",
+        "pkg:hackage/stm",
+        "pkg:hackage/tagged",
+        "pkg:hackage/tasty",
+        "pkg:hackage/tasty-discover",
+        "pkg:hackage/tasty-hedgehog",
+        "pkg:hackage/tasty-hspec",
+        "pkg:hackage/text",
+        "pkg:hackage/time",
+        "pkg:hackage/unordered-containers",
+        "pkg:hackage/zeromq4-haskell"
+      ],
+      "ref": "pkg:hackage/loot-network@0.0.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base-noprelude",
+        "pkg:hackage/universum"
+      ],
+      "ref": "pkg:hackage/loot-prelude@0.0.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/memory"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/microlens"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/microlens-th"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/monad-control"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/mtl"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/network"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/optparse-applicative"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/random"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/reflection"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/safe-exceptions"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/serialise"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/singletons"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/singletons-base"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/stm"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tagged"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty-discover"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty-hedgehog"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty-hspec"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty-hunit"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/text"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/text-icu"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/time"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/universum"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/unordered-containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/validation"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/vinyl"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/yaml"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/zeromq4-haskell"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "hpack-lootbox@2cd7b1e",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/serokell/lootbox"
+        }
+      ],
+      "name": "hpack-lootbox",
+      "purl": "pkg:generic/hpack-lootbox@2cd7b1e",
+      "type": "application",
+      "version": "2cd7b1e"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"addressable_without_cpe\":62,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":1,\"with_candidates\":0}"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "[\"ID\",\"VERSION_ID\"]"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "orphaned-components-detected: 1 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage; manifest-unread: 6 haskell manifest(s) found but not read"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\"code/base\",\"code/config\",\"code/crypto\",\"code/demo\",\"code/log\",\"code/network\",\"code/prelude\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
+      },
+      {
+        "name": "waybill:cabal-entries-skipped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:hpack-read-outcome",
+        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/loot-demo.cabal\"],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\"],\"manifests-unread\":[{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"duplicate entry with key \\\"<<\\\" at line 6 column 1\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\",\"reason\":\"malformed-yaml\"}]}"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "<masked-tool-version>"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

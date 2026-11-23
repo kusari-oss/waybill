@@ -1,0 +1,141 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "annotations": [
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":10,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":5,\\\"with_candidates\\\":1031}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:git-submodule-coverage\",\"value\":\"{\\\"pinned\\\":5,\\\"skipped\\\":{\\\"git-refused\\\":0,\\\"git-unavailable\\\":0,\\\"no-gitlink\\\":0,\\\"no-repository-data\\\":0,\\\"no-url\\\":0,\\\"unsafe-path-or-url\\\":0}}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-inventory-skipped-build-dirs\",\"value\":\"1\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 194 component(s) not reachable from root; manifest-unread: 8 haskell manifest(s) found but not read\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"clients/TypeScript\\\",\\\"clients/TypeScript/packages/client\\\",\\\"clients/TypeScript/packages/repl\\\",\\\"clients/TypeScript/packages/schema\\\",\\\"server/dashboard\\\"]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cabal-entries-skipped\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"],\\\"manifests-unread\\\":[{\\\"detail\\\":\\\"unknown anchor at line 22 column 21\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 22 column 21\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 22 column 21\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 22 column 21\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 22 column 21\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 22 column 21\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 22 column 21\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 21 column 21\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"}]}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"npm\"],\"target_aggregate\":\"incomplete_first_party_only\"}}"
+    }
+  ],
+  "creationInfo": "<masked>",
+  "dataLicense": "CC0-1.0",
+  "documentDescribes": [
+    "SPDXRef-DocumentRoot-<masked>"
+  ],
+  "documentNamespace": "<masked>",
+  "name": "hpack-ogmios-no-generated-cabal 435189a",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-DocumentRoot-<masked>",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/hpack-ogmios-no-generated-cabal@435189a",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "hpack-ogmios-no-generated-cabal",
+      "supplier": "Organization: waybill contributors",
+      "versionInfo": "435189a"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}

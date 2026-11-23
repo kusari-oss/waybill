@@ -1,0 +1,5659 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:hackage/aeson",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "aeson",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-server/package.yaml\",\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-server\",\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/aeson",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/annotated-exception",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "annotated-exception",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/annotated-exception",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/async",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "async",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/async",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/atomic-primops",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "atomic-primops",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/atomic-primops",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "optimal-codec/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "protos/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "tools/tix-to-markdown/package.yaml"
+          }
+        ]
+      },
+      "name": "base",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"protos/package.yaml\",\"sdk/package.yaml\",\"tools/tix-to-markdown/package.yaml\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">= 4.14 && < 5\",\">= 4.18 && < 5\",\">= 4.7 && < 5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\",\"codec-server\",\"core\",\"optimal-codec\",\"protos\",\"sdk\",\"tools/tix-to-markdown\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base64",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "base64",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base64",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/bytestring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "bytestring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\",\"codec-server\",\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/bytestring",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/conduit",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "conduit",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/conduit",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "optimal-codec/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "tools/tix-to-markdown/package.yaml"
+          }
+        ]
+      },
+      "name": "containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"sdk/package.yaml\",\"tools/tix-to-markdown/package.yaml\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">= 0.6\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\",\"codec-server\",\"core\",\"optimal-codec\",\"sdk\",\"tools/tix-to-markdown\"]"
+        }
+      ],
+      "purl": "pkg:hackage/containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/crypton",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          }
+        ]
+      },
+      "name": "crypton",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\"]"
+        }
+      ],
+      "purl": "pkg:hackage/crypton",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/directory",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "directory",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/directory",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/discover-instances",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "discover-instances",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/discover-instances",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/errors",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          }
+        ]
+      },
+      "name": "errors",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\"]"
+        }
+      ],
+      "purl": "pkg:hackage/errors",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/exceptions",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "exceptions",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/exceptions",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/filepath",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "tools/tix-to-markdown/package.yaml"
+          }
+        ]
+      },
+      "name": "filepath",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"tools/tix-to-markdown/package.yaml\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">= 1.4\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"tools/tix-to-markdown\"]"
+        }
+      ],
+      "purl": "pkg:hackage/filepath",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/first-class-families",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "first-class-families",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/first-class-families",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/focus",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "focus",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/focus",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/ghc",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "ghc",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/ghc",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hashable",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hashable",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hashable",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hedgehog",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hedgehog",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hedgehog",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hpc",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "tools/tix-to-markdown/package.yaml"
+          }
+        ]
+      },
+      "name": "hpc",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"tools/tix-to-markdown/package.yaml\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">= 0.6\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"tools/tix-to-markdown\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hpc",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hs-opentelemetry-api",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hs-opentelemetry-api",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-server/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-server\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hs-opentelemetry-api",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hs-opentelemetry-propagator-w3c",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hs-opentelemetry-propagator-w3c",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hs-opentelemetry-propagator-w3c",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hs-opentelemetry-sdk",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hs-opentelemetry-sdk",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"< 1.1\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hs-opentelemetry-sdk",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hspec",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hspec",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hspec",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hspec-api",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hspec-api",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hspec-api",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hspec-discover:hspec-discover",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hspec-discover:hspec-discover",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hspec-discover:hspec-discover",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hspec-hedgehog",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "hspec-hedgehog",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hspec-hedgehog",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/http-types",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          }
+        ]
+      },
+      "name": "http-types",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/http-types",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/if-instance",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "optimal-codec/package.yaml"
+          }
+        ]
+      },
+      "name": "if-instance",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"optimal-codec/package.yaml\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">= 0.5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"optimal-codec\"]"
+        }
+      ],
+      "purl": "pkg:hackage/if-instance",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/lens-family",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "lens-family",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/lens-family",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/list-t",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "list-t",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/list-t",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/memory",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          }
+        ]
+      },
+      "name": "memory",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\"]"
+        }
+      ],
+      "purl": "pkg:hackage/memory",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/monad-logger",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "monad-logger",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/monad-logger",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/mtl",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "mtl",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/mtl",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/network",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "network",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/network",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/network-bsd",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          }
+        ]
+      },
+      "name": "network-bsd",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:hackage/network-bsd",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/primitive",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "primitive",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/primitive",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/proto-lens",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "proto-lens",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\",\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\",\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/proto-lens",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/proto-lens-protobuf-types",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "protos/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "proto-lens-protobuf-types",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"protos/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"protos\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/proto-lens-protobuf-types",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/proto-lens-runtime",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "protos/package.yaml"
+          }
+        ]
+      },
+      "name": "proto-lens-runtime",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"protos/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"protos\"]"
+        }
+      ],
+      "purl": "pkg:hackage/proto-lens-runtime",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/random",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "random",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/random",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/require-callstack",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "require-callstack",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/require-callstack",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/resourcet",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "resourcet",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/resourcet",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/scientific",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "scientific",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/scientific",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/split",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "split",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/split",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/stm",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "stm",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/stm",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/stm-containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "stm-containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/stm-containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/template-haskell",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "template-haskell",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/template-haskell",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/temporal-api-protos@2025.10.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "protos/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "temporal-api-protos",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"protos/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"protos\"]"
+        }
+      ],
+      "purl": "pkg:hackage/temporal-api-protos@2025.10.1.0",
+      "type": "library",
+      "version": "2025.10.1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/temporal-codec-encryption",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "temporal-codec-encryption",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\"]"
+        }
+      ],
+      "purl": "pkg:hackage/temporal-codec-encryption",
+      "type": "library",
+      "version": "0.0.0-unknown"
+    },
+    {
+      "bom-ref": "pkg:hackage/temporal-sdk",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "temporal-sdk",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/temporal-sdk",
+      "type": "library",
+      "version": "0.0.0-unknown"
+    },
+    {
+      "bom-ref": "pkg:hackage/temporal-sdk-codec-server",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "temporal-sdk-codec-server",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/temporal-sdk-codec-server",
+      "type": "library",
+      "version": "0.0.0-unknown"
+    },
+    {
+      "bom-ref": "pkg:hackage/temporal-sdk-core",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "temporal-sdk-core",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:hackage/temporal-sdk-core",
+      "type": "library",
+      "version": "0.0.0-unknown"
+    },
+    {
+      "bom-ref": "pkg:hackage/temporal-sdk-optimal-codec",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "optimal-codec/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "temporal-sdk-optimal-codec",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"optimal-codec/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"optimal-codec\"]"
+        }
+      ],
+      "purl": "pkg:hackage/temporal-sdk-optimal-codec",
+      "type": "library",
+      "version": "0.0.0-unknown"
+    },
+    {
+      "bom-ref": "pkg:hackage/text",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-encryption/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "text",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-encryption\",\"codec-server\",\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/text",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/th-lift-instances",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "th-lift-instances",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/th-lift-instances",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/these",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "these",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/these",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/time",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "time",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/time",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/time-compat",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "time-compat",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/time-compat",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tix-to-markdown",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "tools/tix-to-markdown/package.yaml"
+          }
+        ]
+      },
+      "name": "tix-to-markdown",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"tools/tix-to-markdown/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"tools/tix-to-markdown\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tix-to-markdown",
+      "type": "library",
+      "version": "0.0.0-unknown"
+    },
+    {
+      "bom-ref": "pkg:hackage/transformers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "transformers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-server/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-server\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/transformers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/unix",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          }
+        ]
+      },
+      "name": "unix",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:hackage/unix",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/unliftio",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "unliftio",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/unliftio",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/unordered-containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "unordered-containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/unordered-containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/uuid",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "uuid",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/uuid",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/uuid-types",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "uuid-types",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/uuid-types",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/validation-selective",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "validation-selective",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/validation-selective",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/vault",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "vault",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/vault",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/vector",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "vector",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-server/package.yaml\",\"core/package.yaml\",\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-server\",\"core\",\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/vector",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/wai",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          }
+        ]
+      },
+      "name": "wai",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/wai",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/wai-cors",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "codec-server/package.yaml"
+          }
+        ]
+      },
+      "name": "wai-cors",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"codec-server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"codec-server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/wai-cors",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/zlib",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "name": "zlib",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "offline"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/zlib",
+      "type": "library"
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:cargo/adler2@2.0.1",
+        "pkg:cargo/aho-corasick@1.1.4",
+        "pkg:cargo/allocator-api2@0.2.21",
+        "pkg:cargo/anstyle@1.0.14",
+        "pkg:cargo/anyhow@1.0.102",
+        "pkg:cargo/arbitrary@1.4.2",
+        "pkg:cargo/async-trait@0.1.89",
+        "pkg:cargo/atomic-waker@1.1.2",
+        "pkg:cargo/autocfg@1.5.0",
+        "pkg:cargo/axum-core@0.5.6",
+        "pkg:cargo/axum@0.8.9",
+        "pkg:cargo/backoff@0.4.0",
+        "pkg:cargo/base64@0.22.1",
+        "pkg:cargo/bitflags@2.11.1",
+        "pkg:cargo/bon-macros@3.9.1",
+        "pkg:cargo/bon@3.9.1",
+        "pkg:cargo/bumpalo@3.20.2",
+        "pkg:cargo/bytes@1.11.1",
+        "pkg:cargo/bzip2@0.6.1",
+        "pkg:cargo/cc@1.2.62",
+        "pkg:cargo/cfg-if@1.0.4",
+        "pkg:cargo/cfg_aliases@0.2.1",
+        "pkg:cargo/chrono@0.4.44",
+        "pkg:cargo/convert_case@0.10.0",
+        "pkg:cargo/core-foundation-sys@0.8.7",
+        "pkg:cargo/core-foundation@0.10.1",
+        "pkg:cargo/crc32fast@1.5.0",
+        "pkg:cargo/crossbeam-channel@0.5.15",
+        "pkg:cargo/crossbeam-queue@0.3.12",
+        "pkg:cargo/crossbeam-utils@0.8.21",
+        "pkg:cargo/darling@0.23.0",
+        "pkg:cargo/darling_core@0.23.0",
+        "pkg:cargo/darling_macro@0.23.0",
+        "pkg:cargo/dashmap@6.2.1",
+        "pkg:cargo/derive_arbitrary@1.4.2",
+        "pkg:cargo/derive_more-impl@2.1.1",
+        "pkg:cargo/derive_more@2.1.1",
+        "pkg:cargo/displaydoc@0.2.5",
+        "pkg:cargo/downcast@0.11.0",
+        "pkg:cargo/dyn-clone@1.0.20",
+        "pkg:cargo/either@1.15.0",
+        "pkg:cargo/enum-iterator-derive@1.5.0",
+        "pkg:cargo/enum-iterator@2.3.0",
+        "pkg:cargo/enum_dispatch@0.3.13",
+        "pkg:cargo/equivalent@1.0.2",
+        "pkg:cargo/erased-serde@0.4.10",
+        "pkg:cargo/errno@0.3.14",
+        "pkg:cargo/fastrand@2.4.1",
+        "pkg:cargo/ffi-convert-derive@0.7.0",
+        "pkg:cargo/ffi-convert@0.7.0",
+        "pkg:cargo/filetime@0.2.29",
+        "pkg:cargo/find-msvc-tools@0.1.9",
+        "pkg:cargo/fixedbitset@0.5.7",
+        "pkg:cargo/flate2@1.1.9",
+        "pkg:cargo/fnv@1.0.7",
+        "pkg:cargo/foldhash@0.1.5",
+        "pkg:cargo/foldhash@0.2.0",
+        "pkg:cargo/form_urlencoded@1.2.2",
+        "pkg:cargo/fragile@2.1.0",
+        "pkg:cargo/futures-channel@0.3.32",
+        "pkg:cargo/futures-core@0.3.32",
+        "pkg:cargo/futures-executor@0.3.32",
+        "pkg:cargo/futures-io@0.3.32",
+        "pkg:cargo/futures-macro@0.3.32",
+        "pkg:cargo/futures-retry@0.6.0",
+        "pkg:cargo/futures-sink@0.3.32",
+        "pkg:cargo/futures-task@0.3.32",
+        "pkg:cargo/futures-timer@3.0.3",
+        "pkg:cargo/futures-util@0.3.32",
+        "pkg:cargo/futures@0.3.32",
+        "pkg:cargo/gethostname@1.1.0",
+        "pkg:cargo/getrandom@0.2.17",
+        "pkg:cargo/getrandom@0.3.4",
+        "pkg:cargo/getrandom@0.4.2",
+        "pkg:cargo/governor@0.10.4",
+        "pkg:cargo/h2@0.4.14",
+        "pkg:cargo/hashbrown@0.14.5",
+        "pkg:cargo/hashbrown@0.15.5",
+        "pkg:cargo/hashbrown@0.16.1",
+        "pkg:cargo/hashbrown@0.17.1",
+        "pkg:cargo/heck@0.5.0",
+        "pkg:cargo/http-body-util@0.1.3",
+        "pkg:cargo/http-body@1.0.1",
+        "pkg:cargo/http@1.4.0",
+        "pkg:cargo/httparse@1.10.1",
+        "pkg:cargo/httpdate@1.0.3",
+        "pkg:cargo/hyper-rustls@0.27.9",
+        "pkg:cargo/hyper-timeout@0.5.2",
+        "pkg:cargo/hyper-util@0.1.20",
+        "pkg:cargo/hyper@1.9.0",
+        "pkg:cargo/icu_collections@2.2.0",
+        "pkg:cargo/icu_locale_core@2.2.0",
+        "pkg:cargo/icu_normalizer@2.2.0",
+        "pkg:cargo/icu_normalizer_data@2.2.0",
+        "pkg:cargo/icu_properties@2.2.0",
+        "pkg:cargo/icu_properties_data@2.2.0",
+        "pkg:cargo/icu_provider@2.2.0",
+        "pkg:cargo/id-arena@2.3.0",
+        "pkg:cargo/ident_case@1.0.1",
+        "pkg:cargo/idna@1.1.0",
+        "pkg:cargo/idna_adapter@1.2.2",
+        "pkg:cargo/indexmap@2.14.0",
+        "pkg:cargo/instant@0.1.13",
+        "pkg:cargo/inventory@0.3.24",
+        "pkg:cargo/ipnet@2.12.0",
+        "pkg:cargo/itertools@0.14.0",
+        "pkg:cargo/itoa@1.0.18",
+        "pkg:cargo/jobserver@0.1.34",
+        "pkg:cargo/js-sys@0.3.98",
+        "pkg:cargo/lazy_static@1.5.0",
+        "pkg:cargo/leb128fmt@0.1.0",
+        "pkg:cargo/libbz2-rs-sys@0.2.5",
+        "pkg:cargo/libc@0.2.186",
+        "pkg:cargo/linux-raw-sys@0.12.1",
+        "pkg:cargo/litemap@0.8.2",
+        "pkg:cargo/lock_api@0.4.14",
+        "pkg:cargo/log@0.4.29",
+        "pkg:cargo/lru-slab@0.1.2",
+        "pkg:cargo/lru@0.16.4",
+        "pkg:cargo/matchers@0.2.0",
+        "pkg:cargo/matchit@0.8.4",
+        "pkg:cargo/memchr@2.8.0",
+        "pkg:cargo/mime@0.3.17",
+        "pkg:cargo/miniz_oxide@0.8.9",
+        "pkg:cargo/mio@1.2.0",
+        "pkg:cargo/mockall@0.13.1",
+        "pkg:cargo/mockall_derive@0.13.1",
+        "pkg:cargo/multimap@0.10.1",
+        "pkg:cargo/nonzero_ext@0.3.0",
+        "pkg:cargo/ntapi@0.4.3",
+        "pkg:cargo/nu-ansi-term@0.50.3",
+        "pkg:cargo/num-traits@0.2.19",
+        "pkg:cargo/objc2-core-foundation@0.3.2",
+        "pkg:cargo/objc2-io-kit@0.3.2",
+        "pkg:cargo/once_cell@1.21.4",
+        "pkg:cargo/openssl-probe@0.2.1",
+        "pkg:cargo/opentelemetry-http@0.31.0",
+        "pkg:cargo/opentelemetry-otlp@0.31.1",
+        "pkg:cargo/opentelemetry-proto@0.31.0",
+        "pkg:cargo/opentelemetry@0.31.0",
+        "pkg:cargo/opentelemetry_sdk@0.31.0",
+        "pkg:cargo/parking_lot@0.12.5",
+        "pkg:cargo/parking_lot_core@0.9.12",
+        "pkg:cargo/percent-encoding@2.3.2",
+        "pkg:cargo/petgraph@0.8.3",
+        "pkg:cargo/pid@4.0.0",
+        "pkg:cargo/pin-project-internal@1.1.13",
+        "pkg:cargo/pin-project-lite@0.2.17",
+        "pkg:cargo/pin-project@1.1.13",
+        "pkg:cargo/pkg-config@0.3.33",
+        "pkg:cargo/portable-atomic-util@0.2.7",
+        "pkg:cargo/portable-atomic@1.13.1",
+        "pkg:cargo/potential_utf@0.1.5",
+        "pkg:cargo/ppv-lite86@0.2.21",
+        "pkg:cargo/predicates-core@1.0.10",
+        "pkg:cargo/predicates-tree@1.0.13",
+        "pkg:cargo/predicates@3.1.4",
+        "pkg:cargo/prettyplease@0.2.37",
+        "pkg:cargo/proc-macro2@1.0.106",
+        "pkg:cargo/prometheus@0.14.0",
+        "pkg:cargo/prost-build@0.14.3",
+        "pkg:cargo/prost-derive@0.14.3",
+        "pkg:cargo/prost-types@0.14.3",
+        "pkg:cargo/prost-wkt-build@0.7.1",
+        "pkg:cargo/prost-wkt-types@0.7.1",
+        "pkg:cargo/prost-wkt@0.7.1",
+        "pkg:cargo/prost@0.14.3",
+        "pkg:cargo/protobuf-support@3.7.2",
+        "pkg:cargo/protobuf@3.7.2",
+        "pkg:cargo/pulldown-cmark-to-cmark@22.0.0",
+        "pkg:cargo/pulldown-cmark@0.13.3",
+        "pkg:cargo/quanta@0.12.6",
+        "pkg:cargo/quinn-proto@0.11.14",
+        "pkg:cargo/quinn-udp@0.5.14",
+        "pkg:cargo/quinn@0.11.9",
+        "pkg:cargo/quote@1.0.45",
+        "pkg:cargo/r-efi@5.3.0",
+        "pkg:cargo/r-efi@6.0.0",
+        "pkg:cargo/rand@0.8.6",
+        "pkg:cargo/rand@0.9.4",
+        "pkg:cargo/rand_chacha@0.3.1",
+        "pkg:cargo/rand_chacha@0.9.0",
+        "pkg:cargo/rand_core@0.6.4",
+        "pkg:cargo/rand_core@0.9.5",
+        "pkg:cargo/raw-cpuid@11.6.0",
+        "pkg:cargo/redox_syscall@0.5.18",
+        "pkg:cargo/regex-automata@0.4.14",
+        "pkg:cargo/regex-syntax@0.8.10",
+        "pkg:cargo/regex@1.12.3",
+        "pkg:cargo/reqwest@0.12.28",
+        "pkg:cargo/ring@0.17.14",
+        "pkg:cargo/ringbuf@0.4.8",
+        "pkg:cargo/rustc-hash@2.1.2",
+        "pkg:cargo/rustc_version@0.4.1",
+        "pkg:cargo/rustix@1.1.4",
+        "pkg:cargo/rustls-native-certs@0.8.3",
+        "pkg:cargo/rustls-pki-types@1.14.1",
+        "pkg:cargo/rustls-webpki@0.103.16",
+        "pkg:cargo/rustls@0.23.40",
+        "pkg:cargo/rustversion@1.0.22",
+        "pkg:cargo/ryu@1.0.23",
+        "pkg:cargo/schannel@0.1.29",
+        "pkg:cargo/scopeguard@1.2.0",
+        "pkg:cargo/security-framework-sys@2.17.0",
+        "pkg:cargo/security-framework@3.7.0",
+        "pkg:cargo/semver@1.0.28",
+        "pkg:cargo/serde@1.0.228",
+        "pkg:cargo/serde_core@1.0.228",
+        "pkg:cargo/serde_derive@1.0.228",
+        "pkg:cargo/serde_json@1.0.149",
+        "pkg:cargo/serde_urlencoded@0.7.1",
+        "pkg:cargo/sharded-slab@0.1.7",
+        "pkg:cargo/shlex@1.3.0",
+        "pkg:cargo/signal-hook-registry@1.4.8",
+        "pkg:cargo/simd-adler32@0.3.9",
+        "pkg:cargo/siphasher@1.0.3",
+        "pkg:cargo/slab@0.4.12",
+        "pkg:cargo/slotmap@1.1.1",
+        "pkg:cargo/smallvec@1.15.1",
+        "pkg:cargo/socket2@0.6.3",
+        "pkg:cargo/spinning_top@0.3.0",
+        "pkg:cargo/stable_deref_trait@1.2.1",
+        "pkg:cargo/strsim@0.11.1",
+        "pkg:cargo/subtle@2.6.1",
+        "pkg:cargo/syn@1.0.109",
+        "pkg:cargo/syn@2.0.117",
+        "pkg:cargo/sync_wrapper@1.0.2",
+        "pkg:cargo/synstructure@0.13.2",
+        "pkg:cargo/sysinfo@0.37.2",
+        "pkg:cargo/tar@0.4.46",
+        "pkg:cargo/tempfile@3.27.0",
+        "pkg:cargo/temporal_bridge@0.1.0",
+        "pkg:cargo/temporalio-client@0.1.0",
+        "pkg:cargo/temporalio-common@0.1.0",
+        "pkg:cargo/temporalio-macros@0.1.0",
+        "pkg:cargo/temporalio-sdk-core@0.1.0",
+        "pkg:cargo/termtree@0.5.1",
+        "pkg:cargo/thiserror-impl@1.0.69",
+        "pkg:cargo/thiserror-impl@2.0.18",
+        "pkg:cargo/thiserror@1.0.69",
+        "pkg:cargo/thiserror@2.0.18",
+        "pkg:cargo/thread_local@1.1.9",
+        "pkg:cargo/tinystr@0.8.3",
+        "pkg:cargo/tinyvec@1.11.0",
+        "pkg:cargo/tinyvec_macros@0.1.1",
+        "pkg:cargo/tokio-macros@2.7.0",
+        "pkg:cargo/tokio-rustls@0.26.4",
+        "pkg:cargo/tokio-stream@0.1.18",
+        "pkg:cargo/tokio-util@0.7.18",
+        "pkg:cargo/tokio@1.52.3",
+        "pkg:cargo/tonic-build@0.14.6",
+        "pkg:cargo/tonic-prost-build@0.14.6",
+        "pkg:cargo/tonic-prost@0.14.6",
+        "pkg:cargo/tonic@0.14.6",
+        "pkg:cargo/tower-http@0.6.11",
+        "pkg:cargo/tower-layer@0.3.3",
+        "pkg:cargo/tower-service@0.3.3",
+        "pkg:cargo/tower@0.5.3",
+        "pkg:cargo/tracing-attributes@0.1.31",
+        "pkg:cargo/tracing-core@0.1.36",
+        "pkg:cargo/tracing-log@0.2.0",
+        "pkg:cargo/tracing-subscriber@0.3.23",
+        "pkg:cargo/tracing@0.1.44",
+        "pkg:cargo/try-lock@0.2.5",
+        "pkg:cargo/typeid@1.0.3",
+        "pkg:cargo/typetag-impl@0.2.21",
+        "pkg:cargo/typetag@0.2.21",
+        "pkg:cargo/unicase@2.9.0",
+        "pkg:cargo/unicode-ident@1.0.24",
+        "pkg:cargo/unicode-segmentation@1.13.2",
+        "pkg:cargo/unicode-xid@0.2.6",
+        "pkg:cargo/untrusted@0.9.0",
+        "pkg:cargo/url@2.5.8",
+        "pkg:cargo/utf8_iter@1.0.4",
+        "pkg:cargo/uuid@1.23.1",
+        "pkg:cargo/valuable@0.1.1",
+        "pkg:cargo/version_check@0.9.5",
+        "pkg:cargo/want@0.3.1",
+        "pkg:cargo/wasi@0.11.1%2Bwasi-snapshot-preview1",
+        "pkg:cargo/wasip2@1.0.3%2Bwasi-0.2.9",
+        "pkg:cargo/wasip3@0.4.0%2Bwasi-0.3.0-rc-2026-01-06",
+        "pkg:cargo/wasm-bindgen-futures@0.4.71",
+        "pkg:cargo/wasm-bindgen-macro-support@0.2.121",
+        "pkg:cargo/wasm-bindgen-macro@0.2.121",
+        "pkg:cargo/wasm-bindgen-shared@0.2.121",
+        "pkg:cargo/wasm-bindgen@0.2.121",
+        "pkg:cargo/wasm-encoder@0.244.0",
+        "pkg:cargo/wasm-metadata@0.244.0",
+        "pkg:cargo/wasm-streams@0.4.2",
+        "pkg:cargo/wasmparser@0.244.0",
+        "pkg:cargo/web-sys@0.3.98",
+        "pkg:cargo/web-time@1.1.0",
+        "pkg:cargo/winapi-i686-pc-windows-gnu@0.4.0",
+        "pkg:cargo/winapi-x86_64-pc-windows-gnu@0.4.0",
+        "pkg:cargo/winapi@0.3.9",
+        "pkg:cargo/windows-collections@0.2.0",
+        "pkg:cargo/windows-core@0.61.2",
+        "pkg:cargo/windows-future@0.2.1",
+        "pkg:cargo/windows-implement@0.60.2",
+        "pkg:cargo/windows-interface@0.59.3",
+        "pkg:cargo/windows-link@0.1.3",
+        "pkg:cargo/windows-link@0.2.1",
+        "pkg:cargo/windows-numerics@0.2.0",
+        "pkg:cargo/windows-result@0.3.4",
+        "pkg:cargo/windows-strings@0.4.2",
+        "pkg:cargo/windows-sys@0.52.0",
+        "pkg:cargo/windows-sys@0.60.2",
+        "pkg:cargo/windows-sys@0.61.2",
+        "pkg:cargo/windows-targets@0.52.6",
+        "pkg:cargo/windows-targets@0.53.5",
+        "pkg:cargo/windows-threading@0.1.0",
+        "pkg:cargo/windows@0.61.3",
+        "pkg:cargo/windows_aarch64_gnullvm@0.52.6",
+        "pkg:cargo/windows_aarch64_gnullvm@0.53.1",
+        "pkg:cargo/windows_aarch64_msvc@0.52.6",
+        "pkg:cargo/windows_aarch64_msvc@0.53.1",
+        "pkg:cargo/windows_i686_gnu@0.52.6",
+        "pkg:cargo/windows_i686_gnu@0.53.1",
+        "pkg:cargo/windows_i686_gnullvm@0.52.6",
+        "pkg:cargo/windows_i686_gnullvm@0.53.1",
+        "pkg:cargo/windows_i686_msvc@0.52.6",
+        "pkg:cargo/windows_i686_msvc@0.53.1",
+        "pkg:cargo/windows_x86_64_gnu@0.52.6",
+        "pkg:cargo/windows_x86_64_gnu@0.53.1",
+        "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
+        "pkg:cargo/windows_x86_64_gnullvm@0.53.1",
+        "pkg:cargo/windows_x86_64_msvc@0.52.6",
+        "pkg:cargo/windows_x86_64_msvc@0.53.1",
+        "pkg:cargo/wit-bindgen-core@0.51.0",
+        "pkg:cargo/wit-bindgen-rust-macro@0.51.0",
+        "pkg:cargo/wit-bindgen-rust@0.51.0",
+        "pkg:cargo/wit-bindgen@0.51.0",
+        "pkg:cargo/wit-bindgen@0.57.1",
+        "pkg:cargo/wit-component@0.244.0",
+        "pkg:cargo/wit-parser@0.244.0",
+        "pkg:cargo/writeable@0.6.3",
+        "pkg:cargo/xattr@1.6.1",
+        "pkg:cargo/yoke-derive@0.8.2",
+        "pkg:cargo/yoke@0.8.2",
+        "pkg:cargo/zerocopy-derive@0.8.48",
+        "pkg:cargo/zerocopy@0.8.48",
+        "pkg:cargo/zerofrom-derive@0.1.7",
+        "pkg:cargo/zerofrom@0.1.8",
+        "pkg:cargo/zeroize@1.8.2",
+        "pkg:cargo/zerotrie@0.2.4",
+        "pkg:cargo/zerovec-derive@0.11.3",
+        "pkg:cargo/zerovec@0.11.6",
+        "pkg:cargo/zip@4.6.1",
+        "pkg:cargo/zlib-rs@0.6.3",
+        "pkg:cargo/zmij@1.0.21",
+        "pkg:cargo/zopfli@0.8.3",
+        "pkg:cargo/zstd-safe@7.2.4",
+        "pkg:cargo/zstd-sys@2.0.16%2Bzstd.1.5.7",
+        "pkg:cargo/zstd@0.13.3"
+      ],
+      "dependencies": [
+        "pkg:cargo/adler2@2.0.1",
+        "pkg:cargo/aho-corasick@1.1.4",
+        "pkg:cargo/allocator-api2@0.2.21",
+        "pkg:cargo/anstyle@1.0.14",
+        "pkg:cargo/anyhow@1.0.102",
+        "pkg:cargo/arbitrary@1.4.2",
+        "pkg:cargo/async-trait@0.1.89",
+        "pkg:cargo/atomic-waker@1.1.2",
+        "pkg:cargo/autocfg@1.5.0",
+        "pkg:cargo/axum-core@0.5.6",
+        "pkg:cargo/axum@0.8.9",
+        "pkg:cargo/backoff@0.4.0",
+        "pkg:cargo/base64@0.22.1",
+        "pkg:cargo/bitflags@2.11.1",
+        "pkg:cargo/bon-macros@3.9.1",
+        "pkg:cargo/bon@3.9.1",
+        "pkg:cargo/bumpalo@3.20.2",
+        "pkg:cargo/bytes@1.11.1",
+        "pkg:cargo/bzip2@0.6.1",
+        "pkg:cargo/cc@1.2.62",
+        "pkg:cargo/cfg-if@1.0.4",
+        "pkg:cargo/cfg_aliases@0.2.1",
+        "pkg:cargo/chrono@0.4.44",
+        "pkg:cargo/convert_case@0.10.0",
+        "pkg:cargo/core-foundation-sys@0.8.7",
+        "pkg:cargo/core-foundation@0.10.1",
+        "pkg:cargo/crc32fast@1.5.0",
+        "pkg:cargo/crossbeam-channel@0.5.15",
+        "pkg:cargo/crossbeam-queue@0.3.12",
+        "pkg:cargo/crossbeam-utils@0.8.21",
+        "pkg:cargo/darling@0.23.0",
+        "pkg:cargo/darling_core@0.23.0",
+        "pkg:cargo/darling_macro@0.23.0",
+        "pkg:cargo/dashmap@6.2.1",
+        "pkg:cargo/derive_arbitrary@1.4.2",
+        "pkg:cargo/derive_more-impl@2.1.1",
+        "pkg:cargo/derive_more@2.1.1",
+        "pkg:cargo/displaydoc@0.2.5",
+        "pkg:cargo/downcast@0.11.0",
+        "pkg:cargo/dyn-clone@1.0.20",
+        "pkg:cargo/either@1.15.0",
+        "pkg:cargo/enum-iterator-derive@1.5.0",
+        "pkg:cargo/enum-iterator@2.3.0",
+        "pkg:cargo/enum_dispatch@0.3.13",
+        "pkg:cargo/equivalent@1.0.2",
+        "pkg:cargo/erased-serde@0.4.10",
+        "pkg:cargo/errno@0.3.14",
+        "pkg:cargo/fastrand@2.4.1",
+        "pkg:cargo/ffi-convert-derive@0.7.0",
+        "pkg:cargo/ffi-convert@0.7.0",
+        "pkg:cargo/filetime@0.2.29",
+        "pkg:cargo/find-msvc-tools@0.1.9",
+        "pkg:cargo/fixedbitset@0.5.7",
+        "pkg:cargo/flate2@1.1.9",
+        "pkg:cargo/fnv@1.0.7",
+        "pkg:cargo/foldhash@0.1.5",
+        "pkg:cargo/foldhash@0.2.0",
+        "pkg:cargo/form_urlencoded@1.2.2",
+        "pkg:cargo/fragile@2.1.0",
+        "pkg:cargo/futures-channel@0.3.32",
+        "pkg:cargo/futures-core@0.3.32",
+        "pkg:cargo/futures-executor@0.3.32",
+        "pkg:cargo/futures-io@0.3.32",
+        "pkg:cargo/futures-macro@0.3.32",
+        "pkg:cargo/futures-retry@0.6.0",
+        "pkg:cargo/futures-sink@0.3.32",
+        "pkg:cargo/futures-task@0.3.32",
+        "pkg:cargo/futures-timer@3.0.3",
+        "pkg:cargo/futures-util@0.3.32",
+        "pkg:cargo/futures@0.3.32",
+        "pkg:cargo/gethostname@1.1.0",
+        "pkg:cargo/getrandom@0.2.17",
+        "pkg:cargo/getrandom@0.3.4",
+        "pkg:cargo/getrandom@0.4.2",
+        "pkg:cargo/governor@0.10.4",
+        "pkg:cargo/h2@0.4.14",
+        "pkg:cargo/hashbrown@0.14.5",
+        "pkg:cargo/hashbrown@0.15.5",
+        "pkg:cargo/hashbrown@0.16.1",
+        "pkg:cargo/hashbrown@0.17.1",
+        "pkg:cargo/heck@0.5.0",
+        "pkg:cargo/http-body-util@0.1.3",
+        "pkg:cargo/http-body@1.0.1",
+        "pkg:cargo/http@1.4.0",
+        "pkg:cargo/httparse@1.10.1",
+        "pkg:cargo/httpdate@1.0.3",
+        "pkg:cargo/hyper-rustls@0.27.9",
+        "pkg:cargo/hyper-timeout@0.5.2",
+        "pkg:cargo/hyper-util@0.1.20",
+        "pkg:cargo/hyper@1.9.0",
+        "pkg:cargo/icu_collections@2.2.0",
+        "pkg:cargo/icu_locale_core@2.2.0",
+        "pkg:cargo/icu_normalizer@2.2.0",
+        "pkg:cargo/icu_normalizer_data@2.2.0",
+        "pkg:cargo/icu_properties@2.2.0",
+        "pkg:cargo/icu_properties_data@2.2.0",
+        "pkg:cargo/icu_provider@2.2.0",
+        "pkg:cargo/id-arena@2.3.0",
+        "pkg:cargo/ident_case@1.0.1",
+        "pkg:cargo/idna@1.1.0",
+        "pkg:cargo/idna_adapter@1.2.2",
+        "pkg:cargo/indexmap@2.14.0",
+        "pkg:cargo/instant@0.1.13",
+        "pkg:cargo/inventory@0.3.24",
+        "pkg:cargo/ipnet@2.12.0",
+        "pkg:cargo/itertools@0.14.0",
+        "pkg:cargo/itoa@1.0.18",
+        "pkg:cargo/jobserver@0.1.34",
+        "pkg:cargo/js-sys@0.3.98",
+        "pkg:cargo/lazy_static@1.5.0",
+        "pkg:cargo/leb128fmt@0.1.0",
+        "pkg:cargo/libbz2-rs-sys@0.2.5",
+        "pkg:cargo/libc@0.2.186",
+        "pkg:cargo/linux-raw-sys@0.12.1",
+        "pkg:cargo/litemap@0.8.2",
+        "pkg:cargo/lock_api@0.4.14",
+        "pkg:cargo/log@0.4.29",
+        "pkg:cargo/lru-slab@0.1.2",
+        "pkg:cargo/lru@0.16.4",
+        "pkg:cargo/matchers@0.2.0",
+        "pkg:cargo/matchit@0.8.4",
+        "pkg:cargo/memchr@2.8.0",
+        "pkg:cargo/mime@0.3.17",
+        "pkg:cargo/miniz_oxide@0.8.9",
+        "pkg:cargo/mio@1.2.0",
+        "pkg:cargo/mockall@0.13.1",
+        "pkg:cargo/mockall_derive@0.13.1",
+        "pkg:cargo/multimap@0.10.1",
+        "pkg:cargo/nonzero_ext@0.3.0",
+        "pkg:cargo/ntapi@0.4.3",
+        "pkg:cargo/nu-ansi-term@0.50.3",
+        "pkg:cargo/num-traits@0.2.19",
+        "pkg:cargo/objc2-core-foundation@0.3.2",
+        "pkg:cargo/objc2-io-kit@0.3.2",
+        "pkg:cargo/once_cell@1.21.4",
+        "pkg:cargo/openssl-probe@0.2.1",
+        "pkg:cargo/opentelemetry-http@0.31.0",
+        "pkg:cargo/opentelemetry-otlp@0.31.1",
+        "pkg:cargo/opentelemetry-proto@0.31.0",
+        "pkg:cargo/opentelemetry@0.31.0",
+        "pkg:cargo/opentelemetry_sdk@0.31.0",
+        "pkg:cargo/parking_lot@0.12.5",
+        "pkg:cargo/parking_lot_core@0.9.12",
+        "pkg:cargo/percent-encoding@2.3.2",
+        "pkg:cargo/petgraph@0.8.3",
+        "pkg:cargo/pid@4.0.0",
+        "pkg:cargo/pin-project-internal@1.1.13",
+        "pkg:cargo/pin-project-lite@0.2.17",
+        "pkg:cargo/pin-project@1.1.13",
+        "pkg:cargo/pkg-config@0.3.33",
+        "pkg:cargo/portable-atomic-util@0.2.7",
+        "pkg:cargo/portable-atomic@1.13.1",
+        "pkg:cargo/potential_utf@0.1.5",
+        "pkg:cargo/ppv-lite86@0.2.21",
+        "pkg:cargo/predicates-core@1.0.10",
+        "pkg:cargo/predicates-tree@1.0.13",
+        "pkg:cargo/predicates@3.1.4",
+        "pkg:cargo/prettyplease@0.2.37",
+        "pkg:cargo/proc-macro2@1.0.106",
+        "pkg:cargo/prometheus@0.14.0",
+        "pkg:cargo/prost-build@0.14.3",
+        "pkg:cargo/prost-derive@0.14.3",
+        "pkg:cargo/prost-types@0.14.3",
+        "pkg:cargo/prost-wkt-build@0.7.1",
+        "pkg:cargo/prost-wkt-types@0.7.1",
+        "pkg:cargo/prost-wkt@0.7.1",
+        "pkg:cargo/prost@0.14.3",
+        "pkg:cargo/protobuf-support@3.7.2",
+        "pkg:cargo/protobuf@3.7.2",
+        "pkg:cargo/pulldown-cmark-to-cmark@22.0.0",
+        "pkg:cargo/pulldown-cmark@0.13.3",
+        "pkg:cargo/quanta@0.12.6",
+        "pkg:cargo/quinn-proto@0.11.14",
+        "pkg:cargo/quinn-udp@0.5.14",
+        "pkg:cargo/quinn@0.11.9",
+        "pkg:cargo/quote@1.0.45",
+        "pkg:cargo/r-efi@5.3.0",
+        "pkg:cargo/r-efi@6.0.0",
+        "pkg:cargo/rand@0.8.6",
+        "pkg:cargo/rand@0.9.4",
+        "pkg:cargo/rand_chacha@0.3.1",
+        "pkg:cargo/rand_chacha@0.9.0",
+        "pkg:cargo/rand_core@0.6.4",
+        "pkg:cargo/rand_core@0.9.5",
+        "pkg:cargo/raw-cpuid@11.6.0",
+        "pkg:cargo/redox_syscall@0.5.18",
+        "pkg:cargo/regex-automata@0.4.14",
+        "pkg:cargo/regex-syntax@0.8.10",
+        "pkg:cargo/regex@1.12.3",
+        "pkg:cargo/reqwest@0.12.28",
+        "pkg:cargo/ring@0.17.14",
+        "pkg:cargo/ringbuf@0.4.8",
+        "pkg:cargo/rustc-hash@2.1.2",
+        "pkg:cargo/rustc_version@0.4.1",
+        "pkg:cargo/rustix@1.1.4",
+        "pkg:cargo/rustls-native-certs@0.8.3",
+        "pkg:cargo/rustls-pki-types@1.14.1",
+        "pkg:cargo/rustls-webpki@0.103.16",
+        "pkg:cargo/rustls@0.23.40",
+        "pkg:cargo/rustversion@1.0.22",
+        "pkg:cargo/ryu@1.0.23",
+        "pkg:cargo/schannel@0.1.29",
+        "pkg:cargo/scopeguard@1.2.0",
+        "pkg:cargo/security-framework-sys@2.17.0",
+        "pkg:cargo/security-framework@3.7.0",
+        "pkg:cargo/semver@1.0.28",
+        "pkg:cargo/serde@1.0.228",
+        "pkg:cargo/serde_core@1.0.228",
+        "pkg:cargo/serde_derive@1.0.228",
+        "pkg:cargo/serde_json@1.0.149",
+        "pkg:cargo/serde_urlencoded@0.7.1",
+        "pkg:cargo/sharded-slab@0.1.7",
+        "pkg:cargo/shlex@1.3.0",
+        "pkg:cargo/signal-hook-registry@1.4.8",
+        "pkg:cargo/simd-adler32@0.3.9",
+        "pkg:cargo/siphasher@1.0.3",
+        "pkg:cargo/slab@0.4.12",
+        "pkg:cargo/slotmap@1.1.1",
+        "pkg:cargo/smallvec@1.15.1",
+        "pkg:cargo/socket2@0.6.3",
+        "pkg:cargo/spinning_top@0.3.0",
+        "pkg:cargo/stable_deref_trait@1.2.1",
+        "pkg:cargo/strsim@0.11.1",
+        "pkg:cargo/subtle@2.6.1",
+        "pkg:cargo/syn@1.0.109",
+        "pkg:cargo/syn@2.0.117",
+        "pkg:cargo/sync_wrapper@1.0.2",
+        "pkg:cargo/synstructure@0.13.2",
+        "pkg:cargo/sysinfo@0.37.2",
+        "pkg:cargo/tar@0.4.46",
+        "pkg:cargo/tempfile@3.27.0",
+        "pkg:cargo/temporal_bridge@0.1.0",
+        "pkg:cargo/temporalio-client@0.1.0",
+        "pkg:cargo/temporalio-common@0.1.0",
+        "pkg:cargo/temporalio-macros@0.1.0",
+        "pkg:cargo/temporalio-sdk-core@0.1.0",
+        "pkg:cargo/termtree@0.5.1",
+        "pkg:cargo/thiserror-impl@1.0.69",
+        "pkg:cargo/thiserror-impl@2.0.18",
+        "pkg:cargo/thiserror@1.0.69",
+        "pkg:cargo/thiserror@2.0.18",
+        "pkg:cargo/thread_local@1.1.9",
+        "pkg:cargo/tinystr@0.8.3",
+        "pkg:cargo/tinyvec@1.11.0",
+        "pkg:cargo/tinyvec_macros@0.1.1",
+        "pkg:cargo/tokio-macros@2.7.0",
+        "pkg:cargo/tokio-rustls@0.26.4",
+        "pkg:cargo/tokio-stream@0.1.18",
+        "pkg:cargo/tokio-util@0.7.18",
+        "pkg:cargo/tokio@1.52.3",
+        "pkg:cargo/tonic-build@0.14.6",
+        "pkg:cargo/tonic-prost-build@0.14.6",
+        "pkg:cargo/tonic-prost@0.14.6",
+        "pkg:cargo/tonic@0.14.6",
+        "pkg:cargo/tower-http@0.6.11",
+        "pkg:cargo/tower-layer@0.3.3",
+        "pkg:cargo/tower-service@0.3.3",
+        "pkg:cargo/tower@0.5.3",
+        "pkg:cargo/tracing-attributes@0.1.31",
+        "pkg:cargo/tracing-core@0.1.36",
+        "pkg:cargo/tracing-log@0.2.0",
+        "pkg:cargo/tracing-subscriber@0.3.23",
+        "pkg:cargo/tracing@0.1.44",
+        "pkg:cargo/try-lock@0.2.5",
+        "pkg:cargo/typeid@1.0.3",
+        "pkg:cargo/typetag-impl@0.2.21",
+        "pkg:cargo/typetag@0.2.21",
+        "pkg:cargo/unicase@2.9.0",
+        "pkg:cargo/unicode-ident@1.0.24",
+        "pkg:cargo/unicode-segmentation@1.13.2",
+        "pkg:cargo/unicode-xid@0.2.6",
+        "pkg:cargo/untrusted@0.9.0",
+        "pkg:cargo/url@2.5.8",
+        "pkg:cargo/utf8_iter@1.0.4",
+        "pkg:cargo/uuid@1.23.1",
+        "pkg:cargo/valuable@0.1.1",
+        "pkg:cargo/version_check@0.9.5",
+        "pkg:cargo/want@0.3.1",
+        "pkg:cargo/wasi@0.11.1%2Bwasi-snapshot-preview1",
+        "pkg:cargo/wasip2@1.0.3%2Bwasi-0.2.9",
+        "pkg:cargo/wasip3@0.4.0%2Bwasi-0.3.0-rc-2026-01-06",
+        "pkg:cargo/wasm-bindgen-futures@0.4.71",
+        "pkg:cargo/wasm-bindgen-macro-support@0.2.121",
+        "pkg:cargo/wasm-bindgen-macro@0.2.121",
+        "pkg:cargo/wasm-bindgen-shared@0.2.121",
+        "pkg:cargo/wasm-bindgen@0.2.121",
+        "pkg:cargo/wasm-encoder@0.244.0",
+        "pkg:cargo/wasm-metadata@0.244.0",
+        "pkg:cargo/wasm-streams@0.4.2",
+        "pkg:cargo/wasmparser@0.244.0",
+        "pkg:cargo/web-sys@0.3.98",
+        "pkg:cargo/web-time@1.1.0",
+        "pkg:cargo/winapi-i686-pc-windows-gnu@0.4.0",
+        "pkg:cargo/winapi-x86_64-pc-windows-gnu@0.4.0",
+        "pkg:cargo/winapi@0.3.9",
+        "pkg:cargo/windows-collections@0.2.0",
+        "pkg:cargo/windows-core@0.61.2",
+        "pkg:cargo/windows-future@0.2.1",
+        "pkg:cargo/windows-implement@0.60.2",
+        "pkg:cargo/windows-interface@0.59.3",
+        "pkg:cargo/windows-link@0.1.3",
+        "pkg:cargo/windows-link@0.2.1",
+        "pkg:cargo/windows-numerics@0.2.0",
+        "pkg:cargo/windows-result@0.3.4",
+        "pkg:cargo/windows-strings@0.4.2",
+        "pkg:cargo/windows-sys@0.52.0",
+        "pkg:cargo/windows-sys@0.60.2",
+        "pkg:cargo/windows-sys@0.61.2",
+        "pkg:cargo/windows-targets@0.52.6",
+        "pkg:cargo/windows-targets@0.53.5",
+        "pkg:cargo/windows-threading@0.1.0",
+        "pkg:cargo/windows@0.61.3",
+        "pkg:cargo/windows_aarch64_gnullvm@0.52.6",
+        "pkg:cargo/windows_aarch64_gnullvm@0.53.1",
+        "pkg:cargo/windows_aarch64_msvc@0.52.6",
+        "pkg:cargo/windows_aarch64_msvc@0.53.1",
+        "pkg:cargo/windows_i686_gnu@0.52.6",
+        "pkg:cargo/windows_i686_gnu@0.53.1",
+        "pkg:cargo/windows_i686_gnullvm@0.52.6",
+        "pkg:cargo/windows_i686_gnullvm@0.53.1",
+        "pkg:cargo/windows_i686_msvc@0.52.6",
+        "pkg:cargo/windows_i686_msvc@0.53.1",
+        "pkg:cargo/windows_x86_64_gnu@0.52.6",
+        "pkg:cargo/windows_x86_64_gnu@0.53.1",
+        "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
+        "pkg:cargo/windows_x86_64_gnullvm@0.53.1",
+        "pkg:cargo/windows_x86_64_msvc@0.52.6",
+        "pkg:cargo/windows_x86_64_msvc@0.53.1",
+        "pkg:cargo/wit-bindgen-core@0.51.0",
+        "pkg:cargo/wit-bindgen-rust-macro@0.51.0",
+        "pkg:cargo/wit-bindgen-rust@0.51.0",
+        "pkg:cargo/wit-bindgen@0.51.0",
+        "pkg:cargo/wit-bindgen@0.57.1",
+        "pkg:cargo/wit-component@0.244.0",
+        "pkg:cargo/wit-parser@0.244.0",
+        "pkg:cargo/writeable@0.6.3",
+        "pkg:cargo/xattr@1.6.1",
+        "pkg:cargo/yoke-derive@0.8.2",
+        "pkg:cargo/yoke@0.8.2",
+        "pkg:cargo/zerocopy-derive@0.8.48",
+        "pkg:cargo/zerocopy@0.8.48",
+        "pkg:cargo/zerofrom-derive@0.1.7",
+        "pkg:cargo/zerofrom@0.1.8",
+        "pkg:cargo/zeroize@1.8.2",
+        "pkg:cargo/zerotrie@0.2.4",
+        "pkg:cargo/zerovec-derive@0.11.3",
+        "pkg:cargo/zerovec@0.11.6",
+        "pkg:cargo/zip@4.6.1",
+        "pkg:cargo/zlib-rs@0.6.3",
+        "pkg:cargo/zmij@1.0.21",
+        "pkg:cargo/zopfli@0.8.3",
+        "pkg:cargo/zstd-safe@7.2.4",
+        "pkg:cargo/zstd-sys@2.0.16%2Bzstd.1.5.7",
+        "pkg:cargo/zstd@0.13.3"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "hpack-hs-temporal-sdk@d24313e"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "hpack-hs-temporal-sdk@d24313e"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:hackage/temporal-api-protos@2025.10.1.0",
+        "pkg:hackage/temporal-codec-encryption",
+        "pkg:hackage/temporal-sdk",
+        "pkg:hackage/temporal-sdk-codec-server",
+        "pkg:hackage/temporal-sdk-core",
+        "pkg:hackage/temporal-sdk-optimal-codec",
+        "pkg:hackage/tix-to-markdown"
+      ],
+      "ref": "hpack-hs-temporal-sdk@d24313e"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/aeson"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/annotated-exception"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/async"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/atomic-primops"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base64"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/bytestring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/conduit"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/crypton"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/directory"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/discover-instances"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/errors"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/exceptions"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/filepath"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/first-class-families"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/focus"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/ghc"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hashable"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hedgehog"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hpc"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hs-opentelemetry-api"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hs-opentelemetry-propagator-w3c"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hs-opentelemetry-sdk"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hspec"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hspec-api"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hspec-discover:hspec-discover"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hspec-hedgehog"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/http-types"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/if-instance"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/lens-family"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/list-t"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/memory"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/monad-logger"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/mtl"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/network"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/network-bsd"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/primitive"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/proto-lens"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/proto-lens-protobuf-types"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/proto-lens-runtime"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/random"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/require-callstack"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/resourcet"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/scientific"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/split"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/stm"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/stm-containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/template-haskell"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base",
+        "pkg:hackage/proto-lens-protobuf-types",
+        "pkg:hackage/proto-lens-runtime"
+      ],
+      "ref": "pkg:hackage/temporal-api-protos@2025.10.1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/containers",
+        "pkg:hackage/crypton",
+        "pkg:hackage/errors",
+        "pkg:hackage/hedgehog",
+        "pkg:hackage/memory",
+        "pkg:hackage/proto-lens",
+        "pkg:hackage/temporal-sdk",
+        "pkg:hackage/text"
+      ],
+      "ref": "pkg:hackage/temporal-codec-encryption"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/annotated-exception",
+        "pkg:hackage/async",
+        "pkg:hackage/atomic-primops",
+        "pkg:hackage/base",
+        "pkg:hackage/base64",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/conduit",
+        "pkg:hackage/containers",
+        "pkg:hackage/directory",
+        "pkg:hackage/discover-instances",
+        "pkg:hackage/exceptions",
+        "pkg:hackage/first-class-families",
+        "pkg:hackage/focus",
+        "pkg:hackage/ghc",
+        "pkg:hackage/hashable",
+        "pkg:hackage/hedgehog",
+        "pkg:hackage/hs-opentelemetry-api",
+        "pkg:hackage/hs-opentelemetry-propagator-w3c",
+        "pkg:hackage/hs-opentelemetry-sdk",
+        "pkg:hackage/hspec",
+        "pkg:hackage/hspec-api",
+        "pkg:hackage/hspec-discover:hspec-discover",
+        "pkg:hackage/hspec-hedgehog",
+        "pkg:hackage/lens-family",
+        "pkg:hackage/list-t",
+        "pkg:hackage/monad-logger",
+        "pkg:hackage/mtl",
+        "pkg:hackage/network",
+        "pkg:hackage/primitive",
+        "pkg:hackage/proto-lens",
+        "pkg:hackage/proto-lens-protobuf-types",
+        "pkg:hackage/random",
+        "pkg:hackage/require-callstack",
+        "pkg:hackage/resourcet",
+        "pkg:hackage/scientific",
+        "pkg:hackage/split",
+        "pkg:hackage/stm",
+        "pkg:hackage/stm-containers",
+        "pkg:hackage/template-haskell",
+        "pkg:hackage/temporal-api-protos@2025.10.1.0",
+        "pkg:hackage/temporal-sdk-core",
+        "pkg:hackage/text",
+        "pkg:hackage/th-lift-instances",
+        "pkg:hackage/these",
+        "pkg:hackage/time",
+        "pkg:hackage/time-compat",
+        "pkg:hackage/transformers",
+        "pkg:hackage/unliftio",
+        "pkg:hackage/unordered-containers",
+        "pkg:hackage/uuid",
+        "pkg:hackage/uuid-types",
+        "pkg:hackage/validation-selective",
+        "pkg:hackage/vault",
+        "pkg:hackage/vector",
+        "pkg:hackage/zlib"
+      ],
+      "ref": "pkg:hackage/temporal-sdk"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/containers",
+        "pkg:hackage/hs-opentelemetry-api",
+        "pkg:hackage/http-types",
+        "pkg:hackage/temporal-sdk",
+        "pkg:hackage/text",
+        "pkg:hackage/transformers",
+        "pkg:hackage/vector",
+        "pkg:hackage/wai",
+        "pkg:hackage/wai-cors"
+      ],
+      "ref": "pkg:hackage/temporal-sdk-codec-server"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/async",
+        "pkg:hackage/atomic-primops",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/containers",
+        "pkg:hackage/hspec",
+        "pkg:hackage/lens-family",
+        "pkg:hackage/monad-logger",
+        "pkg:hackage/mtl",
+        "pkg:hackage/network-bsd",
+        "pkg:hackage/proto-lens",
+        "pkg:hackage/stm",
+        "pkg:hackage/temporal-api-protos@2025.10.1.0",
+        "pkg:hackage/text",
+        "pkg:hackage/unix",
+        "pkg:hackage/unliftio",
+        "pkg:hackage/unordered-containers",
+        "pkg:hackage/uuid",
+        "pkg:hackage/vector"
+      ],
+      "ref": "pkg:hackage/temporal-sdk-core"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base",
+        "pkg:hackage/containers",
+        "pkg:hackage/if-instance",
+        "pkg:hackage/temporal-sdk"
+      ],
+      "ref": "pkg:hackage/temporal-sdk-optimal-codec"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/text"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/th-lift-instances"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/these"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/time"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/time-compat"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base",
+        "pkg:hackage/containers",
+        "pkg:hackage/filepath",
+        "pkg:hackage/hpc"
+      ],
+      "ref": "pkg:hackage/tix-to-markdown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/transformers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/unix"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/unliftio"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/unordered-containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/uuid"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/uuid-types"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/validation-selective"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/vault"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/vector"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/wai"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/wai-cors"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/zlib"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "hpack-hs-temporal-sdk@d24313e",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/mercury/hs-temporal-sdk"
+        }
+      ],
+      "name": "hpack-hs-temporal-sdk",
+      "purl": "pkg:generic/hpack-hs-temporal-sdk@d24313e",
+      "type": "application",
+      "version": "d24313e"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      },
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:nixpkgs-haskell-degraded",
+        "value": "offline"
+      },
+      {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"addressable_without_cpe\":73,\"excluded_files\":6,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":12,\"with_candidates\":354}"
+      },
+      {
+        "name": "waybill:nixpkgs-haskell-resolution",
+        "value": "{\"disagreements\":0,\"resolved\":0,\"revision\":null,\"unresolved\":{\"offline\":66}}"
+      },
+      {
+        "name": "waybill:file-inventory-skipped-build-dirs",
+        "value": "2"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "[\"ID\",\"VERSION_ID\"]"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "orphaned-components-detected: 12 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\",\"codec-encryption\",\"codec-server\",\"core\",\"core/rust\",\"optimal-codec\",\"protos\",\"sdk\",\"tools/tix-to-markdown\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
+      },
+      {
+        "name": "waybill:cabal-entries-skipped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:hpack-read-outcome",
+        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/temporal-codec-encryption.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/temporal-sdk-codec-server.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/temporal-sdk-core.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/temporal-sdk-optimal-codec.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/temporal-api-protos.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/temporal-sdk.cabal\"],\"manifests-partial\":[{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\",\"unmodelled-construct\":\"include\"}],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"],\"manifests-unread\":[]}"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "<masked-tool-version>"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

@@ -8,7 +8,7 @@
 use std::path::PathBuf;
 
 use super::cache::{CorpusCacheDir, CorpusCacheKey};
-use super::manifest::{CorpusTarget, PinnedRef, ScanMode, SourceKind};
+use super::manifest::{CorpusTarget, PinnedRef, Prepare, ScanMode, SourceKind};
 
 // -----------------------------------------------------------------------
 // Data-model Entity 2 — EmittedSboms
@@ -97,6 +97,10 @@ pub enum CorpusInfraError {
     /// built before the scan, so waybill would have no runtime closure to read
     /// and the recall floor would score the reachability walk instead.
     NixRealise { target: &'static str, stderr: String },
+    /// #1677 — a target's `Prepare` step could not produce its tree, or
+    /// produced one it did not change (removing nothing would silently scan
+    /// the committed tree under the prepared target's name).
+    Prepare { target: &'static str, detail: String },
 }
 
 impl std::fmt::Display for CorpusInfraError {
@@ -154,6 +158,12 @@ impl std::fmt::Display for CorpusInfraError {
                 writeln!(f, "kind:      {kind:?}")?;
                 writeln!(f, "next:      check disk space / permissions on {path:?}")?;
             }
+            CorpusInfraError::Prepare { target, detail } => {
+                writeln!(f, "invariant: prepare")?;
+                writeln!(f, "target:    {target}")?;
+                writeln!(f, "next:      check the pinned tree still has the files the target's `Prepare` step removes")?;
+                writeln!(f, "underlying error: {}", truncate_stderr(detail))?;
+            }
             CorpusInfraError::OciToolMissing => {
                 writeln!(f, "invariant: oci-tool-missing")?;
                 writeln!(f, "next:      install `docker` (or set WAYBILL_CORPUS_SKIP_OCI=1 to skip image targets on this host)")?;
@@ -199,7 +209,12 @@ pub fn update_goldens_gate() -> bool {
 /// emitted CDX + SPDX 2.3 + SPDX 3 files, and returns them parsed.
 pub fn scan_target(target: &CorpusTarget) -> Result<EmittedSboms, CorpusInfraError> {
     let cache = CorpusCacheDir::default()?;
+    // #1677: targets sharing a pin share the cache directory; take it alone
+    // while cloning and preparing, then release it for the scan.
+    let lock = cache.lock(target)?;
     let cache_dir = cache.ensure_hydrated(target)?;
+    let cache_dir = prepared_dir(target, &cache_dir)?;
+    drop(lock);
 
     let out = tempfile::tempdir().map_err(|e| CorpusInfraError::CacheIo {
         path: PathBuf::from("<tmpdir>"),
@@ -327,6 +342,77 @@ fn parse_file(path: &std::path::Path, target: &'static str) -> Result<serde_json
         stderr: format!("json parse failed for {}: {e}", path.display()),
         missing_files: vec![],
     })
+}
+
+/// #1677: the tree to scan. The clone itself for `Prepare::None`; otherwise a
+/// git worktree of the pinned commit at a fixed path beside the clone,
+/// recreated on every run so no earlier run's change carries over, with the
+/// target's change applied. See `manifest::Prepare`.
+fn prepared_dir(target: &CorpusTarget, repo: &std::path::Path) -> Result<PathBuf, CorpusInfraError> {
+    let Some(name) = target.prepare.dir_name() else {
+        return Ok(repo.to_path_buf());
+    };
+    let fail = |detail: String| CorpusInfraError::Prepare { target: target.name, detail };
+    let PinnedRef::Sha { hex } = &target.pinned else {
+        return Err(fail("a prepared target must be a git target pinned by SHA".to_string()));
+    };
+    let parent = repo.parent().ok_or_else(|| fail(format!("{} has no parent", repo.display())))?;
+    let dest = parent.join(name);
+    let git = |args: &[&std::ffi::OsStr]| -> Result<(), CorpusInfraError> {
+        let out = std::process::Command::new("git")
+            .arg("-C")
+            .arg(repo)
+            .args(args)
+            .output()
+            .map_err(|e| fail(format!("spawn git: {e}")))?;
+        if out.status.success() {
+            Ok(())
+        } else {
+            Err(fail(format!("git {args:?}: {}", String::from_utf8_lossy(&out.stderr))))
+        }
+    };
+    if dest.exists() {
+        std::fs::remove_dir_all(&dest).map_err(|e| CorpusInfraError::CacheIo { path: dest.clone(), kind: e.kind() })?;
+    }
+    git(&["worktree".as_ref(), "prune".as_ref()])?;
+    git(&["worktree".as_ref(), "add".as_ref(), "--detach".as_ref(), dest.as_os_str(), (*hex).as_ref()])?;
+    match target.prepare {
+        Prepare::None => {}
+        Prepare::RemoveHpackGeneratedCabal => {
+            let removed = remove_hpack_generated_cabal(&dest).map_err(|e| fail(format!("walking {}: {e}", dest.display())))?;
+            if removed == 0 {
+                return Err(fail("no hpack-generated .cabal found to remove".to_string()));
+            }
+        }
+    }
+    Ok(dest)
+}
+
+/// Delete every `*.cabal` under `root` (`.git` excluded) whose first four
+/// lines contain `hpack`, the header hpack writes into a file it generates.
+/// Returns how many were removed.
+fn remove_hpack_generated_cabal(root: &std::path::Path) -> std::io::Result<usize> {
+    let mut removed = 0;
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            let kind = entry.file_type()?;
+            if kind.is_dir() {
+                if entry.file_name() != ".git" {
+                    stack.push(path);
+                }
+            } else if kind.is_file() && path.extension().is_some_and(|e| e == "cabal") {
+                let bytes = std::fs::read(&path)?;
+                if bytes.split(|b| *b == b'\n').take(4).any(|l| l.windows(5).any(|w| w == b"hpack")) {
+                    std::fs::remove_file(&path)?;
+                    removed += 1;
+                }
+            }
+        }
+    }
+    Ok(removed)
 }
 
 fn pinned_ref_short(p: &PinnedRef) -> String {

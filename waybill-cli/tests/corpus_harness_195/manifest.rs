@@ -32,6 +32,41 @@ pub struct CorpusTarget {
     pub reader_ecosystems: &'static [EcosystemId],
     pub expectations: fn(&EmittedSboms) -> Result<(), AssertionFailure>,
     pub scan_mode: ScanMode,
+    /// What is done to the pinned tree before it is scanned (#1677).
+    pub prepare: Prepare,
+}
+
+/// #1677: a change made to the pinned tree before the scan, so a target can
+/// measure a layout its repository does not commit.
+///
+/// The change is never made in the shared clone: two targets pinned to one
+/// commit share one cache directory, and editing it would change the other's
+/// input. `harness::scan_target` checks the pinned commit out as a git
+/// worktree at a fixed path beside the clone and changes that. The path is
+/// fixed, not a temporary directory, because a document can record the
+/// scanned paths (C200 lists absolute manifest paths), and a path that
+/// changed every run would make the golden drift every run.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Prepare {
+    /// Scan the tree as committed.
+    None,
+    /// Delete every `*.cabal` whose first four lines contain `hpack`, the
+    /// header hpack writes into the files it generates. Many hpack projects
+    /// commit no generated `.cabal`; this one is how they look to waybill.
+    /// With the generated file present, waybill falls back to it when a
+    /// `package.yaml` cannot be read, which hides that loss from a golden.
+    RemoveHpackGeneratedCabal,
+}
+
+impl Prepare {
+    /// The directory name the prepared worktree takes, or `None` to scan the
+    /// clone itself.
+    pub fn dir_name(self) -> Option<&'static str> {
+        match self {
+            Prepare::None => None,
+            Prepare::RemoveHpackGeneratedCabal => Some("prepared-no-generated-cabal"),
+        }
+    }
 }
 
 /// One ecosystem as `docs/ecosystems.md`'s coverage matrix names it —
@@ -179,6 +214,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Golang],
         expectations: super::expectations::go_cobra_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // #879 — the first MULTI-MODULE Go target. `go-cobra` and
     // `pants-example-golang` each have one go.sum, so the path where
@@ -209,6 +245,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Golang, EcosystemId::Pip],
         expectations: super::expectations::go_opentelemetry_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // The first corpus target that runs `--nix-closure`, so the first to
     // exercise milestones 1034 (closure query), 1035 (closure-derived
@@ -245,6 +282,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
         expectations: super::expectations::nix_closure_moat_expectations,
         scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: false },
+        prepare: Prepare::None,
     },
     // Milestone 1423 (T036, FR-016) — the live runtime-closure path.
     //
@@ -272,6 +310,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Nix],
         expectations: super::expectations::nix_closure_shellcheck_expectations,
         scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: false },
+        prepare: Prepare::None,
     },
     // Feature 1283 (FR-014, SC-001–SC-003) — three Haskell projects whose
     // flakes need import-from-derivation, so their closure is unreachable
@@ -300,6 +339,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
         expectations: super::expectations::nix_closure_slack_web_expectations,
         scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: true },
+        prepare: Prepare::None,
     },
     CorpusTarget {
         name: "nix-closure-openai",
@@ -317,6 +357,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
         expectations: super::expectations::nix_closure_openai_expectations,
         scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: true },
+        prepare: Prepare::None,
     },
     CorpusTarget {
         name: "nix-closure-slacklinker",
@@ -333,6 +374,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
         expectations: super::expectations::nix_closure_slacklinker_expectations,
         scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: true },
+        prepare: Prepare::None,
     },
     // T022 (US2) — Rust source target:
     CorpusTarget {
@@ -347,6 +389,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Cargo],
         expectations: super::expectations::rust_ripgrep_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // T025 (US2) — npm source target:
     CorpusTarget {
@@ -361,6 +404,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Npm],
         expectations: super::expectations::npm_express_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // T028 (US2) — Python source target:
     CorpusTarget {
@@ -375,6 +419,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Pip],
         expectations: super::expectations::python_flask_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // T031 (US2) — Java/Maven source target:
     CorpusTarget {
@@ -389,6 +434,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Maven],
         expectations: super::expectations::maven_guice_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // T034 (US2) — Polyglot container image target:
     CorpusTarget {
@@ -412,6 +458,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Deb, EcosystemId::Golang],
         expectations: super::expectations::image_postgres16_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // Pants example repos — permanent regression gates for m223 (pex-lockfile
     // reader), m224 (coursier-JVM), m226 (Pants Go enricher), m672 (front-
@@ -434,6 +481,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::PantsPython, EcosystemId::Pip],
         expectations: super::expectations::pants_example_python_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     CorpusTarget {
         name: "pants-example-django",
@@ -449,6 +497,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::PantsPython, EcosystemId::Pip],
         expectations: super::expectations::pants_example_django_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // Feature 676 (issue #756 fix) — re-enable pants-example-jvm now that
     // the m224 reader accepts both string and coord-table shapes for the
@@ -469,6 +518,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::PantsJvm],
         expectations: super::expectations::pants_example_jvm_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // #925 — the first polyglot Pants target: `[python.resolves]` and
     // `[jvm.resolves]` in one pants.toml. The pantsbuild/example-* repos are
@@ -490,6 +540,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::PantsPython, EcosystemId::PantsJvm],
         expectations: super::expectations::pants_clojure_polyglot_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     CorpusTarget {
         name: "pants-example-golang",
@@ -505,6 +556,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Golang, EcosystemId::PantsGo],
         expectations: super::expectations::pants_example_golang_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // Feature 675 — Pants JavaScript / npm regression gate.
     // Locks in current behavior of the standard npm reader stack
@@ -528,6 +580,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Npm],
         expectations: super::expectations::pants_example_javascript_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // #898 — Haskell source target. The FIRST Haskell target in either
     // corpus; its absence is what let the #891 defects live, and the gap
@@ -558,6 +611,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Haskell],
         expectations: super::expectations::haskell_aeson_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // The SECOND corpus target that resolves through nixpkgs, and the reason
     // it exists: until it did, `haskell-language-server` was the only one, so
@@ -599,6 +653,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
         expectations: super::expectations::haskell_security_advisories_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
     },
     // #969 — the FIRST corpus target that exercises nixpkgs-backed Haskell
     // version resolution. `haskell-aeson` has no `flake.lock` at all, so the
@@ -645,6 +700,134 @@ pub const TARGETS: &[CorpusTarget] = &[
         reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
         expectations: super::expectations::haskell_language_server_expectations,
         scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
+    },
+    // #1677 — hpack monorepos, so #1673–#1676 are measured on real projects
+    // rather than synthetic fixtures. No earlier Haskell target uses these
+    // constructs: haskell-aeson, haskell-language-server and
+    // haskell-security-advisories are `.cabal`-driven, and the Nix targets
+    // have at most one `package.yaml`. These goldens record the behaviour
+    // before #1673–#1676 land, so each fix shows as a golden diff.
+    //
+    // Every target below commits the hpack-generated `.cabal` beside each
+    // `package.yaml`, and waybill falls back to that file when the
+    // `package.yaml` cannot be read, which hides the loss. So each target
+    // whose loss is masked has a second entry scanned with the generated
+    // files removed (`Prepare::RemoveHpackGeneratedCabal`). Measured at
+    // `main` 8e5080df with the scans this harness makes:
+    //
+    //   target            committed (hackage / main modules)   generated .cabal removed
+    //   hs-opentelemetry  127 / 37                             89 / 21
+    //   lootbox            62 / 7                               7 / 0
+    //   hs-temporal-sdk    73 / 7                              73 / 7  (no variant: all read)
+    //   ogmios            102 / 7                               0 / 0
+    //
+    // #1676 (root-only drops nested Haskell packages) is not reachable with
+    // these four: `--project-discovery=root-only` gives identical output on
+    // each, because none has a root manifest of another ecosystem, so
+    // root-only falls back to full scope. No root-only entry is added.
+    //
+    // hs-opentelemetry: the largest unread population. 24 `package.yaml`
+    // seen, 8 read, 16 unread on YAML anchors defined in an `!include`d file
+    // (#1673). A `callCabal2nix` flake, so a later `--nix-closure` entry with
+    // `allow_ifd` can reuse this pin. 12 MB on GitHub.
+    CorpusTarget {
+        name: "hpack-hs-opentelemetry",
+        source: SourceKind::Git { clone_url: "https://github.com/iand675/hs-opentelemetry" },
+        pinned: PinnedRef::Sha { hex: "25f5b2d65744af384e06f61040e5c037d7cb8db9" },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "#1673 hpack anchors defined in an !include'd file (16 of 24 package.yaml unread), as committed (generated .cabal fallback)",
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
+        expectations: super::expectations::hpack_hs_opentelemetry_expectations,
+        scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
+    },
+    // The same pin with the 24 hpack-generated `.cabal` removed: the 16 unread
+    // manifests' packages disappear (127 -> 89 hackage, 37 -> 21 main
+    // modules), which is what #1673 has to restore.
+    CorpusTarget {
+        name: "hpack-hs-opentelemetry-no-generated-cabal",
+        source: SourceKind::Git { clone_url: "https://github.com/iand675/hs-opentelemetry" },
+        pinned: PinnedRef::Sha { hex: "25f5b2d65744af384e06f61040e5c037d7cb8db9" },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "#1673 with the hpack-generated .cabal removed, so the unread manifests' loss is visible",
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
+        expectations: super::expectations::hpack_hs_opentelemetry_no_generated_cabal_expectations,
+        scan_mode: ScanMode::Offline,
+        prepare: Prepare::RemoveHpackGeneratedCabal,
+    },
+    // lootbox: the only public duplicate-`<<` merge key found (#1674). 7
+    // `package.yaml` seen, 1 read, 6 unread (5 anchors, 1 duplicate `<<`).
+    // 0.5 MB on GitHub. No licence is declared; the golden records only
+    // derived metadata, as every corpus golden does.
+    CorpusTarget {
+        name: "hpack-lootbox",
+        source: SourceKind::Git { clone_url: "https://github.com/serokell/lootbox" },
+        pinned: PinnedRef::Sha { hex: "2cd7b1e0fde3888593404d1e1842d45e1b62bb6c" },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "#1674 YAML merge keys, including a duplicate << (6 of 7 package.yaml unread), as committed",
+        reader_ecosystems: &[EcosystemId::Haskell],
+        expectations: super::expectations::hpack_lootbox_expectations,
+        scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
+    },
+    // lootbox without its 7 generated `.cabal`: 62 -> 7 hackage, 7 -> 0 main
+    // modules.
+    CorpusTarget {
+        name: "hpack-lootbox-no-generated-cabal",
+        source: SourceKind::Git { clone_url: "https://github.com/serokell/lootbox" },
+        pinned: PinnedRef::Sha { hex: "2cd7b1e0fde3888593404d1e1842d45e1b62bb6c" },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "#1674 with the hpack-generated .cabal removed",
+        reader_ecosystems: &[EcosystemId::Haskell],
+        expectations: super::expectations::hpack_lootbox_no_generated_cabal_expectations,
+        scan_mode: ScanMode::Offline,
+        prepare: Prepare::RemoveHpackGeneratedCabal,
+    },
+    // hs-temporal-sdk: `!include` that reads partially rather than failing
+    // (#1673's partial arm). 7 seen, 7 read, 6 partial. Every manifest is
+    // read, so removing the generated `.cabal` changes nothing and there is
+    // no second entry. Also a `callCabal2nix` flake, and 354 Rust crates
+    // from the SDK core's `Cargo.lock`. 8.9 MB on GitHub.
+    CorpusTarget {
+        name: "hpack-hs-temporal-sdk",
+        source: SourceKind::Git { clone_url: "https://github.com/mercury/hs-temporal-sdk" },
+        pinned: PinnedRef::Sha { hex: "d24313e37a009cc4121012e509e16a3e749811d3" },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "#1673 partial reads through !include (6 of 7 partial), plus Cargo.lock and a flake",
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Cargo, EcosystemId::Nix],
+        expectations: super::expectations::hpack_hs_temporal_sdk_expectations,
+        scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
+    },
+    // ogmios: a complete failure, 8 seen and 8 unread on anchors (#1675,
+    // salvage from an unreadable manifest). Also 1,031 npm components from
+    // its clients' `yarn.lock`. 71 MB on GitHub, the corpus's largest clone
+    // (haskell-aeson was 41.5 MB). BardurArantsson/cqrs (7 unread, all on
+    // anchors) is the smaller fallback #1677 lists.
+    CorpusTarget {
+        name: "hpack-ogmios",
+        source: SourceKind::Git { clone_url: "https://github.com/CardanoSolutions/ogmios" },
+        pinned: PinnedRef::Sha { hex: "435189aea2d9a047dc395a6f1cdef737d52f1cbe" },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "#1675 a complete hpack failure (8 of 8 package.yaml unread), as committed",
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Npm],
+        expectations: super::expectations::hpack_ogmios_expectations,
+        scan_mode: ScanMode::Offline,
+        prepare: Prepare::None,
+    },
+    // ogmios without its 8 generated `.cabal`: 102 -> 0 hackage. Nothing of
+    // the Haskell project is reported, the case #1675 is about.
+    CorpusTarget {
+        name: "hpack-ogmios-no-generated-cabal",
+        source: SourceKind::Git { clone_url: "https://github.com/CardanoSolutions/ogmios" },
+        pinned: PinnedRef::Sha { hex: "435189aea2d9a047dc395a6f1cdef737d52f1cbe" },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "#1675 with the hpack-generated .cabal removed: no Haskell component survives",
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Npm],
+        expectations: super::expectations::hpack_ogmios_no_generated_cabal_expectations,
+        scan_mode: ScanMode::Offline,
+        prepare: Prepare::RemoveHpackGeneratedCabal,
     },
 ];
 
