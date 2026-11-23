@@ -101,6 +101,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A library read from its own bytes stays visible after it merges into a pkg-config or CMake component (#1665).**
+  When a version banner or exported symbols identified a library and a `.pc` or CMake file named the same version, the merged component kept only the file's evidence. On the ROCm 7.14 SDK that hid the binary match on 6 of its 7 banner-matched libraries: expat, gmp, liblzma, llvm, ncurses and zlib.
+  - **Now:** the merged component's CycloneDX `evidence.identity` lists two methods, `manifest-analysis` and `binary-analysis`, and SPDX 2.3 and SPDX 3 add the same `methods` to their `evidence.identity` annotation. Components with one method keep their payload exactly.
+  - **The technique is corrected too:** a banner or symbol match is now labelled `binary-analysis`, CycloneDX 1.6's term for it, instead of `manifest-analysis`, whether or not it merges.
+  - **Measured:** on the ROCm SDK, 8 components changed evidence and nothing else; components, versions, CPEs and edges are unchanged. 2 components changed in 1 of 18 open-source projects scanned before and after. The public corpus is unchanged.
+
 - **One component per library when its banner and its pkg-config or CMake file name or version it differently (#1662).**
   On the ROCm 7.14 SDK, ncurses was reported as `ncurses@6.6` (from its banner) and `ncursesw@6.6.20251230` (from `ncursesw.pc`), and LLVM as `llvm@23.0.0` and `llvm@23.0.0git`. Each is now one component, `ncurses@6.6.20251230` and `llvm@23.0.0git`, listing both readers' files. Nothing else in that scan changed, nor in 18 open-source projects scanned before and after.
   - **Versions as stated:** LLVM keeps the suffix its banner states (`23.0.0git`, `18.1.0rc1`), and ncurses its patch date (`6.6.20251230`).
