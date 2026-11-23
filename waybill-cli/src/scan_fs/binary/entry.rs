@@ -592,13 +592,10 @@ pub(crate) struct BinaryScan {
     /// binaries whose dynamic-symbol set is fully stripped.
     pub symbol_names: Vec<String>,
     /// Spec 1644 FR-003: the symbols named in `version_strings::ANCHOR_SYMBOLS`
-    /// this binary defines (ELF `.dynsym` and Mach-O globals that are not
-    /// undefined; PE exports), each with its table and binding (spec 1647).
-    /// Never emitted.
+    /// this binary defines (ELF `.dynsym` and, since spec 1647, `.symtab`;
+    /// Mach-O globals that are not undefined; PE exports), each with its
+    /// table and binding. Never emitted.
     pub anchor_symbols: Vec<super::version_strings::AnchorSymbol>,
-    /// Spec 1647 FR-002: the same symbols defined in the ELF static symbol
-    /// table (`.symtab`). Census only on the log-only commit. Never emitted.
-    pub static_anchor_symbols: Vec<super::version_strings::AnchorSymbol>,
     /// Spec 1647 census: `exec`, `dyn`, `rel` or `other` for an ELF file;
     /// `None` otherwise. Never emitted.
     pub elf_type: Option<&'static str>,
@@ -1399,7 +1396,6 @@ mod tests {
             packer: None,
             symbol_names: Vec::new(),
             anchor_symbols: Vec::new(),
-            static_anchor_symbols: Vec::new(),
             elf_type: None,
             comment_stamps: Vec::new(),
             macho_build_version: None,

@@ -1119,15 +1119,9 @@ fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSe
         for v in &anchored {
             tracing::debug!(target: "waybill::version_census", path = %path.display(), anchored = %v.to_json());
         }
-        // Spec 1647 FR-001: what reading `.symtab` (rule A) and the xz
-        // header magic (rule B) would do to this binary's verdicts.
-        if let Some(j) = version_strings::liblzma_static_event(
-            &scan.string_region,
-            &scan.anchor_symbols,
-            &scan.static_anchor_symbols,
-            scan.elf_type,
-            &anchored,
-        ) {
+        // Spec 1647: a binary anchored by `.symtab` alone, and every
+        // anchored library's verdict there.
+        if let Some(j) = version_strings::liblzma_static_event(&scan.anchor_symbols, scan.elf_type, &anchored) {
             tracing::debug!(target: "waybill::version_census", path = %path.display(), liblzma_static = %j);
         }
         let bare = version_strings::bzip2_form_without_anchor(&scan.string_region);

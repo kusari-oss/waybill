@@ -102,7 +102,7 @@ Output does not change in this phase.
 **Goal**: defined `.symtab` anchors version liblzma.
 **Independent test**: S1 and S2 pass; S6 and S7 are unchanged.
 
-- [ ] T011 [US1] Wire rule A:
+- [X] T011 [US1] Wire rule A:
   - in `SC`, merge `static_anchor_symbols` into `anchor_symbols` (keeping table and binding), and remove the separate field;
   - in `MD`, keep the `liblzma_static` event for files anchored only by `.symtab`, with `rule_a` reporting the production verdict;
   - if T010 rejected FR-004, remove rule B's evaluation, the magic search and the `magic` field.
@@ -111,14 +111,18 @@ Output does not change in this phase.
   - remove the `#[ignore]` from S1, S2 and S5;
   - update the census assertions to the wired state: `current` now equals `rule_a`;
   - if rule B is removed, drop S8's `rule_b` assertion and the `magic` key from T006's unit tests, and assert that S8 has no event at all.
+  - *As built*: `scan.rs` appends the `.symtab` anchors to `anchor_symbols` (`symtab_anchor_symbols` is local), and the `static_anchor_symbols` field is gone. `liblzma_static_event(anchor_symbols, elf_type, current)` fires for a binary with a `.symtab` anchor that no other table defines. `rule_a` equals `current`, kept so the census reads one shape. Rule B, the magic constant and its search are removed. The unit test `s1647_rule_b_from_magic` became `s1647_magic_alone_anchors_nothing`, and S8 asserts no event. The control still passes on S3, S4 and S6–S8, and S1 now differs from `main`, which is the control's teeth.
 
 ## Phase 4: User Story 2 — a program that only uses liblzma is never anchored (P1)
 
 **Goal**: definedness and spec 1644's rules hold for `.symtab` anchors.
 **Independent test**: S3, S4 and S5 pass; mutations M1–M4 are killed.
 
-- [ ] T012 [US2] Add a unit test in `SC` for a program whose `.dynsym` **and** `.symtab` both list `lzma_version_string` as undefined. It gives no anchor in either list.
-- [ ] T013 [US2] Run mutations M1–M4 (R7). Copy spec 1646's `measurements/mutate.py` to `MS/mutate.py`, and write each mutation as an exact-string replacement. Record the killing tests in `MS/mutations.md`. Every mutation must be killed. Afterwards, `diff -r` the source against a copy taken before the run, and rebuild.
+- [X] T012 [US2] Add a unit test in `SC` for a program whose `.dynsym` **and** `.symtab` both list `lzma_version_string` as undefined. It gives no anchor in either list.
+  - *As built*: an integration test, `importer_undefined_in_both_tables_never_anchors` in `IT`, because the ELF builder is test-side (see T005).
+
+- [X] T013 [US2] Run mutations M1–M4 (R7). Copy spec 1646's `measurements/mutate.py` to `MS/mutate.py`, and write each mutation as an exact-string replacement. Record the killing tests in `MS/mutations.md`. Every mutation must be killed. Afterwards, `diff -r` the source against a copy taken before the run, and rebuild.
+  - *As built*: 5 of 5 killed, including an added M5 (a `.dynsym` anchor labelled `symtab`). `MS/mutations.md`.
 
 ## Phase 5: User Story 3 — a stripped static liblzma: decided by measurement (P2)
 

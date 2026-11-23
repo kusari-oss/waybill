@@ -338,7 +338,7 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     // DEFINES. `symbol_names` above keeps imports too (an ELF `.dynsym`
     // lists both), and it feeds the fingerprint, so it is left as it is; a
     // program that merely links liblzma must not anchor it.
-    let anchor_symbols: Vec<AnchorSymbol> = {
+    let mut anchor_symbols: Vec<AnchorSymbol> = {
         use super::version_strings::ANCHOR_SYMBOLS;
         use object::Object;
         use object::ObjectSymbol;
@@ -378,7 +378,7 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     // unstripped program), so it is iterated only when its string table
     // holds `lzma_version_` at all: one substring search per ELF file. An
     // undefined entry is an import and never anchors.
-    let static_anchor_symbols: Vec<AnchorSymbol> = if class == "elf" {
+    let symtab_anchor_symbols: Vec<AnchorSymbol> = if class == "elf" {
         use super::version_strings::ANCHOR_SYMBOLS;
         use object::Object;
         use object::ObjectSymbol;
@@ -402,6 +402,8 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     } else {
         Vec::new()
     };
+    anchor_symbols.extend(symtab_anchor_symbols);
+    sort_anchor_symbols(&mut anchor_symbols);
     let elf_type = if class == "elf" {
         use object::Object;
         Some(match file.kind() {
@@ -460,7 +462,6 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         packer: packer_kind,
         symbol_names,
         anchor_symbols,
-        static_anchor_symbols,
         elf_type,
         comment_stamps,
         macho_build_version,
@@ -665,7 +666,6 @@ fn scan_fat_macho(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         // Spec 1644: fat Mach-O symbols are not read (as `symbol_names`), so
         // liblzma in a fat binary has no anchor and gets no version.
         anchor_symbols: Vec::new(),
-        static_anchor_symbols: Vec::new(),
         elf_type: None,
         // Milestone 098: `.comment` is ELF-only.
         comment_stamps: Vec::new(),

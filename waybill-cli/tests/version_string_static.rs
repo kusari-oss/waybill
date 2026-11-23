@@ -223,33 +223,29 @@ fn case(id: &str) -> tempfile::TempDir {
     tree(&[(FILE, bytes)])
 }
 
-/// The case's census event shows liblzma versioned at 5.4.5 by rule A.
+/// The case's census event shows liblzma versioned at 5.4.5 by rule A, which
+/// is now production's verdict (`current`).
 fn assert_rule_a_versions(s: &Scan) {
     let e = one_event(s);
+    assert_eq!(e["rule_a"], e["current"], "{e:#}");
     let a = entry(&e, "rule_a", "liblzma").unwrap_or_else(|| panic!("no rule_a liblzma: {e:#}"));
     assert_eq!((a["verdict"].as_str(), a["version"].as_str()), (Some("versioned"), Some("5.4.5")), "{e:#}");
     assert!(e["anchors"].as_array().unwrap().iter().any(|a| a["table"] == "symtab"), "{e:#}");
     assert_eq!(e["elf_type"], "exec");
 }
 
-/// S1 — red until T011.
+/// S1: `lzma_version_string` defined in `.symtab` versions liblzma.
 #[test]
-#[ignore = "spec 1647: red until T011"]
 fn s1_symtab_lzma_version_string_versions_liblzma() {
     let s = scan(case("S1"));
-    // The census first: on the log-only commit it passes, and only the
-    // component is missing.
     assert_rule_a_versions(&s);
     assert_eq!(curated(&s, "liblzma"), vec!["pkg:generic/liblzma@5.4.5"]);
 }
 
-/// S2 — red until T011.
+/// S2: the same for `lzma_version_number`.
 #[test]
-#[ignore = "spec 1647: red until T011"]
 fn s2_symtab_lzma_version_number_versions_liblzma() {
     let s = scan(case("S2"));
-    // The census first: on the log-only commit it passes, and only the
-    // component is missing.
     assert_rule_a_versions(&s);
     assert_eq!(curated(&s, "liblzma"), vec!["pkg:generic/liblzma@5.4.5"]);
 }
@@ -262,6 +258,22 @@ fn s3_undefined_symtab_symbol_never_anchors() {
     assert!(static_events(&s).is_empty(), "{}", s.stderr);
 }
 
+/// T012: a dynamically linked program that imports liblzma lists the
+/// symbol as undefined in `.dynsym` and in `.symtab`. Neither table anchors.
+#[test]
+fn importer_undefined_in_both_tables_never_anchors() {
+    let bytes = elf_with_tables(
+        ET_DYN,
+        &region(&[b"5.4.5\0"]),
+        Some((&[], &["lzma_version_string"])),
+        (&[], &["lzma_version_string", "lzma_version_number"]),
+    );
+    let s = scan(tree(&[(FILE, bytes)]));
+    assert!(curated(&s, "liblzma").is_empty());
+    assert!(static_events(&s).is_empty(), "{}", s.stderr);
+    assert!(!s.stderr.contains(" anchored="), "{}", s.stderr);
+}
+
 /// S4: two candidates, so no version (spec 1644 FR-005).
 #[test]
 fn s4_two_candidates_are_ambiguous() {
@@ -271,15 +283,14 @@ fn s4_two_candidates_are_ambiguous() {
     assert_eq!(entry(&e, "rule_a", "liblzma").unwrap()["verdict"], "ambiguous", "{e:#}");
 }
 
-/// S5 — red until T011. On `main` GMP alone is anchored and takes `5.4.5`;
-/// with the static anchor both libraries accept it, so neither keeps it.
+/// S5: on `main` GMP alone is anchored and takes `5.4.5`; with the static
+/// anchor both libraries accept it, so neither keeps it.
 #[test]
-#[ignore = "spec 1647: red until T011"]
 fn s5_shared_candidate_versions_neither() {
     let s = scan(case("S5"));
     let e = one_event(&s);
-    assert_eq!(entry(&e, "rule_a", "gmp").unwrap()["verdict"], "ambiguous-shared", "{e:#}");
-    assert_eq!(entry(&e, "rule_a", "liblzma").unwrap()["verdict"], "ambiguous-shared", "{e:#}");
+    assert_eq!(entry(&e, "current", "gmp").unwrap()["verdict"], "ambiguous-shared", "{e:#}");
+    assert_eq!(entry(&e, "current", "liblzma").unwrap()["verdict"], "ambiguous-shared", "{e:#}");
     assert!(curated(&s, "liblzma").is_empty());
     assert!(curated(&s, "gmp").is_empty(), "gmp kept a shared version");
 }
@@ -300,15 +311,14 @@ fn s7_unrelated_symtab_changes_nothing() {
     assert!(static_events(&s).is_empty(), "{}", s.stderr);
 }
 
-/// S8: a stripped program with the xz header magic: no component. On the
-/// log-only commit the census shows what the magic would give (rule B).
+/// S8: a stripped program with the xz header magic: no component and no
+/// event. FR-004 was rejected: 7-Zip carries the magic with one bare
+/// `13.2.0` (`measurements/census.md`).
 #[test]
 fn s8_magic_alone_gives_no_component() {
     let s = scan(case("S8"));
     assert!(curated(&s, "liblzma").is_empty());
-    let e = one_event(&s);
-    assert_eq!(entry(&e, "rule_b", "liblzma").unwrap()["verdict"], "versioned", "{e:#}");
-    assert!(e.get("rule_a").is_none(), "{e:#}");
+    assert!(static_events(&s).is_empty(), "{}", s.stderr);
 }
 
 /// The documents with every random (version 4) UUID masked: the CycloneDX

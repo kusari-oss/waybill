@@ -893,63 +893,39 @@ pub fn anchored_verdicts(region: &[u8], anchor_symbols: &[AnchorSymbol]) -> Vec<
     out
 }
 
-/// Spec 1647 FR-004: the xz stream header magic, which liblzma's encoder
-/// and decoder both use. Census only: whether it may anchor liblzma is
-/// decided by measurement (research R2).
-pub const XZ_HEADER_MAGIC: &[u8] = b"\xFD7zXZ\x00";
-
-/// Spec 1647 census (contracts/wire.md): the `liblzma_static` event for one
-/// binary, or `None` when neither rule applies.
+/// Spec 1647 census (contracts/wire.md): the `liblzma_static` event for a
+/// binary anchored by the ELF static symbol table alone (FR-002): it defines
+/// an anchor symbol in `.symtab` that no other table defines. `None`
+/// otherwise, including for a shared liblzma that defines it in both.
 ///
-/// - Rule A (FR-002, ELF): `static_anchor_symbols` defines a name that
-///   `anchor_symbols` does not. `rule_a` is every anchored library's verdict
-///   with the static symbols included.
-/// - Rule B (FR-004): no anchor symbol in either list, and the region holds
-///   [`XZ_HEADER_MAGIC`]. `rule_b` is every anchored library's verdict with a
-///   hypothetical defined `lzma_version_string`, which gives exactly the
-///   verdict the magic would give: [`anchored_verdicts`] treats every
-///   liblzma anchor alike (research R4).
-///
-/// `current` is production's list, so a rule's effect is the difference.
+/// `current` is every anchored library's verdict, which is what production
+/// emits; `rule_a` is the same list, kept so the census reads one shape
+/// across the log-only and wired commits. The xz header magic (FR-004) was
+/// measured and rejected: 7-Zip carries it with one bare `13.2.0`
+/// (`specs/1647-static-liblzma-anchor/measurements/census.md`).
 pub fn liblzma_static_event(
-    region: &[u8],
     anchor_symbols: &[AnchorSymbol],
-    static_anchor_symbols: &[AnchorSymbol],
     elf_type: Option<&str>,
     current: &[AnchoredVerdict],
 ) -> Option<String> {
-    let rule_a = static_anchor_symbols.iter().any(|s| !anchor_symbols.iter().any(|d| d.name == s.name));
-    let magic = (anchor_symbols.is_empty() && static_anchor_symbols.is_empty())
-        .then(|| memchr::memmem::find(region, XZ_HEADER_MAGIC))
-        .flatten();
-    if !rule_a && magic.is_none() {
+    let symtab_only = anchor_symbols.iter().any(|s| {
+        s.table == SymbolTable::Symtab
+            && !anchor_symbols.iter().any(|d| d.name == s.name && d.table != SymbolTable::Symtab)
+    });
+    if !symtab_only {
         return None;
     }
-    let list = |vs: &[AnchoredVerdict]| {
-        serde_json::Value::Array(vs.iter().map(AnchoredVerdict::summary).collect())
-    };
+    let list = serde_json::Value::Array(current.iter().map(AnchoredVerdict::summary).collect());
     let sym = |s: &AnchorSymbol| {
         serde_json::json!({"binding": s.binding.label(), "name": s.name, "table": s.table.label()})
     };
     let mut j = serde_json::json!({
-        "anchors": anchor_symbols.iter().chain(static_anchor_symbols).map(sym).collect::<Vec<_>>(),
-        "current": list(current),
+        "anchors": anchor_symbols.iter().map(sym).collect::<Vec<_>>(),
+        "current": list.clone(),
+        "rule_a": list,
     });
     if let Some(e) = elf_type {
         j["elf_type"] = serde_json::json!(e);
-    }
-    if rule_a {
-        let all: Vec<AnchorSymbol> = anchor_symbols.iter().chain(static_anchor_symbols).cloned().collect();
-        j["rule_a"] = list(&anchored_verdicts(region, &all));
-    }
-    if let Some(offset) = magic {
-        j["magic"] = serde_json::json!(offset);
-        let hypothetical = [AnchorSymbol {
-            name: ANCHOR_SYMBOLS[0].to_string(),
-            table: SymbolTable::Dynsym,
-            binding: Binding::Unknown,
-        }];
-        j["rule_b"] = list(&anchored_verdicts(region, &hypothetical));
     }
     Some(j.to_string())
 }
@@ -2012,9 +1988,9 @@ mod tests {
         AnchorSymbol { name: name.to_string(), table: SymbolTable::Symtab, binding: Binding::Global }
     }
 
-    fn event(region: &[u8], dynamic: &[AnchorSymbol], stat: &[AnchorSymbol]) -> Option<serde_json::Value> {
-        let current = anchored_verdicts(region, dynamic);
-        liblzma_static_event(region, dynamic, stat, Some("exec"), &current).map(|j| serde_json::from_str(&j).unwrap())
+    fn event(region: &[u8], syms: &[AnchorSymbol]) -> Option<serde_json::Value> {
+        let current = anchored_verdicts(region, syms);
+        liblzma_static_event(syms, Some("exec"), &current).map(|j| serde_json::from_str(&j).unwrap())
     }
 
     fn lib<'a>(e: &'a serde_json::Value, rule: &str, library: &str) -> Option<&'a serde_json::Value> {
@@ -2035,11 +2011,11 @@ mod tests {
 
     #[test]
     fn s1647_rule_a_versions_from_symtab() {
-        let e = event(b"\x005.4.5\0", &[], &[symtab("lzma_version_string")]).unwrap();
-        assert_eq!(e["current"], serde_json::json!([]));
-        let a = lib(&e, "rule_a", "liblzma").unwrap();
+        let e = event(b"\x005.4.5\0", &[symtab("lzma_version_string")]).unwrap();
+        let a = lib(&e, "current", "liblzma").unwrap();
         assert_eq!(a["verdict"], "versioned");
         assert_eq!(a["version"], "5.4.5");
+        assert_eq!(e["rule_a"], e["current"]);
         assert_eq!(e["anchors"][0]["table"], "symtab");
         assert_eq!(e["elf_type"], "exec");
         assert!(e.get("rule_b").is_none() && e.get("magic").is_none());
@@ -2048,30 +2024,31 @@ mod tests {
     #[test]
     fn s1647_rule_a_absent_when_dynsym_already_anchors() {
         // A shared liblzma defines the symbol in both tables: no new anchor.
-        assert!(event(b"\x005.4.5\0", &[dynsym("lzma_version_string")], &[symtab("lzma_version_string")]).is_none());
-        // Nothing at all.
-        assert!(event(b"\x005.4.5\0", &[], &[]).is_none());
+        assert!(event(b"\x005.4.5\0", &[dynsym("lzma_version_string"), symtab("lzma_version_string")]).is_none());
+        // `.dynsym` alone, and nothing at all.
+        assert!(event(b"\x005.4.5\0", &[dynsym("lzma_version_string")]).is_none());
+        assert!(event(b"\x005.4.5\0", &[]).is_none());
     }
 
     #[test]
-    fn s1647_rule_b_from_magic() {
-        let e = event(b"\xFD7zXZ\x00\x005.4.5\0", &[], &[]).unwrap();
-        assert_eq!(e["magic"], 0);
-        assert_eq!(lib(&e, "rule_b", "liblzma").unwrap()["version"], "5.4.5");
-        assert!(e.get("rule_a").is_none());
-        // With any anchor symbol, rule B does not apply.
-        let e = event(b"\xFD7zXZ\x00\x005.4.5\0", &[], &[symtab("lzma_version_number")]).unwrap();
-        assert!(e.get("rule_b").is_none() && e.get("magic").is_none());
+    fn s1647_magic_alone_anchors_nothing() {
+        // FR-004 rejected: the xz header magic with one candidate gives no
+        // verdict and no event.
+        let region = b"\xFD7zXZ\x00\x005.4.5\0";
+        assert!(anchored_verdicts(region, &[]).is_empty());
+        assert!(event(region, &[]).is_none());
     }
 
     #[test]
     fn s1647_rule_a_reports_a_lost_gmp_version() {
         // S5's shape: on main GMP alone is anchored and takes 5.4.5; with the
         // static anchor both libraries accept it, so neither keeps it.
-        let e = event(b"GNU MP:\x005.4.5\0", &[], &[symtab("lzma_version_string")]).unwrap();
-        assert_eq!(lib(&e, "current", "gmp").unwrap()["verdict"], "versioned");
-        assert_eq!(lib(&e, "rule_a", "gmp").unwrap()["verdict"], "ambiguous-shared");
-        assert_eq!(lib(&e, "rule_a", "liblzma").unwrap()["verdict"], "ambiguous-shared");
+        let e = event(b"GNU MP:\x005.4.5\0", &[symtab("lzma_version_string")]).unwrap();
+        assert_eq!(lib(&e, "current", "gmp").unwrap()["verdict"], "ambiguous-shared");
+        assert_eq!(lib(&e, "current", "liblzma").unwrap()["verdict"], "ambiguous-shared");
+        // Without the static anchor, as on main, GMP takes it.
+        let main = anchored_verdicts(b"GNU MP:\x005.4.5\0", &[]);
+        assert_eq!(main[0].verdict, Verdict::Versioned("5.4.5".into()));
     }
 
     fn verdict_of(region: &[u8], syms: &[&str], lib: CuratedLibrary) -> Option<Verdict> {
