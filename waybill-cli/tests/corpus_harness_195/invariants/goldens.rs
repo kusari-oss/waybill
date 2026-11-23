@@ -64,7 +64,22 @@ pub fn load(target: &str) -> Option<EmittedSboms> {
 /// matrix leaves this target to the corpus lane, which evaluates the
 /// unfiltered document. A filtered golden is not a smaller truth; it is
 /// a different document.
-pub const GOLDENS_ARE_FILTERED: &[&str] = &["pants-example-javascript"];
+///
+/// #1677: the hpack targets' goldens are filtered to `pkg:hackage/*` for
+/// size, so they are listed here for the same reason. Their declarations
+/// (#1678's URL-pinned snapshot, #1208's `package.json` files) describe
+/// components the filter drops; the corpus lane checks them on the full
+/// document. `layer2_golden` filters exactly the targets in this list.
+pub const GOLDENS_ARE_FILTERED: &[&str] = &[
+    "pants-example-javascript",
+    "hpack-hs-opentelemetry",
+    "hpack-hs-opentelemetry-no-generated-cabal",
+    "hpack-lootbox",
+    "hpack-lootbox-no-generated-cabal",
+    "hpack-hs-temporal-sdk",
+    "hpack-ogmios",
+    "hpack-ogmios-no-generated-cabal",
+];
 
 /// Every manifest target whose goldens are a faithful copy of the
 /// emitted documents, in manifest order.
