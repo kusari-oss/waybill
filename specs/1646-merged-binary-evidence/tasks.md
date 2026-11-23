@@ -37,9 +37,9 @@ Output does not change in this phase.
   - Add the `BinaryAnalysis` arm to the three technique `match`es: `binary-analysis` in `CE`, `S2A` and `S3A`.
   - Nothing sets the new variant yet.
   - Unit test: a serialized `ResolutionEvidence` with an empty `also` is byte-identical to before (no `also` key).
-- [ ] T004 In `DD`, add `absorb_method(best: &ResolutionEvidence, best_kind, other: &ResolutionEvidence, other_kind) -> Vec<IdentityMethod>` (R3). It returns what would be absorbed: the techniques of `other` and `other.also`, gated by the binary condition and deduplicated by technique, in variant order.
+- [ ] T004 In `DD`, add `absorb_method(best: &ResolutionEvidence, best_kind, other: &ResolutionEvidence, other_kind) -> Vec<IdentityMethod>` (R3). It returns what would be absorbed: the techniques of `other` and `other.also`, gated by the binary-side condition and deduplicated by technique, in variant order. A side is binary when its technique or its `also` is `BinaryAnalysis`, or its `evidence_kind` is `embedded-version-string` or `symbol-fingerprint` (data-model). On this commit the technique is not yet set, so the `evidence_kind` clause is what makes the census fire.
   - Call it at S1 and S2. On this commit only the `binary_merge` census event is emitted (`contracts/wire.md`), and `best` is not modified.
-  - Unit tests on constructed components: banner into `.pc` absorbs `BinaryAnalysis`; a record into a record absorbs nothing; a second `BinaryAnalysis` is not repeated; `also` carries over through a chain of merges.
+  - Unit tests on constructed components: banner into `.pc` absorbs `BinaryAnalysis`; the same with the banner still at `PackageDatabase`, identified by its `evidence_kind` (the log-only state); a record into a record absorbs nothing; a second `BinaryAnalysis` is not repeated; `also` carries over through a chain of merges.
 - [ ] T005 In `SM`, emit the `technique_change` and `binary_derived_kind` census events (R6) for every converted entry whose `evidence_kind` is binary-derived. Grep every `technique: ResolutionTechnique::PackageDatabase` site in `scan_fs/` that can receive a binary entry, and record the list in `MS/control.md`.
 - [ ] T006 In `CE`, `S2A` and `S3A`, emit `also` (R4):
   - CycloneDX: `methods` is the primary method, then `also`;
@@ -67,8 +67,8 @@ Output does not change in this phase.
   - every `binary_merge` with its site and both sides.
 
   **Checkpoint**: if a count contradicts FR-002 to FR-008, amend the spec first. The expected counts are:
-  - TheRock: 6 `binary_merge` (expat, gmp, liblzma, llvm, ncurses, zlib);
-  - TheRock: 7 libraries with a `technique_change`, possibly more events where a library has several files.
+  - TheRock: exactly 6 distinct PURLs among the `binary_merge` events in which one side is a record (expat, gmp, liblzma, llvm, ncurses, zlib). The number of events is higher, one per absorption, because each library has several files (ncurses 2, llvm 3, liblzma 3, gmp 2, and several for zlib and expat). Report events, PURLs, and binary-into-binary absorptions separately;
+  - TheRock: `technique_change` for exactly 7 libraries (bzip2 and the 6 above), counted by PURL, with possibly more events than that, one per file.
 
   Then file the follow-up issue for the other binary-derived kinds, with their measured counts (clarification 2).
 
@@ -89,6 +89,7 @@ Output does not change in this phase.
 - [ ] T011 [US1] In `DD`, apply `absorb_method`'s result to `best.also` at S1 and S2, and remove the `binary_merge` event. Remove the `#[ignore]` from B-1, B-2 and F-2.
   - B-1 asserts that the CycloneDX methods are `manifest-analysis` then `binary-analysis`, and that both SPDX D1 payloads keep their flat `package-database` and add `methods`.
   - F-2 asserts exactly one `binary-analysis` and that `fingerprint-symbols-matched` is kept.
+  - B-1 and F-2 also assert `confidence: 0.85` on the `binary-analysis` method, in CycloneDX and in each SPDX `methods` array (FR-004).
   - R-1 asserts that SPDX D1 has no `methods` and that C56 is as on `main`.
 - [ ] T012 [US1] Mutations M1–M6 (R8). Copy spec 1645's `measurements/mutate.py` to `MS/mutate.py`, and write each mutation as an exact-string replacement. Record the killing tests in `MS/mutations.md`. Every mutation must be killed. Afterwards, `diff -r` the source against a copy taken before the run, and rebuild.
 
@@ -97,10 +98,9 @@ Output does not change in this phase.
 **Goal**: only identity evidence changes.
 **Independent test**: the public corpus, the quality corpus and TheRock, each traced against `main`.
 
-- [ ] T013 [US3] Public corpus at the final code commit (`-f branch=1646-merged-binary-evidence`), with the summary's commit confirmed.
-  - Trace every changed line. Each must be an identity method or technique of a component a binary match touched.
-  - Regenerate with `regen_goldens=true`, and confirm the regenerated files are byte-identical (`cmp`) to the traced output.
-  - Commit them, and confirm with a run that passes 166 of 166.
+- [ ] T013 [US3] Public corpus at the final code commit (`-f branch=1646-merged-binary-evidence`), with the summary's commit confirmed. Either outcome is possible: no public golden contains a visible banner or symbol match, but a merged one would not be visible.
+  - **No drift**: record the 166 of 166 run, and that no regeneration was needed.
+  - **Drift**: trace every changed line; each must be an identity method or technique of a component a binary match touched. Regenerate with `regen_goldens=true`, confirm the regenerated files are byte-identical (`cmp`) to the traced output, commit them, and confirm with a run that passes 166 of 166.
 
   Record all of it in `MS/corpus.md`.
 - [ ] T014 [US3] Quality corpus (`census-versions.yml`) and TheRock (`measure-full`, base `e1148818` against the final code commit), at full SHAs, with `refs.txt` verified. Record in `MS/therock.md`:

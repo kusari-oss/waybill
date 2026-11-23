@@ -138,7 +138,7 @@ A consumer reads CycloneDX's evidence technique to judge how a component was ide
 - **SC-003**: The synthetic trees cover banner plus `.pc`, banner plus CMake, banner alone, fingerprint alone, and fingerprint plus banner plus `.pc`. Each shows the expected methods in every format.
 - **SC-004**: Each rule is guarded by a test that fails when the rule is removed, shown by mutation: the added method on merge, the technique of a banner match, the technique of a fingerprint match, and the one-method-per-technique rule.
 - **SC-005**: `waybill sbom parity-check` shows no new gap on any acceptance tree or on TheRock.
-- **SC-006**: The public corpus differs from its goldens only in identity evidence, with each changed component traced. Its goldens are regenerated.
+- **SC-006**: The public corpus differs from its goldens only in identity evidence, with each changed component traced, or not at all. Its goldens are regenerated only if anything changed.
 - **SC-007**: TheRock's scan time is within 1.05× `main`, measured as the median of at least 3 interleaved runs per arm with one warm-up each, and reported with min, median and max.
 
 ## Assumptions

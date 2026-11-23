@@ -19,7 +19,7 @@ A new variant, `BinaryAnalysis`. It is emitted as `binary-analysis` in CycloneDX
 ## Absorb rule (S1 and S2)
 
 On merging `other` into `best`, `absorb_method` considers each technique in `{other.technique} ∪ other.also`. It adds the technique to `best.also` only when all of these hold:
-- `BinaryAnalysis` is among `best.technique`, `best.also`, `other.technique` and `other.also`;
+- either side is a binary side: its `technique` is `BinaryAnalysis`, its `also` contains `BinaryAnalysis`, or its `evidence_kind` is `embedded-version-string` or `symbol-fingerprint`. The last clause works before the technique is set, so the log-only census sees merges;
 - the technique differs from `best.technique`;
 - the technique is not already in `best.also`.
 
