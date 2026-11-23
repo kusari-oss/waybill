@@ -156,6 +156,7 @@ mod tests {
                 source_connection_ids: Vec::new(),
                 source_file_paths: source_paths.into_iter().map(String::from).collect(),
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: Vec::new(),
             concluded_licenses: Vec::new(),

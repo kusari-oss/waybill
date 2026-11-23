@@ -10,6 +10,98 @@ use std::collections::HashMap;
 use waybill_common::resolution::ResolvedComponent;
 
 use crate::scan_fs::also_detected;
+use waybill_common::resolution::{IdentityMethod, ResolutionTechnique};
+
+/// Spec 1646 (#1665): the evidence kinds whose identity was read from a
+/// binary's own bytes (research R1, clarification 2).
+pub(crate) const BINARY_KINDS: [&str; 2] = ["embedded-version-string", "symbol-fingerprint"];
+
+/// A component's effective technique: `BinaryAnalysis` for a binary match,
+/// whatever its stored technique, and the stored technique otherwise
+/// (data-model "Absorb rule").
+pub(crate) fn effective_technique(c: &ResolvedComponent) -> ResolutionTechnique {
+    if c.evidence_kind.as_deref().is_some_and(|k| BINARY_KINDS.contains(&k)) {
+        ResolutionTechnique::BinaryAnalysis
+    } else {
+        c.evidence.technique.clone()
+    }
+}
+
+fn is_binary_side(c: &ResolvedComponent) -> bool {
+    effective_technique(c) == ResolutionTechnique::BinaryAnalysis
+        || c.evidence.also.iter().any(|m| m.technique == ResolutionTechnique::BinaryAnalysis)
+}
+
+/// The fixed variant order `also` is kept in.
+fn technique_rank(t: &ResolutionTechnique) -> u8 {
+    match t {
+        ResolutionTechnique::UrlPattern => 0,
+        ResolutionTechnique::HashMatch => 1,
+        ResolutionTechnique::PackageDatabase => 2,
+        ResolutionTechnique::LocalCacheHit => 3,
+        ResolutionTechnique::FilePathPattern => 4,
+        ResolutionTechnique::HostnameHeuristic => 5,
+        ResolutionTechnique::BinaryAnalysis => 6,
+    }
+}
+
+/// Spec 1646 (FR-002, research R3): the methods `best` absorbs from `other`
+/// when they merge. Nothing unless one side is a binary match; never `best`'s
+/// own technique; one per technique.
+pub(crate) fn absorb_methods(best: &ResolvedComponent, other: &ResolvedComponent) -> Vec<IdentityMethod> {
+    if !is_binary_side(best) && !is_binary_side(other) {
+        return Vec::new();
+    }
+    let own = effective_technique(best);
+    let mut out: Vec<IdentityMethod> = Vec::new();
+    let candidates = std::iter::once(IdentityMethod {
+        technique: effective_technique(other),
+        confidence: other.evidence.confidence,
+    })
+    .chain(other.evidence.also.iter().cloned());
+    for m in candidates {
+        let seen = best.evidence.also.iter().chain(out.iter()).any(|x| x.technique == m.technique);
+        if m.technique != own && !seen {
+            out.push(m);
+        }
+    }
+    out
+}
+
+fn apply_absorbed(best: &mut ResolvedComponent, methods: Vec<IdentityMethod>) {
+    if methods.is_empty() {
+        return;
+    }
+    best.evidence.also.extend(methods);
+    best.evidence.also.sort_by_key(|m| technique_rank(&m.technique));
+}
+
+/// The `binary_merge` census event (contracts/wire.md), when one side is a
+/// binary match.
+fn census_binary_merge(site: &str, best: &ResolvedComponent, other: &ResolvedComponent, absorbed: &[IdentityMethod]) {
+    if !tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
+        return;
+    }
+    if !is_binary_side(best) && !is_binary_side(other) {
+        return;
+    }
+    let side = |c: &ResolvedComponent| {
+        serde_json::json!({
+            "confidence": c.evidence.confidence,
+            "evidence_kind": c.evidence_kind,
+            "mechanism": c.extra_annotations.get("waybill:source-mechanism"),
+            "technique": c.evidence.technique.kebab_name(),
+        })
+    };
+    let j = serde_json::json!({
+        "absorbed": absorbed.iter().map(|m| m.technique.kebab_name()).collect::<Vec<_>>(),
+        "loser": side(other),
+        "purl": best.purl.as_str(),
+        "site": site,
+        "winner": side(best),
+    });
+    tracing::debug!(target: "waybill::version_census", binary_merge = %j);
+}
 
 /// `(ecosystem, name, version, parent_purl, pants-namespace qualifier)`.
 type DedupKey = (String, String, String, Option<String>, Option<String>, Option<String>);
@@ -153,6 +245,11 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
 
         // Merge evidence from remaining entries.
         for other in group {
+            // Spec 1646 S1: the loser's identity methods, before its fields
+            // are moved below.
+            let methods = absorb_methods(&best, &other);
+            census_binary_merge("S1", &best, &other, &methods);
+            apply_absorbed(&mut best, methods);
             // Spec 1639 S1: what `record` needs from the loser, taken before
             // the fold below moves its annotations.
             let absorbed = also_detected::marks(&other.extra_annotations);
@@ -567,6 +664,9 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
         to_remove.push(sec_idx);
         for dst_idx in on_disk_indices {
             let dst = &mut components[dst_idx];
+            let methods = absorb_methods(dst, &sec);
+            census_binary_merge("S2", dst, &sec, &methods);
+            apply_absorbed(dst, methods);
             let subject = dst.purl.as_str().to_string();
             also_detected::record("S2", &subject, &mut dst.extra_annotations, &sec.extra_annotations);
             // Evidence-trail marker: declared-not-cached → "deps.dev",
@@ -725,6 +825,7 @@ mod tests {
                 source_connection_ids: conn_ids.into_iter().map(String::from).collect(),
                 source_file_paths: file_paths.into_iter().map(String::from).collect(),
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: Vec::new(),
@@ -2026,5 +2127,97 @@ mod tests {
             with_mechanism("pkg:generic/x@1", 0.8, Some("pkg-config")),
         ]);
         assert!(!out[0].extra_annotations.contains_key("waybill:also-detected-via"));
+    }
+
+    fn binary(purl: &str, kind: &str) -> ResolvedComponent {
+        let mut c = make_component(purl, ResolutionTechnique::PackageDatabase, 0.85, vec![], vec!["/t/lib.so"]);
+        c.evidence_kind = Some(kind.to_string());
+        c
+    }
+
+    fn record(purl: &str, mechanism: &str) -> ResolvedComponent {
+        let mut c = make_component(purl, ResolutionTechnique::PackageDatabase, 0.85, vec![], vec!["/t/x.pc"]);
+        c.extra_annotations.insert("waybill:source-mechanism".into(), serde_json::json!(mechanism));
+        c
+    }
+
+    fn techniques(m: &[IdentityMethod]) -> Vec<ResolutionTechnique> {
+        m.iter().map(|x| x.technique.clone()).collect()
+    }
+
+    #[test]
+    fn s1646_a_banner_into_a_record_absorbs_binary_analysis() {
+        let rec = record("pkg:generic/gmp@6.3.0", "pkg-config");
+        // The log-only state: the banner's stored technique is still
+        // PackageDatabase, and its evidence kind makes it a binary side.
+        let ban = binary("pkg:generic/gmp@6.3.0", "embedded-version-string");
+        let m = absorb_methods(&rec, &ban);
+        assert_eq!(techniques(&m), [ResolutionTechnique::BinaryAnalysis]);
+        assert_eq!(m[0].confidence, 0.85);
+        // The wired state: the banner carries BinaryAnalysis itself.
+        let mut wired = ban.clone();
+        wired.evidence.technique = ResolutionTechnique::BinaryAnalysis;
+        assert_eq!(techniques(&absorb_methods(&rec, &wired)), [ResolutionTechnique::BinaryAnalysis]);
+        // A fingerprint is a binary side too.
+        let fp = binary("pkg:generic/zlib@1.3.2", "symbol-fingerprint");
+        assert_eq!(techniques(&absorb_methods(&record("pkg:generic/zlib@1.3.2", "pkg-config"), &fp)), [ResolutionTechnique::BinaryAnalysis]);
+    }
+
+    #[test]
+    fn s1646_a_record_into_a_record_absorbs_nothing() {
+        let pc = record("pkg:generic/expat@2.7.5", "pkg-config");
+        let cm = record("pkg:generic/expat@2.7.5", "cmake-package-version");
+        assert!(absorb_methods(&pc, &cm).is_empty());
+        let mut url = make_component("pkg:generic/expat@2.7.5", ResolutionTechnique::UrlPattern, 0.95, vec![], vec![]);
+        url.evidence_kind = None;
+        assert!(absorb_methods(&url, &pc).is_empty(), "differing techniques, no binary side");
+    }
+
+    #[test]
+    fn s1646_a_binary_winner_absorbs_the_record() {
+        let ban = binary("pkg:generic/gmp@6.3.0", "embedded-version-string");
+        let rec = record("pkg:generic/gmp@6.3.0", "pkg-config");
+        assert_eq!(techniques(&absorb_methods(&ban, &rec)), [ResolutionTechnique::PackageDatabase]);
+    }
+
+    #[test]
+    fn s1646_one_method_per_technique_and_chains_carry() {
+        let mut rec = record("pkg:generic/zlib@1.3.2", "pkg-config");
+        let a = binary("pkg:generic/zlib@1.3.2", "embedded-version-string");
+        let b = binary("pkg:generic/zlib@1.3.2", "symbol-fingerprint");
+        let m = absorb_methods(&rec, &a);
+        apply_absorbed(&mut rec, m);
+        assert_eq!(techniques(&rec.evidence.also), [ResolutionTechnique::BinaryAnalysis]);
+        assert!(absorb_methods(&rec, &b).is_empty(), "a second binary-analysis is not repeated");
+        // A component that already absorbed a binary match passes it on.
+        let mut outer = record("pkg:generic/zlib@1.3.2", "cmake-package-version");
+        outer.evidence.technique = ResolutionTechnique::UrlPattern;
+        assert_eq!(
+            techniques(&absorb_methods(&outer, &rec)),
+            [ResolutionTechnique::PackageDatabase, ResolutionTechnique::BinaryAnalysis]
+        );
+    }
+
+    #[test]
+    fn s1646_absorbed_methods_stay_in_variant_order() {
+        let mut c = record("pkg:generic/x@1", "pkg-config");
+        c.evidence.technique = ResolutionTechnique::UrlPattern;
+        apply_absorbed(&mut c, vec![
+            IdentityMethod { technique: ResolutionTechnique::BinaryAnalysis, confidence: 0.85 },
+            IdentityMethod { technique: ResolutionTechnique::PackageDatabase, confidence: 0.85 },
+        ]);
+        assert_eq!(techniques(&c.evidence.also), [ResolutionTechnique::PackageDatabase, ResolutionTechnique::BinaryAnalysis]);
+    }
+
+    /// Spec 1646 T003: an empty `also` serializes as before, with no key.
+    #[test]
+    fn s1646_empty_also_is_not_serialized() {
+        let c = record("pkg:generic/x@1", "pkg-config");
+        let v = serde_json::to_value(&c.evidence).unwrap();
+        assert!(v.get("also").is_none(), "{v}");
+        let mut d = c.clone();
+        d.evidence.also = vec![IdentityMethod { technique: ResolutionTechnique::BinaryAnalysis, confidence: 0.85 }];
+        let w = serde_json::to_value(&d.evidence).unwrap();
+        assert_eq!(w["also"], serde_json::json!([{"technique": "binary_analysis", "confidence": 0.85}]));
     }
 }

@@ -358,6 +358,19 @@ pub struct ResolutionEvidence {
     pub source_file_paths: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub deps_dev_match: Option<DepsDevMatch>,
+    /// Spec 1646 (#1665): methods absorbed by merges whose technique differs
+    /// from [`technique`](Self::technique), one per technique, in variant
+    /// order. Empty unless a binary match took part in a merge, so a
+    /// component no binary match touched serializes as before.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub also: Vec<IdentityMethod>,
+}
+
+/// Spec 1646: one identification method, a technique and its confidence.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct IdentityMethod {
+    pub technique: ResolutionTechnique,
+    pub confidence: f64,
 }
 
 /// The technique used to resolve a component from observed activity.
@@ -398,6 +411,26 @@ pub enum ResolutionTechnique {
     /// The observed hostname matched a known registry but no specific
     /// package URL was extracted. Confidence 0.40.
     HostnameHeuristic,
+    /// Spec 1646 (#1665): the identity was read from a binary's own bytes,
+    /// a version banner (`embedded-version-string`) or exported symbols
+    /// (`symbol-fingerprint`). CycloneDX 1.6's `binary-analysis`.
+    BinaryAnalysis,
+}
+
+impl ResolutionTechnique {
+    /// The kebab-case name SPDX's `evidence.identity` annotation (catalog
+    /// row D1) and the census use.
+    pub fn kebab_name(&self) -> &'static str {
+        match self {
+            ResolutionTechnique::UrlPattern => "url-pattern",
+            ResolutionTechnique::HashMatch => "hash-match",
+            ResolutionTechnique::PackageDatabase => "package-database",
+            ResolutionTechnique::LocalCacheHit => "local-cache-hit",
+            ResolutionTechnique::FilePathPattern => "file-path-pattern",
+            ResolutionTechnique::HostnameHeuristic => "hostname-heuristic",
+            ResolutionTechnique::BinaryAnalysis => "binary-analysis",
+        }
+    }
 }
 
 /// Reference to a security advisory affecting a resolved component.
@@ -895,6 +928,7 @@ mod tests {
                 source_connection_ids: vec!["conn-1".to_string()],
                 source_file_paths: vec![],
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: Vec::new(),
@@ -1014,6 +1048,7 @@ mod tests {
                     name: "lodash".to_string(),
                     version: "4.17.21".to_string(),
                 }),
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: Vec::new(),

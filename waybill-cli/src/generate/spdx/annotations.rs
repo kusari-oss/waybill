@@ -20,7 +20,7 @@
 
 use waybill_common::attestation::integrity::TraceIntegrity;
 use waybill_common::attestation::metadata::GenerationContext;
-use waybill_common::resolution::{ResolutionTechnique, ResolvedComponent};
+use waybill_common::resolution::ResolvedComponent;
 
 use super::document::{SpdxAnnotation, SpdxAnnotationType};
 use crate::generate::ScanArtifacts;
@@ -347,22 +347,21 @@ pub fn annotate_component(
     // unconditionally because every ResolvedComponent has a
     // technique; `confidence` defaults to 0.0 if absent, which is
     // information too (and CDX emits this too).
-    let technique = match c.evidence.technique {
-        ResolutionTechnique::UrlPattern => "url-pattern",
-        ResolutionTechnique::HashMatch => "hash-match",
-        ResolutionTechnique::PackageDatabase => "package-database",
-        ResolutionTechnique::LocalCacheHit => "local-cache-hit",
-        ResolutionTechnique::FilePathPattern => "file-path-pattern",
-        ResolutionTechnique::HostnameHeuristic => "hostname-heuristic",
-    };
-    push(
-        &mut out,
-        "evidence.identity",
-        json!({
-            "technique": technique,
-            "confidence": c.evidence.confidence,
-        }),
-    );
+    // Spec 1646 (#1665, clarification 1): the flat keys hold the primary
+    // method; a `methods` array is added only when a merge absorbed another,
+    // so a single-method payload is unchanged.
+    let mut identity = json!({
+        "technique": c.evidence.technique.kebab_name(),
+        "confidence": c.evidence.confidence,
+    });
+    if !c.evidence.also.is_empty() {
+        let methods: Vec<serde_json::Value> = std::iter::once((&c.evidence.technique, c.evidence.confidence))
+            .chain(c.evidence.also.iter().map(|m| (&m.technique, m.confidence)))
+            .map(|(t, conf)| json!({ "technique": t.kebab_name(), "confidence": conf }))
+            .collect();
+        identity["methods"] = serde_json::Value::Array(methods);
+    }
+    push(&mut out, "evidence.identity", identity);
 
     // D2 evidence.occurrences — only when non-empty (deep-hashed
     // db-sourced components).
@@ -1620,6 +1619,7 @@ mod tests {
                 source_connection_ids: vec![],
                 source_file_paths: vec![],
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: vec![],
@@ -1711,5 +1711,34 @@ mod tests {
                 .any(|a| parse_envelope(a).field == "waybill:lifecycle-scope");
             assert!(!leaked, "no lifecycle-scope annotation for scope={scope:?}; got {annos:#?}");
         }
+    }
+
+    /// Spec 1646 (#1665, clarification 1): D1 keeps its flat shape for one
+    /// method and adds `methods` only when a merge absorbed another.
+    #[test]
+    fn s1646_d1_methods_only_when_two() {
+        use waybill_common::resolution::{IdentityMethod, ResolutionTechnique};
+        let d1 = |c: &ResolvedComponent| {
+            let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", c, false, false, &[], None, None);
+            let a: Vec<_> = annos.iter().filter(|a| parse_envelope(a).field == "evidence.identity").collect();
+            assert_eq!(a.len(), 1);
+            parse_envelope(a[0]).value
+        };
+        let mut c = mk_minimal_component("pkg:generic/gmp@6.3.0", None);
+        c.evidence.technique = ResolutionTechnique::PackageDatabase;
+        c.evidence.confidence = 0.85;
+        assert_eq!(d1(&c), serde_json::json!({"technique": "package-database", "confidence": 0.85}));
+        c.evidence.also = vec![IdentityMethod { technique: ResolutionTechnique::BinaryAnalysis, confidence: 0.85 }];
+        assert_eq!(
+            d1(&c),
+            serde_json::json!({
+                "technique": "package-database",
+                "confidence": 0.85,
+                "methods": [
+                    {"technique": "package-database", "confidence": 0.85},
+                    {"technique": "binary-analysis", "confidence": 0.85}
+                ]
+            })
+        );
     }
 }

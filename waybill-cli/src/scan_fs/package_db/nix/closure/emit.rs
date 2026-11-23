@@ -646,6 +646,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 source_connection_ids: vec![],
                 source_file_paths: vec![],
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: vec![],

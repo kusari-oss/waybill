@@ -76,6 +76,7 @@ impl Resolver for PathResolver {
                     source_connection_ids: vec![],
                     source_file_paths: vec![file_op.path.clone()],
                     deps_dev_match: None,
+                    also: Vec::new(),
                 },
                 licenses: vec![],
                 concluded_licenses: Vec::new(),

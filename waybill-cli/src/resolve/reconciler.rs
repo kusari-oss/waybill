@@ -418,6 +418,7 @@ mod tests {
                 deps_dev_match: None,
                 source_connection_ids: Vec::new(),
                 source_file_paths: manifest.map(|m| vec![m.to_string()]).unwrap_or_default(),
+                also: Vec::new(),
             },
             hashes: Vec::new(),
             occurrences: Vec::new(),

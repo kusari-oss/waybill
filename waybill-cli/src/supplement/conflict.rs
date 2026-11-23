@@ -487,6 +487,7 @@ mod tests {
                 source_connection_ids: Vec::new(),
                 source_file_paths: Vec::new(),
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: Vec::new(),
             concluded_licenses: Vec::new(),

@@ -20,8 +20,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use waybill_common::resolution::{
-    EnrichmentProvenance, Relationship, RelationshipType, ResolutionEvidence,
-    ResolutionTechnique, ResolvedComponent,
+    EnrichmentProvenance, Relationship, RelationshipType, ResolutionEvidence, ResolvedComponent,
 };
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
@@ -460,12 +459,14 @@ fn module_ecosystem(purl: &Purl) -> Option<&'static str> {
 /// together field by field, because a mirror is exactly the kind of second
 /// copy that drifts.
 fn component_from_entry(entry: &PackageDbEntry) -> ResolvedComponent {
+    // Spec 1646: the same technique rule as the scan's own conversion.
+    crate::scan_fs::census_entry_technique(entry);
     ResolvedComponent {
         name: entry.name.clone(),
         version: entry.version.clone(),
         purl: entry.purl.clone(),
         evidence: ResolutionEvidence {
-            technique: ResolutionTechnique::PackageDatabase,
+            technique: crate::scan_fs::entry_technique(entry),
             confidence: crate::scan_fs::PACKAGE_DB_CONFIDENCE,
             source_connection_ids: vec![],
             // The binary's absolute store path. There is no scan root to be
@@ -475,6 +476,7 @@ fn component_from_entry(entry: &PackageDbEntry) -> ResolvedComponent {
                 .cloned()
                 .collect(),
             deps_dev_match: None,
+            also: Vec::new(),
         },
         licenses: entry.licenses.clone(),
         concluded_licenses: Vec::new(),

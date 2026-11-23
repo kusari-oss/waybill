@@ -606,6 +606,7 @@ mod tests {
                 source_connection_ids: vec![],
                 source_file_paths: vec![path.to_string()],
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: vec![],
