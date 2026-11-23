@@ -281,7 +281,6 @@ fn zlib_lib() -> Vec<u8> {
 
 /// B-1: banner plus `.pc`.
 #[test]
-#[ignore = "spec 1646: red until T011"]
 fn b1_banner_and_pc() {
     let s = scan3(b1_tree());
     assert_merged(&s, "pkg:generic/ncurses@6.6.20251230");
@@ -289,7 +288,6 @@ fn b1_banner_and_pc() {
 
 /// B-2: banner plus CMake package version.
 #[test]
-#[ignore = "spec 1646: red until T011"]
 fn b2_banner_and_cmake() {
     let s = scan3(tree(&[
         ("lib/libLLVM.so", lib(LLVM)),
@@ -300,7 +298,6 @@ fn b2_banner_and_cmake() {
 
 /// B-3: a banner alone. C4 and C16 are unchanged.
 #[test]
-#[ignore = "spec 1646: red until T010"]
 fn b3_banner_alone() {
     let s = scan3(tree(&[("libwaybill-fixture-expat.so.1", lib(EXPAT))]));
     assert_binary_only(&s, "pkg:generic/expat@2.7.5");
@@ -311,7 +308,6 @@ fn b3_banner_alone() {
 
 /// F-1: a symbol fingerprint alone (identity, no version).
 #[test]
-#[ignore = "spec 1646: red until T010"]
 fn f1_fingerprint_alone() {
     let s = scan3(tree(&[(
         "libwaybill-fixture-z.so.1",
@@ -328,7 +324,6 @@ fn f1_fingerprint_alone() {
 
 /// F-2: banner and fingerprint on one binary, plus `.pc`.
 #[test]
-#[ignore = "spec 1646: red until T011"]
 fn f2_fingerprint_banner_and_pc() {
     let s = scan3(tree(&[("lib/libz.so.1", zlib_lib()), ("lib/pkgconfig/zlib.pc", pc("1.3.1"))]));
     assert_merged(&s, "pkg:generic/zlib@1.3.1");
@@ -372,7 +367,7 @@ fn c1_census_reports_the_merge() {
     ] {
         assert!(m[0].contains(needle), "{needle} not in {}", m[0]);
     }
-    let t = events(&s, "technique_change");
-    assert_eq!(t.len(), 1, "{t:#?}");
-    assert!(t[0].contains(r#""new":"binary-analysis""#), "{}", t[0]);
+    // T010 removed `technique_change`: the technique is now the binary
+    // match's own (B-3, F-1), and the merge event reports it.
+    assert!(m[0].contains(r#""technique":"binary-analysis""#), "{}", m[0]);
 }

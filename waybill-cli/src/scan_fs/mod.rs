@@ -264,32 +264,26 @@ pub struct ScanResult {
 /// matching an emitted component resolves to that component exactly.
 /// Anything else (a bare name, or a `pkg:` string matching nothing) returns
 /// `None` and goes through the name lookup as before.
-/// Spec 1646 (#1665): the technique of a component converted from a scanned
-/// entry. Log-only until T010: always `PackageDatabase` here, and the census
-/// reports what a binary match would get.
-pub(crate) fn entry_technique(_entry: &package_db::PackageDbEntry) -> ResolutionTechnique {
-    ResolutionTechnique::PackageDatabase
+/// Spec 1646 (#1665, FR-003): the technique of a component converted from a
+/// scanned entry. A banner or symbol match was read from the binary's own
+/// bytes, so it is `BinaryAnalysis`; everything else keeps `PackageDatabase`.
+pub(crate) fn entry_technique(entry: &package_db::PackageDbEntry) -> ResolutionTechnique {
+    if entry.evidence_kind.as_deref().is_some_and(|k| crate::resolve::deduplicator::BINARY_KINDS.contains(&k)) {
+        ResolutionTechnique::BinaryAnalysis
+    } else {
+        ResolutionTechnique::PackageDatabase
+    }
 }
 
-/// Spec 1646 census (research R6): `technique_change` for a banner or symbol
-/// match, `binary_derived_kind` for the other binary-derived evidence, counted
-/// for the follow-up issue (clarification 2).
+/// Spec 1646 census (research R6): `binary_derived_kind` for the other
+/// binary-derived evidence, which keeps its technique here and is counted for
+/// the follow-up issue (clarification 2).
 pub(crate) fn census_entry_technique(entry: &package_db::PackageDbEntry) {
     if !tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
         return;
     }
     let kind = entry.evidence_kind.as_deref();
     let now = entry_technique(entry);
-    if kind.is_some_and(|k| crate::resolve::deduplicator::BINARY_KINDS.contains(&k)) {
-        let j = serde_json::json!({
-            "evidence_kind": kind,
-            "new": ResolutionTechnique::BinaryAnalysis.kebab_name(),
-            "old": now.kebab_name(),
-            "purl": entry.purl.as_str(),
-        });
-        tracing::debug!(target: "waybill::version_census", technique_change = %j);
-        return;
-    }
     let other = match kind {
         Some(k @ ("dynamic-linkage" | "embedded-source-path" | "cargo-auditable" | "elf-note-package")) => Some(k),
         _ if entry.detected_go == Some(true) => Some("go-buildinfo"),

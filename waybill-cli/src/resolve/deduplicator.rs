@@ -16,10 +16,6 @@ use waybill_common::resolution::{IdentityMethod, ResolutionTechnique};
 /// binary's own bytes (research R1, clarification 2).
 pub(crate) const BINARY_KINDS: [&str; 2] = ["embedded-version-string", "symbol-fingerprint"];
 
-/// Spec 1646 T004: log-only until T011. The census reports what would be
-/// absorbed; `also` is not written.
-const APPLY_ABSORBED: bool = false;
-
 /// A component's effective technique: `BinaryAnalysis` for a binary match,
 /// whatever its stored technique, and the stored technique otherwise
 /// (data-model "Absorb rule").
@@ -253,9 +249,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             // are moved below.
             let methods = absorb_methods(&best, &other);
             census_binary_merge("S1", &best, &other, &methods);
-            if APPLY_ABSORBED {
-                apply_absorbed(&mut best, methods);
-            }
+            apply_absorbed(&mut best, methods);
             // Spec 1639 S1: what `record` needs from the loser, taken before
             // the fold below moves its annotations.
             let absorbed = also_detected::marks(&other.extra_annotations);
@@ -672,9 +666,7 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
             let dst = &mut components[dst_idx];
             let methods = absorb_methods(dst, &sec);
             census_binary_merge("S2", dst, &sec, &methods);
-            if APPLY_ABSORBED {
-                apply_absorbed(dst, methods);
-            }
+            apply_absorbed(dst, methods);
             let subject = dst.purl.as_str().to_string();
             also_detected::record("S2", &subject, &mut dst.extra_annotations, &sec.extra_annotations);
             // Evidence-trail marker: declared-not-cached → "deps.dev",

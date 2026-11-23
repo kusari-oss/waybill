@@ -74,3 +74,10 @@ F-1's fingerprint fixture is recognised as exactly one `zlib` component. The cas
 The extended `census/anchored_control.py` identity tree, which now includes a fingerprint-only zlib, was scanned with this commit's debug build, and both workflow assertions were run on the result:
 - `identity control ok: [('ncurses', 'merge')] [] []`: spec 1645's wired state;
 - `spec 1646 control ok: log-only`. The census reports 2 merges with a record (`llvm@23.0.0git` from `cmake-package-version`, `ncurses@6.6.20251230` from `pkg-config`, each absorbing `["binary-analysis"]`), and `technique_change` for 3 PURLs: llvm, ncurses, and the fingerprint-only `pkg:generic/zlib`.
+
+## After the wiring (T010–T012)
+
+- **T010, technique**: `entry_technique` returns `BinaryAnalysis` for `embedded-version-string` and `symbol-fingerprint`, and the `technique_change` event is removed. B-3 and F-1 pass. B-1 was regenerated (`WAYBILL_UPDATE_VERSION_BOUNDARY_GOLDENS=1`). With content-addressed IDs masked and lines sorted, the diff is exactly 3 lines per format: the technique of the 3 banner components, `manifest-analysis` → `binary-analysis` in CycloneDX and `package-database` → `binary-analysis` in both SPDX D1 payloads. `version_string_boundary`: 154 passed.
+- **T011, absorption**: `APPLY_ABSORBED` is removed, and `absorb_methods`' result is applied at S1 and S2. B-1, B-2 and F-2 pass; all 7 integration cases pass. `assert_merged` checks `confidence: 0.85` on the `binary-analysis` method in all three formats (analysis finding U1).
+- **`binary_merge` is kept, not removed**, unlike the task text. It is the only diagnostic showing which merges absorbed a binary match (Principle X), and it keeps C-1 a live positive control after wiring (C-1 now checks the event's `binary-analysis` technique). The fixture control's wired state was changed to match (fixture commit after `3d1faed`): both states report the two merges with a record; only the log-only state reports `technique_change`.
+- **Fixture control, wired, run locally**: `identity control ok: [('ncurses', 'merge')] [] []` and `spec 1646 control ok: wired [llvm, ncurses] []`.
