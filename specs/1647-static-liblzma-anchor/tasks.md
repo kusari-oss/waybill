@@ -1,0 +1,149 @@
+# Tasks: a statically linked liblzma is versioned from the version it embeds (#1664)
+
+**Input**: `specs/1647-static-liblzma-anchor/` (spec.md, plan.md, research.md, data-model.md, contracts/wire.md, quickstart.md)
+
+**Tests**: requested by the spec (SC-002 to SC-005).
+- **Written red.** S1 and S2 (`contracts/wire.md`) are written before the change that versions them, and fail on the log-only commit.
+- **Guards.** S3–S8 pass on `main`. Their teeth come from mutations M1–M4.
+
+**Paths**:
+- `SC` = `waybill-cli/src/scan_fs/binary/scan.rs` (the anchor read, ~lines 340–367)
+- `EN` = `waybill-cli/src/scan_fs/binary/entry.rs` (`BinaryScan.anchor_symbols`, ~line 597)
+- `VS` = `waybill-cli/src/scan_fs/binary/version_strings.rs` (`ANCHOR_SYMBOLS` ~520, `Anchor`, `anchored_verdicts` ~757)
+- `MD` = `waybill-cli/src/scan_fs/binary/mod.rs` (`prepare`, the census block ~1110)
+- `IL` = `waybill-cli/tests/common/installed_lib.rs`
+- `IT` = `waybill-cli/tests/version_string_static.rs` (new)
+- `MS` = `specs/1647-static-liblzma-anchor/measurements/`
+- `FR` = the TheRock fixture repository, `kusari-sandbox/waybill-fixture-therock-sdk`
+- Research decisions are R1–R7, cases are `contracts/wire.md`'s S1–S8, and mutations are R7's M1–M4.
+
+## Phase 1: Setup
+
+- [ ] T001 Build `main`'s binary at `b6ad3c26` into the scratchpad as `waybill-main-b6ad3c26`. Before building, confirm that `git diff b6ad3c26 -- waybill-cli waybill-common Cargo.toml Cargo.lock` is empty. Record the full SHA in `MS/control.md`.
+- [ ] T002 [P] In `IL`, add the test-only `elf_with_symtab(e_type: u16, rodata: &[u8], defined: &[&str], undefined: &[&str]) -> Vec<u8>` (R6).
+  - Shape: `.rodata`, `.symtab` and `.strtab`, no `.dynsym`, modelled on `elf_shared_lib_with_dynsym`.
+  - `defined` entries are global functions in `.rodata`; `undefined` entries are `SHN_UNDEF`.
+  - Add a variant, or a flag, that also writes `.dynsym` with the same defined names, for S6.
+  - A unit-level sanity test parses its output with `object` and checks that `symbols()` returns exactly the given names, with their definedness.
+- [ ] T003 [P] Create `IT`, copying the harness from `waybill-cli/tests/version_string_anchored.rs` (`region`, `tree`, scan in three formats with parity and unique `bom-ref`s, census events from stderr). Add `WAYBILL_VERSION_STATIC_BIN`, to run a case against T001's binary.
+
+## Phase 2: Foundational (log-only census)
+
+Output does not change in this phase.
+
+- [ ] T004 In `VS`, add `AnchorSymbol { name, table: SymbolTable, binding: Binding }`, `enum SymbolTable { Dynsym, Symtab, MachoSymtab, PeExport }` and `enum Binding { Global, Weak, Local, Unknown }` (data-model).
+  - In `EN`, change `anchor_symbols` to `Vec<AnchorSymbol>`.
+  - In `SC`, fill it from today's three sources (`.dynsym`, Mach-O globals, PE exports), with table and binding, as today: defined only, deduplicated by `(name, table)`.
+  - `anchored_verdicts` takes `&[AnchorSymbol]` and keys on names only, so verdicts are unchanged.
+  - `Anchor::Symbol` gains `table` and `binding`. The `anchored` event's symbol anchors gain `"table"` and `"binding"`; every other field is unchanged (contracts/wire.md).
+  - Unit tests: the existing spec 1644 verdict tests pass after mechanical type changes, and an `anchored` JSON test shows the two new keys.
+- [ ] T005 In `SC`, add the census-only read of `.symtab` (R3):
+  - one `memchr::memmem` search for `lzma_version_` over the raw `.strtab` section;
+  - only on a hit, iterate `file.symbols()`, keeping **defined** entries named in `ANCHOR_SYMBOLS`, with their binding.
+
+  Store them in a new never-emitted `BinaryScan.static_anchor_symbols: Vec<AnchorSymbol>` (table `Symtab`), plus `elf_type`. They do **not** feed `anchor_symbols` on this commit.
+  - Unit tests on T002's helper: defined in `.symtab` is collected; undefined is not; a `.strtab` without the needle skips iteration; a non-ELF file gives empty.
+- [ ] T006 In `VS` and `MD`, emit the `liblzma_static` census event (contracts/wire.md, R4) when either:
+  - rule A applies: `static_anchor_symbols` holds a name `anchor_symbols` does not;
+  - rule B applies: the region holds `FD 37 7A 58 5A 00` and both lists are empty.
+
+  `rule_a` is `anchored_verdicts(region, anchor_symbols ∪ static_anchor_symbols)`'s liblzma entry. `rule_b` is `anchored_verdicts(region, [lzma_version_string as a hypothetical Dynsym anchor])`'s liblzma entry. Keys are sorted, and an absent rule is omitted.
+  - Unit test: the event's JSON for one rule A case and one rule B case.
+- [ ] T007 Write S1–S8 in `IT` with their expected results:
+  - S1 and S2 are red on this commit; S3–S8 pass.
+  - Each case also asserts its census: S1 and S2 have `rule_a.verdict = versioned` at `5.4.5`; S3 has no event; S4 has `rule_a.verdict = ambiguous`; S8 has `rule_b.verdict = versioned` (this commit only).
+
+  Run the cases with this commit's binary and with T001's (`WAYBILL_VERSION_STATIC_BIN`). Record the red/green table in `MS/control.md`, and confirm that T001's binary gives byte-identical documents to this commit's for every case.
+- [ ] T008 Mark S1 and S2 `#[ignore = "spec 1647: red until T011"]`. Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, then check `GATE_RESULT=pass`, the expected line, and the per-target totals. Commit the log-only change and push.
+- [ ] T009 Census (FR-001, R5).
+
+  In `FR`:
+  - extend `census/versions.py` to parse `liblzma_static`, summarising per target: files by rule, by ELF type and by binding; each rule's verdict counts; and the components each rule would newly version;
+  - add to the `control` job: `apt-get install liblzma-dev`, then compile `MS/probe/a.c` (copied into the fixture repository with its provenance) with `gcc -O2 -static -llzma`, unstripped and stripped. Assert that the unstripped build gives `rule_a.verdict = versioned` at the runner's xz version, and that the stripped one gives `rule_b` (log-only) or no event (wired, rule B removed). The assertion accepts both states.
+
+  Then:
+  - dispatch `census-versions.yml` with `--ref main -f waybill_ref=<T008's full SHA>`, and verify every `refs.txt`;
+  - dispatch `public-corpus.yml` with `-f branch=1647-static-liblzma-anchor`, and confirm 166 of 166 at T008's commit;
+  - locally (not TheRock): extract the 13 magic-carrying files listed in `MS/magic-population-2026-11-23.md` from `ubuntu:24.04` with the same packages, scan each alone with T008's build and the census on, and record every `liblzma_static` event.
+
+  Record everything in `MS/census.md`. State plainly any count that is zero, TheRock's above all.
+- [ ] T010 **Checkpoint: decide FR-004.**
+  - If T009 records `7zr` (or any non-liblzma file) with `rule_b.verdict = versioned`: amend spec FR-004 to **rejected**, citing `MS/census.md` and `MS/magic-population-2026-11-23.md`, and amend wire S8 and data-model accordingly.
+  - If no non-liblzma file is versioned by rule B: stop. Report to the user that FR-004's first condition (the build matrix) is now needed, and do not wire rule B without it.
+  - If a rule A count contradicts FR-002 (for example a local-binding or relocatable-object case that is not liblzma), amend the spec first.
+
+## Phase 3: User Story 1 — an unstripped static liblzma gets its version (P1) 🎯 MVP
+
+**Goal**: defined `.symtab` anchors version liblzma.
+**Independent test**: S1 and S2 pass; S6 and S7 are unchanged.
+
+- [ ] T011 [US1] Wire rule A:
+  - in `SC`, merge `static_anchor_symbols` into `anchor_symbols` (keeping table and binding), and remove the separate field;
+  - in `MD`, keep the `liblzma_static` event for files anchored only by `.symtab`, with `rule_a` reporting the production verdict;
+  - if T010 rejected FR-004, remove rule B's evaluation, the magic search and the `magic` field.
+
+  Then remove the `#[ignore]` from S1 and S2, update S8's and the census assertions to the wired state, and update the unit tests.
+
+## Phase 4: User Story 2 — a program that only uses liblzma is never anchored (P1)
+
+**Goal**: definedness and spec 1644's rules hold for `.symtab` anchors.
+**Independent test**: S3, S4 and S5 pass; mutations M1–M4 are killed.
+
+- [ ] T012 [US2] Add a unit test in `SC` for a program whose `.dynsym` **and** `.symtab` both list `lzma_version_string` as undefined. It gives no anchor in either list.
+- [ ] T013 [US2] Run mutations M1–M4 (R7). Copy spec 1646's `measurements/mutate.py` to `MS/mutate.py`, and write each mutation as an exact-string replacement. Record the killing tests in `MS/mutations.md`. Every mutation must be killed. Afterwards, `diff -r` the source against a copy taken before the run, and rebuild.
+
+## Phase 5: User Story 3 — a stripped static liblzma: decided by measurement (P2)
+
+**Goal**: FR-004's outcome is recorded and visible.
+**Independent test**: S8 gives no liblzma component (if rejected), and #1664 records why.
+
+- [ ] T014 [US3] Comment on #1664 with FR-004's measured outcome: the magic's population, the `7zr` false version with waybill's census line, and that a stripped static liblzma remains unversioned. End the comment with `---` and the attribution line. No session URLs.
+
+## Phase 6: User Story 4 — nothing else changes (P2)
+
+**Goal**: every difference is traced.
+**Independent test**: the public corpus, the quality corpus and TheRock, each against a `main` control.
+
+- [ ] T015 [US4] Public corpus at the final code commit (`-f branch=1647-static-liblzma-anchor`), with the summary's commit confirmed.
+  - **No drift**: record the 166 of 166 run.
+  - **Drift**: trace every changed line to a newly versioned liblzma component, regenerate with `regen_goldens=true`, `cmp` the regenerated files with the traced output, commit them, and confirm 166 of 166.
+
+  Record all of it in `MS/corpus.md`.
+- [ ] T016 [US4] Quality corpus (`census-versions.yml`) and TheRock (`measure-full`, base `b6ad3c26` against the final code commit), at full SHAs, with every `refs.txt` verified. Record in `MS/therock.md`:
+  - every component that changed, traced to one file and one anchor. If T009 found none on TheRock, the expected result is no change, and it is stated as such;
+  - the recursive component counts and the edge counts, compared;
+  - `waybill sbom parity-check` on both arms;
+  - SC-007's timing: one warm-up per arm, 3 interleaved runs, the median ratio, and min/median/max.
+
+## Phase 7: Polish
+
+- [ ] T017 [P] `docs/reference/binary-identity.md`:
+  - the liblzma anchor row: a defined symbol in the ELF dynamic or static symbol table, a Mach-O defined external, or a PE export;
+  - replace "A statically linked liblzma whose symbols are hidden … gets no liblzma version" with what holds now: unstripped static builds are versioned; stripped ones are not, with FR-004's reason.
+- [ ] T018 [P] `CHANGELOG.md`: a Fixed entry citing #1664, built from T009, T015 and T016's measurements.
+- [ ] T019 Run the full gate on the final commit, and record in `MS/gate-log.md`:
+  - `GATE_RESULT`, the `>>> all pre-PR checks passed.` line, and the per-target totals;
+  - that `git diff b6ad3c26 -- Cargo.lock '*Cargo.toml'` is empty.
+- [ ] T020 Close-out. For every task above, check that its claim is true of the committed tree and measurements. Where the implementation differs from the task text, note it inline rather than tick a false claim. Then tick it.
+
+## Dependencies
+
+- **Setup**: T001 → T007. T002 → T005 and T007. T003 → T007.
+- **Foundational**: T004 → T005 → T006 → T007 → T008 → T009 → T010.
+- **US1**: T011 needs T010.
+- **US2**: T012 can follow T005. T013 needs T011.
+- **US3**: T014 needs T010 and T011.
+- **US4**: T015 and T016 need every code change (T011).
+- **Polish**: T017 and T018 after T011, with T018's numbers after T015 and T016. T019 and T020 last.
+
+## Parallel opportunities
+
+- T002 (`IL`) and T003 (`IT`) together.
+- T012 alongside T006–T008, since it only adds a unit test.
+- T017 with T018.
+- The CI dispatches (T009, T015, T016) run while local work continues.
+
+## Implementation strategy
+
+- **MVP**: Phases 1–3. The census, then rule A wired.
+- **The scope may shrink.** If T009 finds nothing on TheRock, the change still fixes unstripped static liblzma generally, but #1543 gains nothing from it. The CHANGELOG and the #1543 tracker say so plainly.
