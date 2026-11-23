@@ -264,6 +264,43 @@ pub struct ScanResult {
 /// matching an emitted component resolves to that component exactly.
 /// Anything else (a bare name, or a `pkg:` string matching nothing) returns
 /// `None` and goes through the name lookup as before.
+/// Spec 1646 (#1665): the technique of a component converted from a scanned
+/// entry. Log-only until T010: always `PackageDatabase` here, and the census
+/// reports what a binary match would get.
+pub(crate) fn entry_technique(_entry: &package_db::PackageDbEntry) -> ResolutionTechnique {
+    ResolutionTechnique::PackageDatabase
+}
+
+/// Spec 1646 census (research R6): `technique_change` for a banner or symbol
+/// match, `binary_derived_kind` for the other binary-derived evidence, counted
+/// for the follow-up issue (clarification 2).
+pub(crate) fn census_entry_technique(entry: &package_db::PackageDbEntry) {
+    if !tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
+        return;
+    }
+    let kind = entry.evidence_kind.as_deref();
+    let now = entry_technique(entry);
+    if kind.is_some_and(|k| crate::resolve::deduplicator::BINARY_KINDS.contains(&k)) {
+        let j = serde_json::json!({
+            "evidence_kind": kind,
+            "new": ResolutionTechnique::BinaryAnalysis.kebab_name(),
+            "old": now.kebab_name(),
+            "purl": entry.purl.as_str(),
+        });
+        tracing::debug!(target: "waybill::version_census", technique_change = %j);
+        return;
+    }
+    let other = match kind {
+        Some(k @ ("dynamic-linkage" | "embedded-source-path" | "cargo-auditable" | "elf-note-package")) => Some(k),
+        _ if entry.detected_go == Some(true) => Some("go-buildinfo"),
+        _ => None,
+    };
+    if let Some(k) = other {
+        let j = serde_json::json!({ "evidence_kind": k, "purl": entry.purl.as_str(), "technique": now.kebab_name() });
+        tracing::debug!(target: "waybill::version_census", binary_derived_kind = %j);
+    }
+}
+
 fn resolve_exact_purl_dep<'a>(
     dep_name: &'a str,
     emitted_purls: &std::collections::HashSet<&str>,
@@ -382,6 +419,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                     Some(root),
                 )],
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: Vec::new(),
@@ -1240,12 +1278,13 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             } else {
                 Vec::new()
             };
+            census_entry_technique(entry);
             components.push(ResolvedComponent {
                 name: entry.name.clone(),
                 version: entry.version.clone(),
                 purl: entry.purl.clone(),
                 evidence: ResolutionEvidence {
-                    technique: ResolutionTechnique::PackageDatabase,
+                    technique: entry_technique(entry),
                     confidence: PACKAGE_DB_CONFIDENCE,
                     source_connection_ids: vec![],
                     // Milestone 133 US2.1 (FR-012 Defects A + C): see same-
@@ -1265,6 +1304,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                         })
                         .collect(),
                     deps_dev_match: None,
+                    also: Vec::new(),
                 },
                 licenses,
                 concluded_licenses: concluded_licenses_for_os,
@@ -3025,6 +3065,7 @@ mod m179_dispatch_tests {
                 source_connection_ids: Vec::new(),
                 source_file_paths: Vec::new(),
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: Vec::new(),
             concluded_licenses: Vec::new(),
@@ -3541,6 +3582,7 @@ Architecture: amd64
                 source_connection_ids: vec![],
                 source_file_paths: vec![source_path.to_string()],
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: Vec::new(),
@@ -3662,6 +3704,7 @@ Architecture: amd64
                 deps_dev_match: None,
                 source_connection_ids: Vec::new(),
                 source_file_paths: vec!["package.json".to_string()],
+                also: Vec::new(),
             },
             hashes: Vec::new(),
             occurrences: Vec::new(),
@@ -3973,6 +4016,7 @@ mod workspace_member_tagging_759 {
                 source_connection_ids: Vec::new(),
                 source_file_paths: Vec::new(),
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: Vec::new(),
             concluded_licenses: Vec::new(),

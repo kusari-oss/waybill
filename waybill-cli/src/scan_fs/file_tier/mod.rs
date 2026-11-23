@@ -254,6 +254,7 @@ impl FileTierEntry {
                 source_connection_ids: vec![],
                 source_file_paths: paths_str.clone(),
                 deps_dev_match: None,
+                also: Vec::new(),
             },
             licenses: vec![],
             concluded_licenses: vec![],

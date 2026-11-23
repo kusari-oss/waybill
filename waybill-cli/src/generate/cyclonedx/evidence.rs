@@ -54,24 +54,37 @@ pub struct DerivedIdentity<'a> {
 /// method object. CycloneDX 1.6 closes `methods[]` items to `technique`,
 /// `confidence` and `value`; milestone 105's `waybill-source-mechanism` key
 /// was outside the schema. C55 and C56 are component properties.
-pub fn build_evidence(
-    evidence: &ResolutionEvidence,
-    occurrences: &[FileOccurrence],
-    derived_identity: Option<DerivedIdentity<'_>>,
-) -> serde_json::Value {
-    let technique = match evidence.technique {
+/// The CycloneDX 1.6 technique for a waybill technique.
+fn cdx_technique(t: &ResolutionTechnique) -> &'static str {
+    match t {
         ResolutionTechnique::UrlPattern => "instrumentation",
         ResolutionTechnique::HashMatch => "hash-comparison",
         ResolutionTechnique::PackageDatabase => "manifest-analysis",
         ResolutionTechnique::LocalCacheHit => "filename",
         ResolutionTechnique::FilePathPattern => "filename",
         ResolutionTechnique::HostnameHeuristic => "other",
-    };
+        ResolutionTechnique::BinaryAnalysis => "binary-analysis",
+    }
+}
+
+pub fn build_evidence(
+    evidence: &ResolutionEvidence,
+    occurrences: &[FileOccurrence],
+    derived_identity: Option<DerivedIdentity<'_>>,
+) -> serde_json::Value {
+    let technique = cdx_technique(&evidence.technique);
 
     let mut methods: Vec<serde_json::Value> = vec![json!({
         "technique": technique,
         "confidence": evidence.confidence,
     })];
+    // Spec 1646 (#1665): methods absorbed by a merge with a binary match.
+    for m in &evidence.also {
+        methods.push(json!({
+            "technique": cdx_technique(&m.technique),
+            "confidence": m.confidence,
+        }));
+    }
 
     // Milestone 1366 (#1365) — the derived identifier, natively.
     //
@@ -238,6 +251,7 @@ mod tests {
             source_connection_ids: vec![],
             source_file_paths: vec![],
             deps_dev_match: None,
+            also: Vec::new(),
         }
     }
 
@@ -372,6 +386,7 @@ mod tests {
                 name: "express".to_string(),
                 version: "4.19.2".to_string(),
             }),
+            also: Vec::new(),
         };
         let result = build_evidence(&ev_with_everything, &[], None);
         assert!(
@@ -389,6 +404,7 @@ mod tests {
             source_connection_ids: vec!["conn-1".to_string(), "conn-2".to_string()],
             source_file_paths: vec![],
             deps_dev_match: None,
+            also: Vec::new(),
         };
         let props = evidence_to_properties(&ev);
         assert_eq!(props.len(), 1);
@@ -408,6 +424,7 @@ mod tests {
                 name: "express".to_string(),
                 version: "4.19.2".to_string(),
             }),
+            also: Vec::new(),
         };
         let props = evidence_to_properties(&ev);
         assert_eq!(props.len(), 1);
@@ -434,6 +451,7 @@ mod tests {
                 name: "com.google.guava:guava".to_string(),
                 version: "32.1.3-jre".to_string(),
             }),
+            also: Vec::new(),
         };
         let props = evidence_to_properties(&ev);
         assert_eq!(props.len(), 2);
@@ -496,4 +514,24 @@ mod tests {
         }
     }
 
+
+    /// Spec 1646 (#1665): absorbed methods follow the primary one.
+    #[test]
+    fn s1646_methods_list_the_absorbed_technique() {
+        use waybill_common::resolution::IdentityMethod;
+        let mut ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.85);
+        let one = build_evidence(&ev, &[], None);
+        assert_eq!(one["identity"][0]["methods"], serde_json::json!([{"technique": "manifest-analysis", "confidence": 0.85}]));
+        ev.also = vec![IdentityMethod { technique: ResolutionTechnique::BinaryAnalysis, confidence: 0.85 }];
+        let two = build_evidence(&ev, &[], None);
+        assert_eq!(
+            two["identity"][0]["methods"],
+            serde_json::json!([
+                {"technique": "manifest-analysis", "confidence": 0.85},
+                {"technique": "binary-analysis", "confidence": 0.85}
+            ])
+        );
+        let bin = build_evidence(&make_evidence(ResolutionTechnique::BinaryAnalysis, 0.85), &[], None);
+        assert_eq!(bin["identity"][0]["methods"][0]["technique"], "binary-analysis");
+    }
 }

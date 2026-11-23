@@ -117,6 +117,7 @@ impl Resolver for DepsDevHashResolver {
                             name: m.name,
                             version: m.version,
                         }),
+                        also: Vec::new(),
                     },
                     licenses: vec![],
                     concluded_licenses: Vec::new(),

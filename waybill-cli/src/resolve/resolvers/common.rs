@@ -51,6 +51,7 @@ pub(super) fn build_url_component(
             source_connection_ids: vec![conn.id.clone()],
             source_file_paths: matched_file_paths,
             deps_dev_match: None,
+            also: Vec::new(),
         },
         licenses: vec![],
         concluded_licenses: Vec::new(),

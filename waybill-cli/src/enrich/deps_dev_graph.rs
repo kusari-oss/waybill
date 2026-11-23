@@ -261,6 +261,7 @@ pub async fn enrich_dep_graph(
                                 source_connection_ids: Vec::new(),
                                 source_file_paths: vec!["deps.dev".to_string()],
                                 deps_dev_match: None,
+                                also: Vec::new(),
                             },
                             licenses: Vec::new(),
                             concluded_licenses: Vec::new(),
