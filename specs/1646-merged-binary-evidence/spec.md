@@ -24,6 +24,13 @@ So 6 of the 7 lose every trace that the library's own bytes named it. The librar
 - **Mechanism, read from code at `e1148818`** (`resolve/deduplicator.rs`): the deduplicator keeps one winner by confidence, and at equal confidence the readers' order decides, so the record wins. It unions the loser's free-form annotations, which is why the fingerprint count survives. The loser's typed evidence kind and confidence go with it. C56 records only the losers' *source mechanisms*, and a curated entry has none.
 - **The native field is wrong even without a merge.** Every component read from a package database or a binary is given one technique, `PackageDatabase` (`waybill-common/src/resolution.rs`), which CycloneDX emits as `manifest-analysis` (`generate/cyclonedx/evidence.rs`). bzip2's version was read from its binary's string section, which CycloneDX 1.6 calls `binary-analysis`. SPDX 2.3 and SPDX 3 carry the same identity in an `evidence.identity` annotation (catalog row D1, presence-only parity), with the internal technique name.
 
+## Clarifications
+
+### Session 2026-11-23
+
+- Q: How does SPDX's D1 `evidence.identity` annotation (today one flat `{technique, confidence}` object) carry a second method? → A: The flat `technique` and `confidence` keys stay, holding the winner's method. A `methods` array listing every method is added only when a component has two or more. Single-method components are byte-identical to `main`.
+- Q: Which binary-derived evidence kinds does FR-003 relabel as `binary-analysis`? → A: Only `embedded-version-string` and `symbol-fingerprint`. The census counts every other binary-derived kind (`dynamic-linkage`, `embedded-source-path`, Go build info, `cargo-auditable`). A follow-up issue decides those from the counts; embedded manifests such as Go build info are arguably `manifest-analysis`.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A merged component says its library was also read from the binary (Priority: P1)
@@ -96,10 +103,10 @@ A consumer reads CycloneDX's evidence technique to judge how a component was ide
 - **FR-002 (the binary match on a merged component)**: When a binary-match entry and an entry from another reader merge, the merged component's identity evidence SHALL list one method per distinct technique, in a stable order.
   - That is the winner's method plus `binary-analysis`.
   - In CycloneDX this is `evidence.identity[].methods[]`, a native field (Principle V).
-  - In SPDX 2.3 and SPDX 3 it is the existing D1 `evidence.identity` annotation, whose payload gains the same methods. **No new annotation or catalog row.**
+  - In SPDX 2.3 and SPDX 3 it is the existing D1 `evidence.identity` annotation. Its flat `technique` and `confidence` keys keep the winner's method. A `methods` array listing every method, in the same order as CycloneDX's, is added only when there are two or more, so a single-method component's payload is unchanged. **No new annotation or catalog row.**
 - **FR-003 (the technique of a binary match)**: A component whose identity came from a binary's own bytes (C4 `embedded-version-string` or `symbol-fingerprint`) SHALL report the technique `binary-analysis`, merged or not.
-  - Other evidence kinds keep their technique.
-  - The census (FR-001) counts the components every other binary-derived evidence kind would change (for example `embedded-source-path`, `dynamic-linkage`), for a follow-up issue.
+  - Every other evidence kind keeps its technique in this spec (clarification 2).
+  - The census (FR-001) counts the components each other binary-derived kind would change (`dynamic-linkage`, `embedded-source-path`, Go build info, `cargo-auditable`). A follow-up issue is filed with those counts. Embedded manifests (Go build info, `cargo-auditable`) may rightly stay `manifest-analysis`; structural inferences may not.
 - **FR-004 (confidence)**: The `binary-analysis` method's confidence SHALL be the confidence the unmerged binary match reports on `main` (0.85, the value of `PackageDatabase`). The merged component's own C16 and tier stay the winner's, as on `main`. No new numbers are invented. Whether two independent sources should raise confidence is out of scope (Assumptions).
 - **FR-005 (C4, C16 and C56 unchanged in meaning)**:
   - C4 and C16 stay single-valued, the winner's.
