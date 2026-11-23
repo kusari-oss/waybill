@@ -19,17 +19,18 @@ Rules:
 
 ## LiblzmaStatic (census only, DEBUG `waybill::version_census`)
 
-Emitted for an ELF file when at least one holds:
-- **Rule A**: `.symtab` defines an anchor symbol that `.dynsym` does not;
+Emitted for a binary of any format when at least one holds:
+- **Rule A** (ELF only): `.symtab` defines an anchor symbol that `.dynsym` does not;
 - **Rule B** (log-only commit; removed if FR-004 is rejected): the region holds `FD 37 7A 58 5A 00`, and no table defines an anchor symbol.
 
 | Field | Meaning |
 |---|---|
-| `elf_type` | `exec`, `dyn`, `rel` or `other` |
+| `elf_type` | `exec`, `dyn`, `rel` or `other`; absent for a non-ELF binary |
 | `anchors` | every `AnchorSymbol`: `{name, table, binding}` |
-| `magic` | the magic's offset in the region, or absent (log-only commit) |
-| `rule_a` | the liblzma verdict with `.symtab` anchors included: `{verdict, version?, candidates}`, or absent when rule A does not apply |
-| `rule_b` | the liblzma verdict the magic would give, in the same shape, or absent (log-only commit) |
+| `magic` | the magic's offset in the region; absent when there is none, and after rule B is removed |
+| `rule_a` | with `.symtab` anchors included, the verdict of **every** anchored library: a list of `{library, verdict, version?, candidates}`. Absent when rule A does not apply |
+| `rule_b` | the same list as the magic would give it; absent when rule B does not apply, and after it is removed |
+| `current` | the same list as production computes it on this commit, so a rule's effect is `rule_a` (or `rule_b`) compared with `current`: a library newly versioned, or one losing its version |
 
 The verdict is spec 1644's: `versioned`, `ambiguous`, `ambiguous-shared` or `no-candidate`.
 
@@ -38,4 +39,4 @@ The verdict is spec 1644's: `versioned`, `ambiguous`, `ambiguous-shared` or `no-
 | Commit | `.symtab` anchors versioned? | Magic evaluated? | Output vs `main` |
 |---|---|---|---|
 | Log-only | no (census only) | yes (census only) | byte-identical |
-| Wired | yes | no, unless FR-004 is adopted | changes only where rule A's verdict is `versioned` |
+| Wired | yes | no, unless FR-004 is adopted | changes only where an anchored library's verdict changes: liblzma newly versioned, or GMP losing a shared candidate |

@@ -3,8 +3,8 @@
 **Input**: `specs/1647-static-liblzma-anchor/` (spec.md, plan.md, research.md, data-model.md, contracts/wire.md, quickstart.md)
 
 **Tests**: requested by the spec (SC-002 to SC-005).
-- **Written red.** S1 and S2 (`contracts/wire.md`) are written before the change that versions them, and fail on the log-only commit.
-- **Guards.** S3–S8 pass on `main`. Their teeth come from mutations M1–M4.
+- **Written red.** S1, S2 and S5 (`contracts/wire.md`) are written before the change that alters them, and fail on the log-only commit. S5 fails because it gives `gmp@5.4.5` there, as on `main`.
+- **Guards.** S3, S4 and S6–S8 pass on `main`. Their teeth come from mutations M1–M4.
 
 **Paths**:
 - `SC` = `waybill-cli/src/scan_fs/binary/scan.rs` (the anchor read, ~lines 340–367)
@@ -16,6 +16,7 @@
 - `MS` = `specs/1647-static-liblzma-anchor/measurements/`
 - `FR` = the TheRock fixture repository, `kusari-sandbox/waybill-fixture-therock-sdk`
 - Research decisions are R1–R7, cases are `contracts/wire.md`'s S1–S8, and mutations are R7's M1–M4.
+- Rule A is FR-002 (defined `.symtab` anchors). Rule B is FR-004 (the xz header magic).
 
 ## Phase 1: Setup
 
@@ -43,27 +44,41 @@ Output does not change in this phase.
 
   Store them in a new never-emitted `BinaryScan.static_anchor_symbols: Vec<AnchorSymbol>` (table `Symtab`), plus `elf_type`. They do **not** feed `anchor_symbols` on this commit.
   - Unit tests on T002's helper: defined in `.symtab` is collected; undefined is not; a `.strtab` without the needle skips iteration; a non-ELF file gives empty.
-- [ ] T006 In `VS` and `MD`, emit the `liblzma_static` census event (contracts/wire.md, R4) when either:
-  - rule A applies: `static_anchor_symbols` holds a name `anchor_symbols` does not;
+- [ ] T006 In `VS` and `MD`, emit the `liblzma_static` census event (contracts/wire.md, R4), for a binary of any format, when either:
+  - rule A applies (ELF only): `static_anchor_symbols` holds a name `anchor_symbols` does not;
   - rule B applies: the region holds `FD 37 7A 58 5A 00` and both lists are empty.
 
-  `rule_a` is `anchored_verdicts(region, anchor_symbols ∪ static_anchor_symbols)`'s liblzma entry. `rule_b` is `anchored_verdicts(region, [lzma_version_string as a hypothetical Dynsym anchor])`'s liblzma entry. Keys are sorted, and an absent rule is omitted.
-  - Unit test: the event's JSON for one rule A case and one rule B case.
+  Each of the following is the **whole** list `anchored_verdicts` returns, every anchored library with its verdict, not only liblzma's:
+  - `current`: production's `anchored_verdicts(region, anchor_symbols)`;
+  - `rule_a`: `anchored_verdicts(region, anchor_symbols ∪ static_anchor_symbols)`;
+  - `rule_b`: `anchored_verdicts(region, anchor_symbols plus a hypothetical Dynsym lzma_version_string)`.
+
+  Keys are sorted, an absent rule is omitted, and `elf_type` is omitted for a non-ELF binary.
+  - Unit tests: the event's JSON for a rule A case, for a rule B case, and for S5's shape, where `current` has gmp `versioned` and `rule_a` has gmp and liblzma `ambiguous-shared`.
 - [ ] T007 Write S1–S8 in `IT` with their expected results:
-  - S1 and S2 are red on this commit; S3–S8 pass.
-  - Each case also asserts its census: S1 and S2 have `rule_a.verdict = versioned` at `5.4.5`; S3 has no event; S4 has `rule_a.verdict = ambiguous`; S8 has `rule_b.verdict = versioned` (this commit only).
+  - S1, S2 and S5 are red on this commit; S3, S4 and S6–S8 pass.
+  - Each case also asserts its census, by the liblzma entry unless stated:
+    - S1 and S2: `rule_a` is `versioned` at `5.4.5`;
+    - S3: no event;
+    - S4: `rule_a` is `ambiguous`;
+    - S5: `current` has gmp `versioned` at `5.4.5`, and `rule_a` has gmp and liblzma `ambiguous-shared`;
+    - S8: `rule_b` is `versioned` (this commit only).
 
   Run the cases with this commit's binary and with T001's (`WAYBILL_VERSION_STATIC_BIN`). Record the red/green table in `MS/control.md`, and confirm that T001's binary gives byte-identical documents to this commit's for every case.
-- [ ] T008 Mark S1 and S2 `#[ignore = "spec 1647: red until T011"]`. Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, then check `GATE_RESULT=pass`, the expected line, and the per-target totals. Commit the log-only change and push.
+- [ ] T008 Mark S1, S2 and S5 `#[ignore = "spec 1647: red until T011"]`. Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, then check `GATE_RESULT=pass`, the expected line, and the per-target totals. Commit the log-only change and push.
 - [ ] T009 Census (FR-001, R5).
 
   In `FR`:
-  - extend `census/versions.py` to parse `liblzma_static`, summarising per target: files by rule, by ELF type and by binding; each rule's verdict counts; and the components each rule would newly version;
+  - extend `census/versions.py` to parse `liblzma_static`, summarising per target:
+    - files by rule, by ELF type and by binding;
+    - each rule's verdict counts, per library;
+    - the components each rule would newly version, and the versions it would remove, found by comparing the rule's list with `current`;
+    - for each newly versioned liblzma, any `liblzma` or `xz` component the same document already has from another reader (pkg-config, CMake, a package database), with its version;
   - add to the `control` job: `apt-get install liblzma-dev`, then compile `MS/probe/a.c` (copied into the fixture repository with its provenance) with `gcc -O2 -static -llzma`, unstripped and stripped. Assert that the unstripped build gives `rule_a.verdict = versioned` at the runner's xz version, and that the stripped one gives `rule_b` (log-only) or no event (wired, rule B removed). The assertion accepts both states.
 
   Then:
   - dispatch `census-versions.yml` with `--ref main -f waybill_ref=<T008's full SHA>`, and verify every `refs.txt`;
-  - dispatch `public-corpus.yml` with `-f branch=1647-static-liblzma-anchor`, and confirm 166 of 166 at T008's commit;
+  - dispatch `public-corpus.yml` with `-f branch=1647-static-liblzma-anchor`, and confirm 166 of 166 at T008's commit. Its harness keeps no census log, so on the public corpus FR-001 is measured as output: unchanged here, and traced in T015;
   - locally (not TheRock): extract the 13 magic-carrying files listed in `MS/magic-population-2026-11-23.md` from `ubuntu:24.04` with the same packages, scan each alone with T008's build and the census on, and record every `liblzma_static` event.
 
   Record everything in `MS/census.md`. State plainly any count that is zero, TheRock's above all.
@@ -82,7 +97,10 @@ Output does not change in this phase.
   - in `MD`, keep the `liblzma_static` event for files anchored only by `.symtab`, with `rule_a` reporting the production verdict;
   - if T010 rejected FR-004, remove rule B's evaluation, the magic search and the `magic` field.
 
-  Then remove the `#[ignore]` from S1 and S2, update S8's and the census assertions to the wired state, and update the unit tests.
+  Then:
+  - remove the `#[ignore]` from S1, S2 and S5;
+  - update the census assertions to the wired state: `current` now equals `rule_a`;
+  - if rule B is removed, drop S8's `rule_b` assertion and the `magic` key from T006's unit tests, and assert that S8 has no event at all.
 
 ## Phase 4: User Story 2 — a program that only uses liblzma is never anchored (P1)
 
@@ -110,7 +128,7 @@ Output does not change in this phase.
 
   Record all of it in `MS/corpus.md`.
 - [ ] T016 [US4] Quality corpus (`census-versions.yml`) and TheRock (`measure-full`, base `b6ad3c26` against the final code commit), at full SHAs, with every `refs.txt` verified. Record in `MS/therock.md`:
-  - every component that changed, traced to one file and one anchor. If T009 found none on TheRock, the expected result is no change, and it is stated as such;
+  - every component that changed, traced to one file and one anchor, including any GMP version removed by a shared candidate. If T009 found none on TheRock, the expected result is no change, and it is stated as such;
   - the recursive component counts and the edge counts, compared;
   - `waybill sbom parity-check` on both arms;
   - SC-007's timing: one warm-up per arm, 3 interleaved runs, the median ratio, and min/median/max.

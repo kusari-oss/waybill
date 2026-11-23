@@ -15,6 +15,8 @@ Spec 1644 anchors liblzma on a defined `lzma_version_string` or `lzma_version_nu
 2. **FR-004 decided by the census.** Research R2 measured `7zr` (7-Zip, no liblzma) holding the magic and one bare `13.2.0`. If the census confirms that rule B would emit `liblzma@13.2.0`, FR-004 is amended to *rejected* and #1664 is updated. Rule B is then removed.
 3. **Wire rule A (FR-002).** Defined `.symtab` anchors join `.dynsym`'s. `.symtab` is iterated only when one `memmem` over `.strtab` finds `lzma_version_` (R3). Undefined entries never anchor.
 
+**Terms.** Rule A is FR-002 (defined `.symtab` anchors). Rule B is FR-004 (the xz header magic).
+
 ## Technical Context
 
 **Language/Version**: Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189).

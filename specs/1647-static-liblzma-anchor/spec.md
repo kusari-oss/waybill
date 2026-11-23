@@ -56,7 +56,8 @@ A dynamically linked program that calls liblzma lists `lzma_version_string` as a
 
 1. **Given** an ELF program whose static symbol table lists `lzma_version_string` as undefined, and which holds the whole string `5.4.5` for another reason, **When** it is scanned, **Then** no liblzma component is produced.
 2. **Given** a program defining the symbol in its static symbol table and holding two whole-string candidates, **When** it is scanned, **Then** no liblzma component is produced, and the census records it as ambiguous (spec 1644 FR-005, unchanged).
-3. **Given** a program defining the symbol and holding `GNU MP:`, with `5.4.5` its only candidate, **When** it is scanned, **Then** neither library is versioned (spec 1644 FR-005a, unchanged).
+3. **Given** a program defining the symbol in `.symtab` and holding `GNU MP:`, with `5.4.5` its only candidate, **When** it is scanned, **Then** neither library is versioned (spec 1644 FR-005a, unchanged).
+4. **Given** that same program, **When** it is scanned on `main`, **Then** it gives `pkg:generic/gmp@5.4.5`, because `main` does not read the `.symtab` anchor and GMP is the only anchored library. This change removes that version. That is intended: once both libraries are anchored, the string fits both, and spec 1644 gives a shared string to neither. FR-001 counts such losses, and SC-006 traces each one.
 
 ---
 
@@ -93,13 +94,13 @@ Binaries whose liblzma verdict does not change produce the same documents as on 
 ### Edge Cases
 
 - **A static program that bundles several libraries.** It may hold many `X.Y.Z` strings. With two or more candidates it is ambiguous and gets no version (spec 1644 FR-005). The census counts how often a newly anchored binary ends ambiguous, so the gain is measured, not assumed.
-- **A static program that bundles GMP as well.** A candidate both libraries accept versions neither (spec 1644 FR-005a).
+- **A static program that bundles GMP as well.** A candidate both libraries accept versions neither (spec 1644 FR-005a). On `main` such a program may carry a GMP version taken from a string liblzma also accepts; reading `.symtab` removes it (User Story 2, scenario 4). So this change can remove components as well as add them.
 - **A local or hidden symbol.** With link-time optimisation or `-fvisibility=hidden`, `lzma_version_string` may be in `.symtab` with local binding. Any defined symbol of that name anchors, whatever its binding; the census reports the binding, so a surprise is visible.
 - **A separate debug-info file** (`.debug`, `*.dbg`): its `.symtab` defines the symbols, but its data sections hold no bytes. It has no candidate and gets no version.
 - **A relocatable object or a static archive member** (`version.o` from `liblzma.a`). If the scanner reads it as ELF, it defines the symbols and holds the version, and it is liblzma. The census counts such files separately.
 - **A program that defines its own `lzma_version_string`.** Not seen; the census lists every anchored file, so one would be found.
 - **A large unstripped static symbol table** (an unstripped static `libLLVM`). Reading it costs time on every scan. SC-007 bounds the cost on TheRock, where such files exist.
-- **Mach-O and PE.** Mach-O already reads the full symbol table, so an unstripped static Mach-O program is anchored on `main`. A static PE program exports nothing. A stripped static build on either format is covered only if FR-004 adopts the magic.
+- **Mach-O and PE.** Mach-O already reads the full symbol table, filtered to defined externals, so an unstripped static Mach-O program should be anchored on `main` (inference from the code, research R1; no static Mach-O fixture tests it). A static PE program exports nothing. A stripped static build on either format is covered only if FR-004 adopts the magic.
 - **The 16 MiB region cap.** A candidate or magic beyond it is not seen, as for every curated pattern.
 
 ## Requirements *(mandatory)*
@@ -109,11 +110,11 @@ Binaries whose liblzma verdict does not change produce the same documents as on 
 - **FR-001 (census before design)**: Before any output changes, a log-only build MUST count the facts the remaining requirements depend on. It runs on TheRock's SDK fixture (CI only, through kusari-sandbox/waybill-fixture-therock-sdk, dispatched `--ref main` with full SHAs and every `refs.txt` verified), the quality corpus and the public corpus. It counts:
   - ELF files that define an anchor symbol in `.symtab` but not in `.dynsym`, with the symbol's binding and the file's ELF type;
   - files that hold the xz header magic but define no anchor symbol in any table;
-  - for each such file, its whole-string candidates of liblzma's shape and the verdict each rule would give;
-  - which of them already get a liblzma version from another reader, and under which name and version;
-  - how many components each rule would newly version.
+  - for each such file, its whole-string candidates of liblzma's shape, and the verdict each rule would give **for every anchored library in the file**, not only liblzma;
+  - which of them already get a liblzma version from another reader (pkg-config, CMake, a package database), and under which name and version;
+  - how many components each rule would newly version, and how many existing versions it would remove (a GMP version lost to a shared candidate, User Story 2 scenario 4).
 
-  The census states plainly if TheRock has none. A positive control (a synthetic tree containing a static, unstripped liblzma program and a stripped one) shows each count firing, so a zero means absence. Where a count contradicts a requirement below, the requirement MUST be amended in this spec with the evidence before implementation.
+  The census states plainly if TheRock has none. On the public corpus, whose harness keeps no census log, what is measured is output: unchanged at the log-only commit, and every golden difference traced at the wired commit. A positive control, a static liblzma program compiled on the CI runner and kept unstripped and stripped, shows each count firing, so a zero means absence. Where a count contradicts a requirement below, the requirement MUST be amended in this spec with the evidence before implementation.
 
 - **FR-002 (static symbol table)**: On ELF, a symbol named `lzma_version_string` or `lzma_version_number` anchors liblzma when it is **defined** in `.dynsym` or in `.symtab`, whatever its binding. An undefined symbol in either table MUST NOT anchor. The symbol list used by the symbol fingerprints is unchanged; only the anchor reads `.symtab`.
 
@@ -129,7 +130,7 @@ Binaries whose liblzma verdict does not change produce the same documents as on 
 
 - **FR-006 (no new output field)**: A version gained this way MUST be emitted exactly as spec 1644's liblzma match: same PURL name (`pkg:generic/liblzma`), same evidence kind, same technique (spec 1646's `binary-analysis`), same annotations. No new annotation, catalog row or output field.
 
-- **FR-007 (byte identity)**: Output MUST be byte-identical to `main` for any binary whose liblzma verdict does not change.
+- **FR-007 (byte identity)**: Output MUST be byte-identical to `main` for any binary in which no anchored library's verdict changes.
 
 - **FR-008 (probe kept)**: The local probe (source, build script and results) MUST be committed under `measurements/probe/`, so the finding can be re-run when xz changes. No real liblzma binary is committed.
 
