@@ -225,14 +225,23 @@ fn helpers_mark_symbols_defined_and_undefined() {
 #[test]
 fn defined_anchor_symbol_anchors_elf_and_macho() {
     let r = region(&[b"5.8.1\0"]);
-    for (name, bytes) in [
-        ("libwaybill-fixture-lzma.so.5", elf(&r, &["lzma_version_string"], &[])),
-        ("libwaybill-fixture-lzma.5.dylib", macho_dylib_with_symbols(&r, &["lzma_version_string"], &[])),
+    // Spec 1647 adds the table and binding each symbol anchor was read from.
+    for (name, bytes, anchor) in [
+        (
+            "libwaybill-fixture-lzma.so.5",
+            elf(&r, &["lzma_version_string"], &[]),
+            r#"{"binding":"global","kind":"symbol","table":"dynsym","value":"lzma_version_string"}"#,
+        ),
+        (
+            "libwaybill-fixture-lzma.5.dylib",
+            macho_dylib_with_symbols(&r, &["lzma_version_string"], &[]),
+            r#"{"binding":"global","kind":"symbol","table":"macho-symtab","value":"lzma_version_string"}"#,
+        ),
     ] {
         let s = census(tree(&[(name, bytes)]));
         let ev = anchored(&s, "liblzma");
         assert_eq!(ev.len(), 1, "{name}: {ev:?}\n{}", s.stderr);
-        assert!(ev[0].contains(r#"{"kind":"symbol","value":"lzma_version_string"}"#), "{name}: {}", ev[0]);
+        assert!(ev[0].contains(anchor), "{name}: {}", ev[0]);
     }
 }
 

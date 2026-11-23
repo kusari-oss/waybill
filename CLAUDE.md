@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-22
+Auto-generated from all feature plans. Last updated: 2026-11-23
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -496,6 +496,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-22
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. `tracing` for the census, `serde_json` for the event values, `waybill_common::types::purl::Purl`, and test-only `strum::EnumIter`. **Zero new Cargo dependencies.** (1645-split-library-identity)
 - N/A. In process, per scan. (1645-split-library-identity)
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. `serde`/`serde_json` (the new field and the D1 payload) and `tracing` (the census). **Zero new Cargo dependencies.** (1646-merged-binary-evidence)
+- Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. `object` 0.36 (`symbols()` reads ELF `.symtab`, R1), `memchr` for the `.strtab` gate, `serde_json` and `tracing` for the census. **Zero new Cargo dependencies.** (1647-static-liblzma-anchor)
+- N/A. Per binary, in process. (1647-static-liblzma-anchor)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -728,9 +730,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1647-static-liblzma-anchor: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. `object` 0.36 (`symbols()` reads ELF `.symtab`, R1), `memchr` for the `.strtab` gate, `serde_json` and `tracing` for the census. **Zero new Cargo dependencies.**
 - 1646-merged-binary-evidence: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. `serde`/`serde_json` (the new field and the D1 payload) and `tracing` (the census). **Zero new Cargo dependencies.**
 - 1645-split-library-identity: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. `tracing` for the census, `serde_json` for the event values, `waybill_common::types::purl::Purl`, and test-only `strum::EnumIter`. **Zero new Cargo dependencies.**
-- 1644-bare-version-anchors: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. `memchr` (already a direct dependency, `waybill-cli/Cargo.toml:135`) for the anchor search, `object` (`read` feature) for symbol definedness, `tracing` for the census, and test-only `strum::EnumIter`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

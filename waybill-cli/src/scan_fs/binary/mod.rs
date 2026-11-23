@@ -1119,6 +1119,11 @@ fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSe
         for v in &anchored {
             tracing::debug!(target: "waybill::version_census", path = %path.display(), anchored = %v.to_json());
         }
+        // Spec 1647: a binary anchored by `.symtab` alone, and every
+        // anchored library's verdict there.
+        if let Some(j) = version_strings::liblzma_static_event(&scan.anchor_symbols, scan.elf_type, &anchored) {
+            tracing::debug!(target: "waybill::version_census", path = %path.display(), liblzma_static = %j);
+        }
         let bare = version_strings::bzip2_form_without_anchor(&scan.string_region);
         if !bare.is_empty() {
             let j = serde_json::json!({
