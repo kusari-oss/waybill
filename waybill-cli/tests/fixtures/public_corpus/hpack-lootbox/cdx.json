@@ -2,53 +2,6 @@
   "bomFormat": "CycloneDX",
   "components": [
     {
-      "bom-ref": "pkg:generic/snapshot.yaml@unspecified",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ]
-      },
-      "name": "snapshot.yaml",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-snapshot"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "stack-yaml-lock"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "build-toolchain"
-        },
-        {
-          "name": "waybill:stackage-resolver",
-          "value": "snapshot.yaml"
-        }
-      ],
-      "purl": "pkg:generic/snapshot.yaml@unspecified",
-      "type": "library",
-      "version": "unspecified"
-    },
-    {
       "bom-ref": "pkg:hackage/aeson",
       "evidence": {
         "identity": [
@@ -3583,10 +3536,6 @@
         "pkg:hackage/loot-prelude@0.0.0.0"
       ],
       "ref": "hpack-lootbox@2cd7b1e"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:generic/snapshot.yaml@unspecified"
     },
     {
       "dependsOn": [],
