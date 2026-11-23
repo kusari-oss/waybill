@@ -226,7 +226,7 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-A65I77WXF63XW3UB",
+      "SPDXID": "SPDXRef-Package-AVHOIVSHO767BBAM",
       "annotations": [
         {
           "annotationDate": "<masked>",
@@ -256,7 +256,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:invisible-island:ncurses:6.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:invisible-island:ncurses:6.6:20251230:*:*:*:*:*:*\",\"cpe:2.3:a:ncurses_project:ncurses:6.6:20251230:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.6:20251230:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -275,22 +275,22 @@
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:generic/ncurses@6.6",
+          "referenceLocator": "pkg:generic/ncurses@6.6.20251230",
           "referenceType": "purl"
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:invisible-island:ncurses:6.6:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:invisible-island:ncurses:6.6:20251230:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:ncurses_project:ncurses:6.6:20251230:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:gnu:ncurses:6.6:20251230:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -298,7 +298,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "ncurses",
-      "versionInfo": "6.6"
+      "versionInfo": "6.6.20251230"
     },
     {
       "SPDXID": "SPDXRef-Package-WSSZAL5TTZMVK5KS",
@@ -367,7 +367,7 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-A65I77WXF63XW3UB",
+      "relatedSpdxElement": "SPDXRef-Package-AVHOIVSHO767BBAM",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },

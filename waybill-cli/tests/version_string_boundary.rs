@@ -33,7 +33,7 @@ const EXPAT: &[u8] = b"expat_2.7.5\0";
 const OPENSSL: &[u8] = b"OpenSSL 3.0.11\0";
 
 const ZLIB_V: &str = "pkg:generic/zlib@1.3.2";
-const NCURSES_V: &str = "pkg:generic/ncurses@6.6";
+const NCURSES_V: &str = "pkg:generic/ncurses@6.6.20251230";
 const EXPAT_V: &str = "pkg:generic/expat@2.7.5";
 const OPENSSL_V: &str = "pkg:generic/openssl@3.0.11";
 
@@ -230,11 +230,13 @@ fn b1_nul_preceded_banners_are_byte_identical_to_main() {
 // T004: census positive controls (C-1, C-2)
 // ---------------------------------------------------------------------
 
-/// The `waybill::version_census` events of a scan. The needles are raw
+/// The `waybill::version_census` `hit` events of a scan. The needles are raw
 /// JSON (`"library":"ncurses"`), so a Debug-escaped field (`\"library\"`)
-/// cannot satisfy them.
+/// cannot satisfy them. The field is matched with its leading space: the
+/// same target also carries specs 1644 and 1645's events, and spec 1645's
+/// `curated_version_change` names its library too.
 fn census_events(s: &Scan) -> Vec<&str> {
-    s.stderr.lines().filter(|l| l.contains("waybill::version_census")).collect()
+    s.stderr.lines().filter(|l| l.contains("waybill::version_census") && l.contains(" hit=")).collect()
 }
 
 #[test]
