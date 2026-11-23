@@ -110,7 +110,7 @@ only when the same binary also holds the library's **anchor**:
 |---|---|---|
 | bzip2 | the text `bzip2/libbzip2` (from its internal-error message) | `X.Y.Z, DD-Mon-YYYY`; the version is `X.Y.Z` |
 | GMP | the text `GNU MP:` (from its allocation-failure messages) | `X.Y.Z` |
-| liblzma | a **defined** `lzma_version_string` or `lzma_version_number` symbol: an ELF dynamic symbol or Mach-O external that is not undefined, or a PE export | `X.Y.Z`, optionally followed by `alpha` or `beta` |
+| liblzma | a **defined** `lzma_version_string` or `lzma_version_number` symbol: in an ELF file's dynamic or static symbol table (`.dynsym` or `.symtab`), a Mach-O external that is not undefined, or a PE export | `X.Y.Z`, optionally followed by `alpha` or `beta` |
 
 The rules for the version string:
 
@@ -122,10 +122,19 @@ The rules for the version string:
   more, it gets no version; one is never chosen.
 - GMP and liblzma share the `X.Y.Z` form. A string that both of them,
   anchored in the same binary, would accept versions neither.
-- A program that only *imports* liblzma's symbols does not anchor it.
-  A statically linked liblzma whose symbols are hidden, and a fat
-  Mach-O, get no liblzma version. The PE path is not covered by a test
-  fixture.
+- A program that only *imports* liblzma's symbols does not anchor it,
+  from either symbol table.
+- A statically linked liblzma is versioned when the program is not
+  stripped: a static link leaves liblzma's symbols in `.symtab` (spec
+  1647, #1664). If the same binary also holds GMP's anchor text, a
+  version string both libraries accept versions neither, as above.
+- A **stripped** static liblzma gets no version. It keeps its version
+  string, but no symbol and no text that names the library. The xz
+  stream header magic it carries is not used as an anchor: 7-Zip carries
+  the same bytes, with its own xz code, beside a single bare `13.2.0`,
+  its compiler's version.
+- A fat Mach-O gets no liblzma version. The PE path is not covered by a
+  test fixture.
 
 The component names, `bzip2`, `gmp` and `liblzma`, are the names of the
 libraries' upstream pkg-config files. So when a tree also ships

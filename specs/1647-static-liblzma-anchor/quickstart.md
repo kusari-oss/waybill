@@ -22,7 +22,7 @@ RUST_LOG=waybill::version_census=debug ./target/debug/waybill sbom scan --path <
 
 ```sh
 cargo test -p waybill --test version_string_static
-cargo test -p waybill --lib s1647
+cargo test -p waybill --bins s1647
 ```
 
 ## The gate

@@ -129,30 +129,38 @@ Output does not change in this phase.
 **Goal**: FR-004's outcome is recorded and visible.
 **Independent test**: S8 gives no liblzma component (if rejected), and #1664 records why.
 
-- [ ] T014 [US3] Comment on #1664 with FR-004's measured outcome: the magic's population, the `7zr` false version with waybill's census line, and that a stripped static liblzma remains unversioned. End the comment with `---` and the attribution line. No session URLs.
+- [X] T014 [US3] Comment on #1664 with FR-004's measured outcome: the magic's population, the `7zr` false version with waybill's census line, and that a stripped static liblzma remains unversioned. End the comment with `---` and the attribution line. No session URLs.
+  - *As built*: posted on #1664 (issue comment 7105769275), with the attribution line.
 
 ## Phase 6: User Story 4 — nothing else changes (P2)
 
 **Goal**: every difference is traced.
 **Independent test**: the public corpus, the quality corpus and TheRock, each against a `main` control.
 
-- [ ] T015 [US4] Public corpus at the final code commit (`-f branch=1647-static-liblzma-anchor`), with the summary's commit confirmed.
+- [X] T015 [US4] Public corpus at the final code commit (`-f branch=1647-static-liblzma-anchor`), with the summary's commit confirmed.
   - **No drift**: record the 166 of 166 run.
   - **Drift**: trace every changed line to a newly versioned liblzma component, regenerate with `regen_goldens=true`, `cmp` the regenerated files with the traced output, commit them, and confirm 166 of 166.
 
   Record all of it in `MS/corpus.md`.
-- [ ] T016 [US4] Quality corpus (`census-versions.yml`) and TheRock (`measure-full`, base `b6ad3c26` against the final code commit), at full SHAs, with every `refs.txt` verified. Record in `MS/therock.md`:
+  - *As built*: no drift. Run 45206557193 scanned `541e2bff` and passed 166 of 166 (`MS/corpus.md`).
+
+- [X] T016 [US4] Quality corpus (`census-versions.yml`) and TheRock (`measure-full`, base `b6ad3c26` against the final code commit), at full SHAs, with every `refs.txt` verified. Record in `MS/therock.md`:
   - every component that changed, traced to one file and one anchor, including any GMP version removed by a shared candidate. If T009 found none on TheRock, the expected result is no change, and it is stated as such;
   - the recursive component counts and the edge counts, compared;
   - `waybill sbom parity-check` on both arms;
   - SC-007's timing: one warm-up per arm, 3 interleaved runs, the median ratio, and min/median/max.
+  - *As built*: TheRock's documents are identical to `main`'s in all three formats with UUIDs and timestamps masked. parity-check gives 260 of 261 on both arms, with the same A5 row failing. All 17 quality-corpus documents are identical. Only the static control gained `liblzma@5.4.5`. Median ratio 1.001 (`MS/therock.md`).
 
 ## Phase 7: Polish
 
-- [ ] T017 [P] `docs/reference/binary-identity.md`:
+- [X] T017 [P] `docs/reference/binary-identity.md`:
   - the liblzma anchor row: a defined symbol in the ELF dynamic or static symbol table, a Mach-O defined external, or a PE export;
   - replace "A statically linked liblzma whose symbols are hidden … gets no liblzma version" with what holds now: unstripped static builds are versioned; stripped ones are not, with FR-004's reason.
-- [ ] T018 [P] `CHANGELOG.md`: a Fixed entry citing #1664, built from T009, T015 and T016's measurements.
+  - *As built*: the liblzma anchor row, and three bullets replacing the hidden-symbols sentence: importers from either table, unstripped static builds versioned, stripped ones not (with the 7-Zip reason).
+
+- [X] T018 [P] `CHANGELOG.md`: a Fixed entry citing #1664, built from T009, T015 and T016's measurements.
+  - *As built*: a Fixed entry above #1665's, built from T009, T015 and T016.
+
 - [ ] T019 Run the full gate on the final commit, and record in `MS/gate-log.md`:
   - `GATE_RESULT`, the `>>> all pre-PR checks passed.` line, and the per-target totals;
   - that `git diff b6ad3c26 -- Cargo.lock '*Cargo.toml'` is empty.

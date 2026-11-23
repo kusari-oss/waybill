@@ -101,6 +101,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A program that statically links liblzma, unstripped, now gets liblzma's version (#1664).**
+  liblzma's version was read only when the binary defined `lzma_version_string` or `lzma_version_number` as a dynamic symbol, which a static link never does. It puts them in the static symbol table (`.symtab`), so an unstripped static program got no liblzma component.
+  - **Now:** a definition in either table anchors liblzma, and an imported (undefined) symbol in either still never does. If the same binary also holds GMP's anchor text, a version string both libraries accept versions neither, as before.
+  - **A stripped static program still gets no version.** It keeps the version string but nothing that names liblzma. Its xz header bytes were measured as an anchor and rejected: 7-Zip carries them beside a single bare `13.2.0`, which would have been reported as `liblzma@13.2.0`.
+  - **Measured:** on the ROCm 7.14 SDK, the 17 open-source projects scanned before and after, and the public corpus, output is unchanged, because none contains an unstripped static liblzma. A real static build of liblzma 5.4.5 is now versioned. Scan time on the SDK is 1.001× `main`.
+
 - **A library read from its own bytes stays visible after it merges into a pkg-config or CMake component (#1665).**
   When a version banner or exported symbols identified a library and a `.pc` or CMake file named the same version, the merged component kept only the file's evidence. On the ROCm 7.14 SDK that hid the binary match on 6 of its 7 banner-matched libraries: expat, gmp, liblzma, llvm, ncurses and zlib.
   - **Now:** the merged component's CycloneDX `evidence.identity` lists two methods, `manifest-analysis` and `binary-analysis`, and SPDX 2.3 and SPDX 3 add the same `methods` to their `evidence.identity` annotation. Components with one method keep their payload exactly.
