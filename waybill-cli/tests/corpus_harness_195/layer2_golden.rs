@@ -73,6 +73,18 @@ pub fn compare_golden(
             FailureFormat::All => unreachable!("layer 2 is per-format"),
         }
     }
+    // #1677 — the hpack targets' goldens keep only the Haskell surface. The
+    // per-target expectations and the invariant layer still see the whole
+    // document; only what is committed as the golden is filtered.
+    if target.starts_with("hpack-") {
+        let prefix = js_filter::HASKELL_PREFIX;
+        match format {
+            FailureFormat::Cdx => js_filter::filter_cdx_to_prefix(&mut masked, prefix),
+            FailureFormat::Spdx23 => js_filter::filter_spdx23_to_prefix(&mut masked, prefix),
+            FailureFormat::Spdx3 => js_filter::filter_spdx3_to_prefix(&mut masked, prefix),
+            FailureFormat::All => unreachable!("layer 2 is per-format"),
+        }
+    }
     let masked_bytes = serde_json::to_vec_pretty(&masked).expect("serialize masked");
     let golden = golden_path(target, match format {
         FailureFormat::Cdx => FailureFormat::Cdx,

@@ -1,4 +1,10 @@
-//! JS-only golden filter — issue #760 option B, feature 675 FR-008.
+//! Single-ecosystem golden filter — issue #760 option B, feature 675 FR-008.
+//!
+//! #1677 generalised it from `pkg:npm/*` to any PURL prefix: the hpack
+//! targets' goldens are filtered to `pkg:hackage/*`, because most of their
+//! components (ogmios's npm clients, hs-temporal-sdk's Rust crates) say
+//! nothing about the Haskell readers they are there to measure. The JS
+//! wrappers below keep `pants-example-javascript` byte-identical.
 //!
 //! Filters emitted SBOMs down to the `pkg:npm/*` surface only, before
 //! layer 2 byte-identity comparison. Applied per-target (dispatched by
@@ -25,7 +31,7 @@ use std::collections::HashSet;
 /// retained entry's `.dependsOn[]` filtered to only npm PURLs.
 ///
 /// Idempotent: applying twice yields byte-identical output.
-pub fn filter_cdx_to_js(v: &mut serde_json::Value) {
+pub fn filter_cdx_to_prefix(v: &mut serde_json::Value, prefix: &str) {
     let Some(obj) = v.as_object_mut() else { return };
 
     // The primary component's bom-ref, retained unconditionally below.
@@ -52,7 +58,7 @@ pub fn filter_cdx_to_js(v: &mut serde_json::Value) {
         components.retain(|c| {
             c.get("purl")
                 .and_then(|p| p.as_str())
-                .is_some_and(|p| p.starts_with("pkg:npm/"))
+                .is_some_and(|p| p.starts_with(prefix))
         });
     }
 
@@ -61,14 +67,14 @@ pub fn filter_cdx_to_js(v: &mut serde_json::Value) {
     if let Some(deps) = obj.get_mut("dependencies").and_then(|d| d.as_array_mut()) {
         deps.retain_mut(|dep| {
             let dep_ref = dep.get("ref").and_then(|r| r.as_str());
-            let is_npm_ref = dep_ref.is_some_and(|r| r.starts_with("pkg:npm/"));
+            let is_npm_ref = dep_ref.is_some_and(|r| r.starts_with(prefix));
             let is_root = dep_ref.is_some() && dep_ref == root_ref.as_deref();
             if !is_npm_ref && !is_root {
                 return false;
             }
             if let Some(depends_on) = dep.get_mut("dependsOn").and_then(|d| d.as_array_mut()) {
                 depends_on.retain(|t| {
-                    t.as_str().is_some_and(|s| s.starts_with("pkg:npm/"))
+                    t.as_str().is_some_and(|s| s.starts_with(prefix))
                 });
             }
             true
@@ -87,7 +93,7 @@ pub fn filter_cdx_to_js(v: &mut serde_json::Value) {
 /// SPDXIDs are in the retained set.
 ///
 /// Retained packages keep ALL their externalRefs (not filtered per-entry).
-pub fn filter_spdx23_to_js(v: &mut serde_json::Value) {
+pub fn filter_spdx23_to_prefix(v: &mut serde_json::Value, prefix: &str) {
     let Some(obj) = v.as_object_mut() else { return };
 
     // Compute the "always keep" set: documentDescribes references + the
@@ -120,7 +126,7 @@ pub fn filter_spdx23_to_js(v: &mut serde_json::Value) {
                     arr.iter().any(|r| {
                         r.get("referenceLocator")
                             .and_then(|l| l.as_str())
-                            .is_some_and(|l| l.starts_with("pkg:npm/"))
+                            .is_some_and(|l| l.starts_with(prefix))
                     })
                 })
                 .unwrap_or(false);
@@ -163,7 +169,7 @@ pub fn filter_spdx23_to_js(v: &mut serde_json::Value) {
 /// `to` may be an array — its members are filtered to retained spdxIds
 /// (drop the relationship if `to` becomes empty). `to` may also be a
 /// scalar string — drop the relationship if it references a removed node.
-pub fn filter_spdx3_to_js(v: &mut serde_json::Value) {
+pub fn filter_spdx3_to_prefix(v: &mut serde_json::Value, prefix: &str) {
     let Some(obj) = v.as_object_mut() else { return };
 
     // SPDX 3 uses "type" (per the JPEWdev validator we gate on); support
@@ -230,7 +236,7 @@ pub fn filter_spdx3_to_js(v: &mut serde_json::Value) {
         let has_npm_purl = node
             .get("software_packageUrl")
             .and_then(|u| u.as_str())
-            .is_some_and(|u| u.starts_with("pkg:npm/"))
+            .is_some_and(|u| u.starts_with(prefix))
             || node
                 .get("externalIdentifier")
                 .and_then(|e| e.as_array())
@@ -243,7 +249,7 @@ pub fn filter_spdx3_to_js(v: &mut serde_json::Value) {
                         let ident_is_npm = r
                             .get("identifier")
                             .and_then(|i| i.as_str())
-                            .is_some_and(|i| i.starts_with("pkg:npm/"));
+                            .is_some_and(|i| i.starts_with(prefix));
                         ty_is_purl && ident_is_npm
                     })
                 })
@@ -307,6 +313,27 @@ pub fn filter_spdx3_to_js(v: &mut serde_json::Value) {
     });
 }
 
+/// The JS surface (feature 675), for `pants-example-javascript`.
+pub fn filter_cdx_to_js(v: &mut serde_json::Value) {
+    filter_cdx_to_prefix(v, "pkg:npm/");
+}
+
+/// The JS surface (feature 675), for `pants-example-javascript`.
+pub fn filter_spdx23_to_js(v: &mut serde_json::Value) {
+    filter_spdx23_to_prefix(v, "pkg:npm/");
+}
+
+/// The JS surface (feature 675), for `pants-example-javascript`.
+pub fn filter_spdx3_to_js(v: &mut serde_json::Value) {
+    filter_spdx3_to_prefix(v, "pkg:npm/");
+}
+
+/// #1677: the Haskell surface, `pkg:hackage/*`, for the hpack targets. The
+/// document-scope records (C200 `waybill:hpack-read-outcome` among them)
+/// stay: CycloneDX `metadata` is never filtered, SPDX 2.3 keeps document
+/// fields, and SPDX 3 keeps annotations whose subject is the document.
+pub const HASKELL_PREFIX: &str = "pkg:hackage/";
+
 // ------------------------------------------------------------------
 // Unit tests — per contracts/js-golden-filter.md testing section
 // ------------------------------------------------------------------
@@ -315,6 +342,33 @@ pub fn filter_spdx3_to_js(v: &mut serde_json::Value) {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// #1677: the Haskell filter keeps `pkg:hackage/*` components, their
+    /// edges and the document's metadata (where C200 lives), and drops every
+    /// other ecosystem.
+    #[test]
+    fn haskell_prefix_keeps_hackage_and_document_metadata() {
+        let mut v = json!({
+            "metadata": {
+                "component": {"bom-ref": "pkg:generic/hpack-x@1"},
+                "properties": [{"name": "waybill:hpack-read-outcome", "value": "{}"}]
+            },
+            "components": [
+                {"purl": "pkg:hackage/base@4.18.0", "bom-ref": "pkg:hackage/base@4.18.0"},
+                {"purl": "pkg:npm/left-pad@1.0.0", "bom-ref": "pkg:npm/left-pad@1.0.0"},
+                {"purl": "pkg:cargo/serde@1.0.0", "bom-ref": "pkg:cargo/serde@1.0.0"}
+            ],
+            "dependencies": [
+                {"ref": "pkg:generic/hpack-x@1", "dependsOn": ["pkg:hackage/base@4.18.0", "pkg:npm/left-pad@1.0.0"]},
+                {"ref": "pkg:npm/left-pad@1.0.0", "dependsOn": []}
+            ]
+        });
+        filter_cdx_to_prefix(&mut v, HASKELL_PREFIX);
+        let purls: Vec<&str> = v["components"].as_array().unwrap().iter().map(|c| c["purl"].as_str().unwrap()).collect();
+        assert_eq!(purls, vec!["pkg:hackage/base@4.18.0"]);
+        assert_eq!(v["metadata"]["properties"][0]["name"], "waybill:hpack-read-outcome");
+        assert_eq!(v["dependencies"], json!([{"ref": "pkg:generic/hpack-x@1", "dependsOn": ["pkg:hackage/base@4.18.0"]}]));
+    }
 
     // (a) Happy-path CDX with mixed npm + pypi components → npm-only remain.
     #[test]
