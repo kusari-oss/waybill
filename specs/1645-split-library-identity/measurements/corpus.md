@@ -28,3 +28,9 @@ No other target changed. Specifically, no target outside TheRock has a curated L
 - **Commit**: `Scanned commit: c7d556ea…`. Its code differs from `cd88e02b` only in the module's doc comment.
 - **Result**: `166 passed; 0 failed`. The summary lists exactly 3 changed goldens: `nix-closure-openai` in each of the three formats.
 - **Copied into the tree**: all files from `corpus-goldens-regen`. `git status` shows exactly those 3 modified, and each is byte-identical (`cmp`) to the `.actual` document traced above.
+
+## Confirmation, run 45085758825 at `4953c559`
+
+- **Dispatch**: `-f branch=1645-split-library-identity`, without regeneration, against the committed goldens.
+- **Commit**: `Scanned commit: 4953c559…`, the commit with the regenerated goldens.
+- **Result**: `test result: ok. 166 passed; 0 failed`.
