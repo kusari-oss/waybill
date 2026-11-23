@@ -39,6 +39,7 @@ Target `waybill::version_census`, level DEBUG, with fields `path` and `liblzma_s
 
 - `current`, `rule_a` and `rule_b` each list every anchored library's verdict, so a library that a rule versions, and one it un-versions, are both visible.
 - `rule_b` appears instead of `rule_a` on a stripped file at the log-only commit, with `magic` (the offset).
+- **At the wired commit** (`541e2bff`, after FR-004 was rejected): `rule_b` and `magic` no longer exist. The event fires only for a binary anchored by `.symtab` alone, and `rule_a` equals `current`.
 - `elf_type` is absent for a non-ELF binary. Rule B is not specific to ELF.
 - Keys are sorted. Absent rules are omitted, not null.
 - The existing `anchored` event keeps its fields. Each entry of `anchors` with `"kind":"symbol"` gains `"table"` and `"binding"`, and nothing else changes.

@@ -32,6 +32,8 @@ Emitted for a binary of any format when at least one holds:
 | `rule_b` | the same list as the magic would give it; absent when rule B does not apply, and after it is removed |
 | `current` | the same list as production computes it on this commit, so a rule's effect is `rule_a` (or `rule_b`) compared with `current`: a library newly versioned, or one losing its version |
 
+**At the wired commit**, the event fires only for a binary with a `.symtab` anchor that no other table defines. `rule_a` equals `current`, and `rule_b` and `magic` are gone (FR-004 rejected). `BinaryScan` has no separate `.symtab` list: the `.symtab` anchors are part of `anchor_symbols`.
+
 The verdict is spec 1644's: `versioned`, `ambiguous`, `ambiguous-shared` or `no-candidate`.
 
 ## States across commits

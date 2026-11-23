@@ -161,10 +161,13 @@ Output does not change in this phase.
 - [X] T018 [P] `CHANGELOG.md`: a Fixed entry citing #1664, built from T009, T015 and T016's measurements.
   - *As built*: a Fixed entry above #1665's, built from T009, T015 and T016.
 
-- [ ] T019 Run the full gate on the final commit, and record in `MS/gate-log.md`:
+- [X] T019 Run the full gate on the final commit, and record in `MS/gate-log.md`:
   - `GATE_RESULT`, the `>>> all pre-PR checks passed.` line, and the per-target totals;
   - that `git diff b6ad3c26 -- Cargo.lock '*Cargo.toml'` is empty.
-- [ ] T020 Close-out. For every task above, check that its claim is true of the committed tree and measurements. Where the implementation differs from the task text, note it inline rather than tick a false claim. Then tick it.
+  - *As built*: passed at `a3d60b95`, with 430 suites, 11,061 passed, 0 failed, 48 ignored, and no Cargo change (`MS/gate-log.md`).
+
+- [X] T020 Close-out. For every task above, check that its claim is true of the committed tree and measurements. Where the implementation differs from the task text, note it inline rather than tick a false claim. Then tick it.
+  - *As built*: every task's claim checked against the tree and `MS/`. The log-only pieces that T011 removed (`static_anchor_symbols`, rule B, the magic search) are noted at T005, T006 and T011, and the wired state is noted in contracts/wire.md and data-model.md. quickstart's unit-test command was corrected from `--lib` to `--bins`.
 
 ## Dependencies
 
