@@ -126,6 +126,8 @@ Binaries whose liblzma verdict does not change produce the same documents as on 
 
   If either fails, the magic is not adopted. The failing build or program and the reason go in `measurements/`, and #1664 is updated with them.
 
+  **Decided by the census: rejected** (`measurements/census.md`, T010). The second condition fails. 7-Zip's `7zr` and `7za` (`7zip 23.01+dfsg-11`, Ubuntu 24.04) hold the magic through 7-Zip's own xz implementation, with no liblzma. Each holds one whole-string candidate, `13.2.0`, the GCC version from 7-Zip's `Compiler:` banner. waybill's own verdict code, with the magic as an anchor, gives both `liblzma@13.2.0`. The build matrix for the first condition is not built. On TheRock the magic is in 5 files and would version none of them (all `no-candidate`). A stripped static liblzma therefore stays unversioned.
+
 - **FR-005 (census reporting)**: `waybill::version_census` MUST report, for each liblzma-anchored binary, which anchor fired: a defined `.dynsym` symbol, a defined `.symtab` symbol with its binding, or (if adopted) the header magic with its offset. The existing event fields keep their shape.
 
 - **FR-006 (no new output field)**: A version gained this way MUST be emitted exactly as spec 1644's liblzma match: same PURL name (`pkg:generic/liblzma`), same evidence kind, same technique (spec 1646's `binary-analysis`), same annotations. No new annotation, catalog row or output field.

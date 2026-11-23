@@ -20,31 +20,35 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Build `main`'s binary at `b6ad3c26` into the scratchpad as `waybill-main-b6ad3c26`. Before building, confirm that `git diff b6ad3c26 -- waybill-cli waybill-common Cargo.toml Cargo.lock` is empty. Record the full SHA in `MS/control.md`.
-- [ ] T002 [P] In `IL`, add the test-only `elf_with_symtab(e_type: u16, rodata: &[u8], defined: &[&str], undefined: &[&str]) -> Vec<u8>` (R6).
+- [X] T001 Build `main`'s binary at `b6ad3c26` into the scratchpad as `waybill-main-b6ad3c26`. Before building, confirm that `git diff b6ad3c26 -- waybill-cli waybill-common Cargo.toml Cargo.lock` is empty. Record the full SHA in `MS/control.md`.
+- [X] T002 [P] In `IL`, add the test-only `elf_with_symtab(e_type: u16, rodata: &[u8], defined: &[&str], undefined: &[&str]) -> Vec<u8>` (R6).
   - Shape: `.rodata`, `.symtab` and `.strtab`, no `.dynsym`, modelled on `elf_shared_lib_with_dynsym`.
   - `defined` entries are global functions in `.rodata`; `undefined` entries are `SHN_UNDEF`.
   - Add a variant, or a flag, that also writes `.dynsym` with the same defined names, for S6.
   - A unit-level sanity test parses its output with `object` and checks that `symbols()` returns exactly the given names, with their definedness.
-- [ ] T003 [P] Create `IT`, copying the harness from `waybill-cli/tests/version_string_anchored.rs` (`region`, `tree`, scan in three formats with parity and unique `bom-ref`s, census events from stderr). Add `WAYBILL_VERSION_STATIC_BIN`, to run a case against T001's binary.
+  - *As built*: `elf_with_symtab` wraps a general `elf_with_tables(e_type, rodata, dynsym: Option<(defined, undefined)>, symtab: (defined, undefined))`, which S6 uses for both tables. The sanity test is `helper_writes_symtab_only_with_definedness` in `IT`.
+- [X] T003 [P] Create `IT`, copying the harness from `waybill-cli/tests/version_string_anchored.rs` (`region`, `tree`, scan in three formats with parity and unique `bom-ref`s, census events from stderr). Add `WAYBILL_VERSION_STATIC_BIN`, to run a case against T001's binary.
+  - *As built*: `Scan` keeps the CycloneDX document and the log; `scan_with(bin, dir)` returns the three documents' bytes for the control.
 
 ## Phase 2: Foundational (log-only census)
 
 Output does not change in this phase.
 
-- [ ] T004 In `VS`, add `AnchorSymbol { name, table: SymbolTable, binding: Binding }`, `enum SymbolTable { Dynsym, Symtab, MachoSymtab, PeExport }` and `enum Binding { Global, Weak, Local, Unknown }` (data-model).
+- [X] T004 In `VS`, add `AnchorSymbol { name, table: SymbolTable, binding: Binding }`, `enum SymbolTable { Dynsym, Symtab, MachoSymtab, PeExport }` and `enum Binding { Global, Weak, Local, Unknown }` (data-model).
   - In `EN`, change `anchor_symbols` to `Vec<AnchorSymbol>`.
   - In `SC`, fill it from today's three sources (`.dynsym`, Mach-O globals, PE exports), with table and binding, as today: defined only, deduplicated by `(name, table)`.
   - `anchored_verdicts` takes `&[AnchorSymbol]` and keys on names only, so verdicts are unchanged.
   - `Anchor::Symbol` gains `table` and `binding`. The `anchored` event's symbol anchors gain `"table"` and `"binding"`; every other field is unchanged (contracts/wire.md).
   - Unit tests: the existing spec 1644 verdict tests pass after mechanical type changes, and an `anchored` JSON test shows the two new keys.
-- [ ] T005 In `SC`, add the census-only read of `.symtab` (R3):
+  - *As built*: the spec 1644 test `defined_anchor_symbol_anchors_elf_and_macho` asserted the old anchor JSON exactly, and failed the first gate. It now asserts the new full form for each format (`dynsym` on ELF, `macho-symtab` on Mach-O).
+- [X] T005 In `SC`, add the census-only read of `.symtab` (R3):
   - one `memchr::memmem` search for `lzma_version_` over the raw `.strtab` section;
   - only on a hit, iterate `file.symbols()`, keeping **defined** entries named in `ANCHOR_SYMBOLS`, with their binding.
 
   Store them in a new never-emitted `BinaryScan.static_anchor_symbols: Vec<AnchorSymbol>` (table `Symtab`), plus `elf_type`. They do **not** feed `anchor_symbols` on this commit.
   - Unit tests on T002's helper: defined in `.symtab` is collected; undefined is not; a `.strtab` without the needle skips iteration; a non-ELF file gives empty.
-- [ ] T006 In `VS` and `MD`, emit the `liblzma_static` census event (contracts/wire.md, R4), for a binary of any format, when either:
+  - *As built*: the four checks are integration cases, not unit tests in `SC`, because the `.symtab` builder lives in `tests/common`: S1 and S2 (collected), S3 (undefined), S7 (no needle), S6 (both tables). Recorded in `MS/control.md`.
+- [X] T006 In `VS` and `MD`, emit the `liblzma_static` census event (contracts/wire.md, R4), for a binary of any format, when either:
   - rule A applies (ELF only): `static_anchor_symbols` holds a name `anchor_symbols` does not;
   - rule B applies: the region holds `FD 37 7A 58 5A 00` and both lists are empty.
 
@@ -55,7 +59,8 @@ Output does not change in this phase.
 
   Keys are sorted, an absent rule is omitted, and `elf_type` is omitted for a non-ELF binary.
   - Unit tests: the event's JSON for a rule A case, for a rule B case, and for S5's shape, where `current` has gmp `versioned` and `rule_a` has gmp and liblzma `ambiguous-shared`.
-- [ ] T007 Write S1–S8 in `IT` with their expected results:
+  - *As built*: `version_strings::liblzma_static_event`, with five unit tests `s1647_*` in `VS`. They run in the binary target: `cargo test -p waybill --bins s1647`.
+- [X] T007 Write S1–S8 in `IT` with their expected results:
   - S1, S2 and S5 are red on this commit; S3, S4 and S6–S8 pass.
   - Each case also asserts its census, by the liblzma entry unless stated:
     - S1 and S2: `rule_a` is `versioned` at `5.4.5`;
@@ -65,8 +70,10 @@ Output does not change in this phase.
     - S8: `rule_b` is `versioned` (this commit only).
 
   Run the cases with this commit's binary and with T001's (`WAYBILL_VERSION_STATIC_BIN`). Record the red/green table in `MS/control.md`, and confirm that T001's binary gives byte-identical documents to this commit's for every case.
-- [ ] T008 Mark S1, S2 and S5 `#[ignore = "spec 1647: red until T011"]`. Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, then check `GATE_RESULT=pass`, the expected line, and the per-target totals. Commit the log-only change and push.
-- [ ] T009 Census (FR-001, R5).
+  - *As built*: the control is `control_byte_identical_to_main` (ignored unless `WAYBILL_VERSION_STATIC_MAIN_BIN` is set). It masks version-4 UUIDs, because the CycloneDX serial is random per run (`MS/control.md`). The red cases check their census first, so their log-only failure is the component line.
+- [X] T008 Mark S1, S2 and S5 `#[ignore = "spec 1647: red until T011"]`. Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, then check `GATE_RESULT=pass`, the expected line, and the per-target totals. Commit the log-only change and push.
+  - *As built*: the first gate failed at clippy (an unread field) and the second on the spec 1644 assertion (T004's note). The third passed at `7c78ac6c`: 430 suites, 11,057 passed, 0 failed, 51 ignored (47 before, plus S1, S2, S5 and the control).
+- [X] T009 Census (FR-001, R5).
 
   In `FR`:
   - extend `census/versions.py` to parse `liblzma_static`, summarising per target:
@@ -82,10 +89,13 @@ Output does not change in this phase.
   - locally (not TheRock): extract the 13 magic-carrying files listed in `MS/magic-population-2026-11-23.md` from `ubuntu:24.04` with the same packages, scan each alone with T008's build and the census on, and record every `liblzma_static` event.
 
   Record everything in `MS/census.md`. State plainly any count that is zero, TheRock's above all.
-- [ ] T010 **Checkpoint: decide FR-004.**
+  - *As built*: run 45201916920 (20 of 20 jobs, every `refs.txt` at `7c78ac6c`) and public corpus run 45201924694 (166 of 166, scanned commit `7c78ac6c`). TheRock: rule A **0 files**; rule B 5 files, all `no-candidate`. Quality corpus: 0 events. Ubuntu: `7zr` and `7za` get rule B `liblzma@13.2.0`. Static control: both rules fired on the runner's real build at 5.4.5. Everything is in `MS/census.md`.
+
+- [X] T010 **Checkpoint: decide FR-004.**
   - If T009 records `7zr` (or any non-liblzma file) with `rule_b.verdict = versioned`: amend spec FR-004 to **rejected**, citing `MS/census.md` and `MS/magic-population-2026-11-23.md`, and amend wire S8 and data-model accordingly.
   - If no non-liblzma file is versioned by rule B: stop. Report to the user that FR-004's first condition (the build matrix) is now needed, and do not wire rule B without it.
   - If a rule A count contradicts FR-002 (for example a local-binding or relocatable-object case that is not liblzma), amend the spec first.
+  - *As built*: FR-004 is **rejected** (`7zr`, `7za`) and amended in spec.md, contracts/wire.md (S8) and data-model.md. FR-002 is confirmed. This spec does not change TheRock's output.
 
 ## Phase 3: User Story 1 — an unstripped static liblzma gets its version (P1) 🎯 MVP
 

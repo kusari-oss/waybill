@@ -21,7 +21,7 @@ Each file is synthetic: `waybill-fixture-*` names, a `.rodata` region, and `.sym
 | S5 | exec | defines `lzma_version_string` | `GNU MP:\x005.4.5\x00` | neither gmp nor liblzma (spec 1644 FR-005a). **Red at the log-only commit**: there, as on `main`, it gives `pkg:generic/gmp@5.4.5`, and the census shows `current` with gmp `versioned` against `rule_a` with gmp and liblzma `ambiguous-shared` |
 | S6 | dyn, `.dynsym` and `.symtab` both define it | | `\x005.4.5\x00` | `liblzma@5.4.5`, byte-identical to `main` |
 | S7 | exec | `.symtab` holds only unrelated names | `\x005.4.5\x00` | no liblzma component, byte-identical to `main` |
-| S8 | exec | none (stripped) | `\xFD7zXZ\x00` and `\x005.4.5\x00` | no liblzma component, unless FR-004 is adopted |
+| S8 | exec | none (stripped) | `\xFD7zXZ\x00` and `\x005.4.5\x00` | no liblzma component, and no census event: FR-004 was rejected (T010) |
 
 Every case also runs `waybill sbom parity-check` over its three documents (SC-005).
 

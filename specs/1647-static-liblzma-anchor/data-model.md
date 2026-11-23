@@ -39,4 +39,4 @@ The verdict is spec 1644's: `versioned`, `ambiguous`, `ambiguous-shared` or `no-
 | Commit | `.symtab` anchors versioned? | Magic evaluated? | Output vs `main` |
 |---|---|---|---|
 | Log-only | no (census only) | yes (census only) | byte-identical |
-| Wired | yes | no, unless FR-004 is adopted | changes only where an anchored library's verdict changes: liblzma newly versioned, or GMP losing a shared candidate |
+| Wired | yes | no: FR-004 rejected (T010) | changes only where an anchored library's verdict changes: liblzma newly versioned, or GMP losing a shared candidate |
