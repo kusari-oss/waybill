@@ -20,7 +20,7 @@ No component is added or removed, no PURL or version changes, and no other field
 
 **Judgement**: intended. The new CPEs have NVD's form for ncurses records: the release in the version field and the patch date in update. 81 of 110 entries put the date in update, and none put it in version (`nvd-version-forms-2026-11-22.txt`).
 
-No other target changed. Specifically, no target outside TheRock has a curated LLVM or ncurses banner, or a merge (census T010).
+No other target changed. The public corpus's 21 CycloneDX goldens at `bb9d6cc4` carry no `embedded-version-string` component at all (measured for the spec's Background), so no target there has a curated LLVM or ncurses banner or a merge. The T010 census found none in the quality corpus either.
 
 ## Regeneration, run 45083655380 at `c7d556ea`
 
