@@ -209,8 +209,12 @@ pub fn update_goldens_gate() -> bool {
 /// emitted CDX + SPDX 2.3 + SPDX 3 files, and returns them parsed.
 pub fn scan_target(target: &CorpusTarget) -> Result<EmittedSboms, CorpusInfraError> {
     let cache = CorpusCacheDir::default()?;
+    // #1677: targets sharing a pin share the cache directory; take it alone
+    // while cloning and preparing, then release it for the scan.
+    let lock = cache.lock(target)?;
     let cache_dir = cache.ensure_hydrated(target)?;
     let cache_dir = prepared_dir(target, &cache_dir)?;
+    drop(lock);
 
     let out = tempfile::tempdir().map_err(|e| CorpusInfraError::CacheIo {
         path: PathBuf::from("<tmpdir>"),

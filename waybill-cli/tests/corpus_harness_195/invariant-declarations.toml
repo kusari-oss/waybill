@@ -83,6 +83,31 @@ issue = 1206
 
 [[declaration]]
 invariant = "I2"
+target = "hpack-ogmios"
+kind = "duplicate-file-identity"
+count_at_declaration = 1
+reason = """
+Three file-tier components are named `package.json` with an empty version:
+`clients/TypeScript/packages/{client,schema,repl}/package.json`, distinct files
+with distinct content hashes. `(name, version, type)` cannot tell them apart.
+This is #1208's defect, as in `maven-guice`'s seven `pom.xml`. Found when #1677
+added ogmios as an hpack corpus target.
+"""
+issue = 1208
+
+[[declaration]]
+invariant = "I2"
+target = "hpack-ogmios-no-generated-cabal"
+kind = "duplicate-file-identity"
+count_at_declaration = 1
+reason = """
+The same three `package.json` file components as `hpack-ogmios`: removing the
+hpack-generated `.cabal` (#1677) does not touch the TypeScript clients.
+"""
+issue = 1208
+
+[[declaration]]
+invariant = "I2"
 target = "maven-guice"
 kind = "duplicate-file-identity"
 count_at_declaration = 1
@@ -338,6 +363,31 @@ issue = 1207
 # (`classify_orphans` short-circuits on any other ecosystem), so these
 # cells want new vocabulary rather than a new caller of the old.
 # ---------------------------------------------------------------------
+
+[[declaration]]
+invariant = "I7"
+target = "hpack-hs-opentelemetry"
+kind = "unreachable-and-unexplained"
+count_at_declaration = 1
+reason = """
+`pkg:generic/unknown@93a107557e8691ed5ca17beaee41e68222b142c48868fc8c04a4181fb233477d`:
+the Stack snapshot in `instrumentation/yesod/stack.yaml.lock`, pinned by URL
+(`original: {url: .../lts/18/8.yaml}`) rather than by resolver name. The reader
+names a snapshot from `original.resolver` alone, so this one is `unknown`, with
+its sha256 as the version, an empty source file, no edge and no orphan reason.
+"""
+issue = 1678
+
+[[declaration]]
+invariant = "I7"
+target = "hpack-hs-opentelemetry-no-generated-cabal"
+kind = "unreachable-and-unexplained"
+count_at_declaration = 1
+reason = """
+The same URL-pinned Stack snapshot as `hpack-hs-opentelemetry`: removing the
+hpack-generated `.cabal` (#1677) does not touch `stack.yaml.lock`.
+"""
+issue = 1678
 
 [[declaration]]
 invariant = "I7"

@@ -91,6 +91,24 @@ pub struct CorpusCacheDir {
     pub root: PathBuf,
 }
 
+/// #1677: exclusive use of one pinned cache directory, released on drop.
+///
+/// Targets pinned to one commit share one cache directory (`CorpusCacheKey`
+/// ignores the target's name), and the corpus runs its targets in parallel.
+/// Without this, a second target cloned or checked out into the directory
+/// while the first was still cloning it: the first CI run of the #1677
+/// targets failed twice with `fatal: unable to read tree`. Held across
+/// hydration and `harness::prepared_dir`, not the scan.
+pub struct HydrationLock {
+    path: PathBuf,
+}
+
+impl Drop for HydrationLock {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir(&self.path);
+    }
+}
+
 impl CorpusCacheDir {
     /// Honors `WAYBILL_CORPUS_CACHE_DIR`, then `$XDG_CACHE_HOME/waybill`,
     /// then `$HOME/.cache/waybill` per contracts/corpus-harness.md.
@@ -234,6 +252,35 @@ impl CorpusCacheDir {
             }
         }
         Ok(())
+    }
+
+    /// Wait for and take [`HydrationLock`] on `target`'s cache directory. The
+    /// lock is a directory, created atomically. One left by a run that died
+    /// is taken over after two hours; waiting gives up after one.
+    pub fn lock(&self, target: &CorpusTarget) -> Result<HydrationLock, CorpusInfraError> {
+        let dir = CorpusCacheKey::for_target(target).dir(&self.root);
+        std::fs::create_dir_all(&dir).map_err(|e| CorpusInfraError::CacheIo { path: dir.clone(), kind: e.kind() })?;
+        let path = dir.join(".hydrate.lock");
+        let start = std::time::Instant::now();
+        loop {
+            match std::fs::create_dir(&path) {
+                Ok(()) => return Ok(HydrationLock { path }),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                    let stale = std::fs::metadata(&path)
+                        .and_then(|m| m.modified())
+                        .is_ok_and(|t| t.elapsed().is_ok_and(|d| d > std::time::Duration::from_secs(7200)));
+                    if stale {
+                        let _ = std::fs::remove_dir(&path);
+                        continue;
+                    }
+                    if start.elapsed() > std::time::Duration::from_secs(3600) {
+                        return Err(CorpusInfraError::CacheIo { path, kind: std::io::ErrorKind::TimedOut });
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(250));
+                }
+                Err(e) => return Err(CorpusInfraError::CacheIo { path, kind: e.kind() }),
+            }
+        }
     }
 
     /// Ensures the target's pinned artifact is present on disk:
