@@ -163,11 +163,20 @@ of these hold:
 The merged component takes the library's name, which is the name the
 CPE table knows, and the record's version. It lists both readers'
 files, and it keeps the record's source mechanism and tier. Edges that
-named the record follow it. Like every merge of a banner match into a
-record, the merged component does not carry the banner match's
-`waybill:evidence-kind` (#1665). Each such file and its verdict
+named the record follow it. Each such file and its verdict
 (`merge`, `version-disagrees`, `name-unrelated` or `ambiguous`) is
 reported by the `waybill::version_census` debug log as `shared_file`.
+
+**A merged component keeps the binary match visible** (spec 1646,
+#1665). A banner or symbol match is identified by `binary-analysis`, the
+CycloneDX 1.6 technique, in `evidence.identity[].methods[]`. When it
+merges into a pkg-config or CMake component, which keeps that reader's
+`manifest-analysis`, the merged component lists both methods; SPDX 2.3
+and SPDX 3 add the same `methods` to their `evidence.identity`
+annotation. The merged component's `waybill:evidence-kind` and
+`waybill:confidence` stay the winning reader's. The
+`waybill::version_census` debug log reports each such merge as
+`binary_merge`.
 
 Each detection emits a `pkg:generic/<library>@<version>` component
 with `waybill:evidence-kind = "embedded-version-string"` and
