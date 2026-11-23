@@ -591,10 +591,17 @@ pub(crate) struct BinaryScan {
     /// non-ELF binaries, ELF binaries with no `.dynsym`, and ELF
     /// binaries whose dynamic-symbol set is fully stripped.
     pub symbol_names: Vec<String>,
-    /// Spec 1644 FR-003: the names from `version_strings::ANCHOR_SYMBOLS`
+    /// Spec 1644 FR-003: the symbols named in `version_strings::ANCHOR_SYMBOLS`
     /// this binary defines (ELF `.dynsym` and Mach-O globals that are not
-    /// undefined; PE exports). Never emitted.
-    pub anchor_symbols: Vec<String>,
+    /// undefined; PE exports), each with its table and binding (spec 1647).
+    /// Never emitted.
+    pub anchor_symbols: Vec<super::version_strings::AnchorSymbol>,
+    /// Spec 1647 FR-002: the same symbols defined in the ELF static symbol
+    /// table (`.symtab`). Census only on the log-only commit. Never emitted.
+    pub static_anchor_symbols: Vec<super::version_strings::AnchorSymbol>,
+    /// Spec 1647 census: `exec`, `dyn`, `rel` or `other` for an ELF file;
+    /// `None` otherwise. Never emitted.
+    pub elf_type: Option<&'static str>,
     /// ELF `.comment` section's NUL-delimited compiler stamps per
     /// milestone-098 FR-001. Within-binary deduped; per-entry length
     /// capped at 4 KiB; total length capped at 64 KiB with a final
@@ -1392,6 +1399,8 @@ mod tests {
             packer: None,
             symbol_names: Vec::new(),
             anchor_symbols: Vec::new(),
+            static_anchor_symbols: Vec::new(),
+            elf_type: None,
             comment_stamps: Vec::new(),
             macho_build_version: None,
             pe_linker_version: None,

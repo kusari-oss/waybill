@@ -628,11 +628,65 @@ fn parse_bzip2_candidate(s: &[u8]) -> Option<String> {
     (year.len() == 4 && year.iter().all(u8::is_ascii_digit)).then(|| version.to_string())
 }
 
+/// Spec 1647 (data-model): the symbol table an anchor symbol was read from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum SymbolTable {
+    /// ELF `.dynsym`.
+    Dynsym,
+    /// ELF `.symtab`: where a static link leaves liblzma's symbols.
+    Symtab,
+    /// The Mach-O symbol table, defined externals only.
+    MachoSymtab,
+    /// The PE export table.
+    PeExport,
+}
+
+impl SymbolTable {
+    pub fn label(self) -> &'static str {
+        match self {
+            SymbolTable::Dynsym => "dynsym",
+            SymbolTable::Symtab => "symtab",
+            SymbolTable::MachoSymtab => "macho-symtab",
+            SymbolTable::PeExport => "pe-export",
+        }
+    }
+}
+
+/// Spec 1647: an anchor symbol's binding. Mach-O externals are `Global`;
+/// PE exports carry none (`Unknown`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Binding {
+    Global,
+    Weak,
+    Local,
+    Unknown,
+}
+
+impl Binding {
+    pub fn label(self) -> &'static str {
+        match self {
+            Binding::Global => "global",
+            Binding::Weak => "weak",
+            Binding::Local => "local",
+            Binding::Unknown => "unknown",
+        }
+    }
+}
+
+/// Spec 1647 (data-model): a **defined** symbol named in [`ANCHOR_SYMBOLS`],
+/// with where it was found. An undefined (imported) symbol is never one.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AnchorSymbol {
+    pub name: String,
+    pub table: SymbolTable,
+    pub binding: Binding,
+}
+
 /// What anchored a library in one binary.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Anchor {
     Text { value: &'static str, offset: usize },
-    Symbol { value: String },
+    Symbol { value: String, table: SymbolTable, binding: Binding },
 }
 
 /// A whole string of a library's candidate shape.
@@ -720,6 +774,20 @@ impl AnchoredVerdict {
         }
     }
 
+    /// Spec 1647: `{candidates, library, verdict, version?}`, one entry of a
+    /// `liblzma_static` event's verdict list.
+    fn summary(&self) -> serde_json::Value {
+        let mut j = serde_json::json!({
+            "candidates": self.candidates.iter().map(|c| c.string.clone()).collect::<Vec<_>>(),
+            "library": self.library.slug(),
+            "verdict": self.verdict.label(),
+        });
+        if let Verdict::Versioned(v) = &self.verdict {
+            j["version"] = serde_json::json!(v);
+        }
+        j
+    }
+
     /// The `waybill::version_census` `anchored` event (contracts/wire.md).
     pub fn to_json(&self) -> String {
         let cand = |c: &Candidate| serde_json::json!({"value": c.string, "offset": c.offset, "preceding": c.preceding});
@@ -727,7 +795,12 @@ impl AnchoredVerdict {
             "library": self.library.slug(),
             "anchors": self.anchors.iter().map(|a| match a {
                 Anchor::Text { value, offset } => serde_json::json!({"kind": "text", "value": value, "offset": offset}),
-                Anchor::Symbol { value } => serde_json::json!({"kind": "symbol", "value": value}),
+                Anchor::Symbol { value, table, binding } => serde_json::json!({
+                    "binding": binding.label(),
+                    "kind": "symbol",
+                    "table": table.label(),
+                    "value": value,
+                }),
             }).collect::<Vec<_>>(),
             "candidates": self.candidates.iter().map(cand).collect::<Vec<_>>(),
             "shared": self.shared.iter().map(|(c, with)| {
@@ -746,7 +819,8 @@ impl AnchoredVerdict {
 
 /// Spec 1644: every [`Boundary::WholeString`] library whose anchor is in
 /// this binary, with its candidates and verdict. `anchor_symbols` holds the
-/// binary's *defined* names from [`ANCHOR_SYMBOLS`].
+/// binary's *defined* symbols named in [`ANCHOR_SYMBOLS`]; the verdict keys
+/// on their names only, and the table each came from is reported.
 ///
 /// A binary with no anchor costs one substring search per text anchor and
 /// returns nothing. Only an anchored binary has its region split into
@@ -754,7 +828,7 @@ impl AnchoredVerdict {
 /// region or follows a NUL (FR-004); one another anchored library also
 /// accepts versions neither (FR-005a); a library left with two or more
 /// versions gets none (FR-005).
-pub fn anchored_verdicts(region: &[u8], anchor_symbols: &[String]) -> Vec<AnchoredVerdict> {
+pub fn anchored_verdicts(region: &[u8], anchor_symbols: &[AnchorSymbol]) -> Vec<AnchoredVerdict> {
     let mut found: Vec<(CuratedLibrary, Vec<Anchor>)> = Vec::new();
     for lib in WHOLE_STRING_LIBRARIES {
         let anchors: Vec<Anchor> = match lib.anchor() {
@@ -764,8 +838,8 @@ pub fn anchored_verdicts(region: &[u8], anchor_symbols: &[String]) -> Vec<Anchor
                 .collect(),
             Some(AnchorKind::Symbol) => ANCHOR_SYMBOLS
                 .iter()
-                .filter(|s| anchor_symbols.iter().any(|d| d == *s))
-                .map(|s| Anchor::Symbol { value: (*s).to_string() })
+                .flat_map(|s| anchor_symbols.iter().filter(move |d| d.name == *s))
+                .map(|d| Anchor::Symbol { value: d.name.clone(), table: d.table, binding: d.binding })
                 .collect(),
             None => Vec::new(),
         };
@@ -817,6 +891,67 @@ pub fn anchored_verdicts(region: &[u8], anchor_symbols: &[String]) -> Vec<Anchor
         out.push(AnchoredVerdict { library: *lib, anchors: anchors.clone(), candidates, shared, verdict });
     }
     out
+}
+
+/// Spec 1647 FR-004: the xz stream header magic, which liblzma's encoder
+/// and decoder both use. Census only: whether it may anchor liblzma is
+/// decided by measurement (research R2).
+pub const XZ_HEADER_MAGIC: &[u8] = b"\xFD7zXZ\x00";
+
+/// Spec 1647 census (contracts/wire.md): the `liblzma_static` event for one
+/// binary, or `None` when neither rule applies.
+///
+/// - Rule A (FR-002, ELF): `static_anchor_symbols` defines a name that
+///   `anchor_symbols` does not. `rule_a` is every anchored library's verdict
+///   with the static symbols included.
+/// - Rule B (FR-004): no anchor symbol in either list, and the region holds
+///   [`XZ_HEADER_MAGIC`]. `rule_b` is every anchored library's verdict with a
+///   hypothetical defined `lzma_version_string`, which gives exactly the
+///   verdict the magic would give: [`anchored_verdicts`] treats every
+///   liblzma anchor alike (research R4).
+///
+/// `current` is production's list, so a rule's effect is the difference.
+pub fn liblzma_static_event(
+    region: &[u8],
+    anchor_symbols: &[AnchorSymbol],
+    static_anchor_symbols: &[AnchorSymbol],
+    elf_type: Option<&str>,
+    current: &[AnchoredVerdict],
+) -> Option<String> {
+    let rule_a = static_anchor_symbols.iter().any(|s| !anchor_symbols.iter().any(|d| d.name == s.name));
+    let magic = (anchor_symbols.is_empty() && static_anchor_symbols.is_empty())
+        .then(|| memchr::memmem::find(region, XZ_HEADER_MAGIC))
+        .flatten();
+    if !rule_a && magic.is_none() {
+        return None;
+    }
+    let list = |vs: &[AnchoredVerdict]| {
+        serde_json::Value::Array(vs.iter().map(AnchoredVerdict::summary).collect())
+    };
+    let sym = |s: &AnchorSymbol| {
+        serde_json::json!({"binding": s.binding.label(), "name": s.name, "table": s.table.label()})
+    };
+    let mut j = serde_json::json!({
+        "anchors": anchor_symbols.iter().chain(static_anchor_symbols).map(sym).collect::<Vec<_>>(),
+        "current": list(current),
+    });
+    if let Some(e) = elf_type {
+        j["elf_type"] = serde_json::json!(e);
+    }
+    if rule_a {
+        let all: Vec<AnchorSymbol> = anchor_symbols.iter().chain(static_anchor_symbols).cloned().collect();
+        j["rule_a"] = list(&anchored_verdicts(region, &all));
+    }
+    if let Some(offset) = magic {
+        j["magic"] = serde_json::json!(offset);
+        let hypothetical = [AnchorSymbol {
+            name: ANCHOR_SYMBOLS[0].to_string(),
+            table: SymbolTable::Dynsym,
+            binding: Binding::Unknown,
+        }];
+        j["rule_b"] = list(&anchored_verdicts(region, &hypothetical));
+    }
+    Some(j.to_string())
 }
 
 /// Spec 1644 census only (FR-001, FR-006): bzip2 date-form strings in a
@@ -1863,8 +1998,80 @@ mod tests {
     // ---- Spec 1644: anchored whole-string libraries -------------------
 
     fn verdicts(region: &[u8], syms: &[&str]) -> Vec<AnchoredVerdict> {
-        let syms: Vec<String> = syms.iter().map(|s| s.to_string()).collect();
+        let syms: Vec<AnchorSymbol> = syms.iter().map(|s| dynsym(s)).collect();
         anchored_verdicts(region, &syms)
+    }
+
+    fn dynsym(name: &str) -> AnchorSymbol {
+        AnchorSymbol { name: name.to_string(), table: SymbolTable::Dynsym, binding: Binding::Global }
+    }
+
+    // ---- Spec 1647: static liblzma ------------------------------------
+
+    fn symtab(name: &str) -> AnchorSymbol {
+        AnchorSymbol { name: name.to_string(), table: SymbolTable::Symtab, binding: Binding::Global }
+    }
+
+    fn event(region: &[u8], dynamic: &[AnchorSymbol], stat: &[AnchorSymbol]) -> Option<serde_json::Value> {
+        let current = anchored_verdicts(region, dynamic);
+        liblzma_static_event(region, dynamic, stat, Some("exec"), &current).map(|j| serde_json::from_str(&j).unwrap())
+    }
+
+    fn lib<'a>(e: &'a serde_json::Value, rule: &str, library: &str) -> Option<&'a serde_json::Value> {
+        e[rule].as_array()?.iter().find(|v| v["library"] == library)
+    }
+
+    #[test]
+    fn s1647_anchored_event_reports_table_and_binding() {
+        let v = anchored_verdicts(b"5.8.1\0", &[symtab("lzma_version_string")]);
+        let j: serde_json::Value = serde_json::from_str(&v[0].to_json()).unwrap();
+        assert_eq!(
+            j["anchors"][0],
+            serde_json::json!({"binding": "global", "kind": "symbol", "table": "symtab", "value": "lzma_version_string"})
+        );
+        // The verdict keys on the name alone: the table does not change it.
+        assert_eq!(v[0].verdict, Verdict::Versioned("5.8.1".into()));
+    }
+
+    #[test]
+    fn s1647_rule_a_versions_from_symtab() {
+        let e = event(b"\x005.4.5\0", &[], &[symtab("lzma_version_string")]).unwrap();
+        assert_eq!(e["current"], serde_json::json!([]));
+        let a = lib(&e, "rule_a", "liblzma").unwrap();
+        assert_eq!(a["verdict"], "versioned");
+        assert_eq!(a["version"], "5.4.5");
+        assert_eq!(e["anchors"][0]["table"], "symtab");
+        assert_eq!(e["elf_type"], "exec");
+        assert!(e.get("rule_b").is_none() && e.get("magic").is_none());
+    }
+
+    #[test]
+    fn s1647_rule_a_absent_when_dynsym_already_anchors() {
+        // A shared liblzma defines the symbol in both tables: no new anchor.
+        assert!(event(b"\x005.4.5\0", &[dynsym("lzma_version_string")], &[symtab("lzma_version_string")]).is_none());
+        // Nothing at all.
+        assert!(event(b"\x005.4.5\0", &[], &[]).is_none());
+    }
+
+    #[test]
+    fn s1647_rule_b_from_magic() {
+        let e = event(b"\xFD7zXZ\x00\x005.4.5\0", &[], &[]).unwrap();
+        assert_eq!(e["magic"], 0);
+        assert_eq!(lib(&e, "rule_b", "liblzma").unwrap()["version"], "5.4.5");
+        assert!(e.get("rule_a").is_none());
+        // With any anchor symbol, rule B does not apply.
+        let e = event(b"\xFD7zXZ\x00\x005.4.5\0", &[], &[symtab("lzma_version_number")]).unwrap();
+        assert!(e.get("rule_b").is_none() && e.get("magic").is_none());
+    }
+
+    #[test]
+    fn s1647_rule_a_reports_a_lost_gmp_version() {
+        // S5's shape: on main GMP alone is anchored and takes 5.4.5; with the
+        // static anchor both libraries accept it, so neither keeps it.
+        let e = event(b"GNU MP:\x005.4.5\0", &[], &[symtab("lzma_version_string")]).unwrap();
+        assert_eq!(lib(&e, "current", "gmp").unwrap()["verdict"], "versioned");
+        assert_eq!(lib(&e, "rule_a", "gmp").unwrap()["verdict"], "ambiguous-shared");
+        assert_eq!(lib(&e, "rule_a", "liblzma").unwrap()["verdict"], "ambiguous-shared");
     }
 
     fn verdict_of(region: &[u8], syms: &[&str], lib: CuratedLibrary) -> Option<Verdict> {

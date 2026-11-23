@@ -11,6 +11,7 @@ use object::ObjectSection;
 use super::elf;
 use super::entry::BinaryScan;
 use super::packer;
+use super::version_strings::{AnchorSymbol, Binding, SymbolTable};
 
 /// Quick probe: does this ELF carry Go BuildInfo? Used by the Linux-
 /// rootfs Go-suppression rule — when Go BuildInfo succeeds, the Go
@@ -337,34 +338,80 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     // DEFINES. `symbol_names` above keeps imports too (an ELF `.dynsym`
     // lists both), and it feeds the fingerprint, so it is left as it is; a
     // program that merely links liblzma must not anchor it.
-    let anchor_symbols: Vec<String> = {
+    let anchor_symbols: Vec<AnchorSymbol> = {
         use super::version_strings::ANCHOR_SYMBOLS;
         use object::Object;
         use object::ObjectSymbol;
-        let mut v: Vec<String> = if class == "elf" {
+        let mut v: Vec<AnchorSymbol> = if class == "elf" {
             file.dynamic_symbols()
                 .filter(|s| !s.is_undefined())
-                .filter_map(|s| s.name().ok())
-                .filter(|n| ANCHOR_SYMBOLS.contains(n))
-                .map(str::to_string)
+                .filter_map(|s| {
+                    let name = s.name().ok().filter(|n| ANCHOR_SYMBOLS.contains(n))?;
+                    Some(AnchorSymbol { name: name.to_string(), table: SymbolTable::Dynsym, binding: binding_of(&s) })
+                })
                 .collect()
         } else if class == "macho" {
             file.symbols()
                 .filter(|s| s.is_global() && !s.is_undefined())
-                .filter_map(|s| s.name().ok())
-                .map(strip_macho_underscore_prefix)
-                .filter(|n| ANCHOR_SYMBOLS.contains(n))
-                .map(str::to_string)
+                .filter_map(|s| {
+                    let name = s.name().ok().map(strip_macho_underscore_prefix).filter(|n| ANCHOR_SYMBOLS.contains(n))?;
+                    Some(AnchorSymbol { name: name.to_string(), table: SymbolTable::MachoSymtab, binding: Binding::Global })
+                })
                 .collect()
         } else if class == "pe" {
             // Export names are defined by construction.
-            symbol_names.iter().filter(|n| ANCHOR_SYMBOLS.contains(&n.as_str())).cloned().collect()
+            symbol_names
+                .iter()
+                .filter(|n| ANCHOR_SYMBOLS.contains(&n.as_str()))
+                .map(|n| AnchorSymbol { name: n.clone(), table: SymbolTable::PeExport, binding: Binding::Unknown })
+                .collect()
         } else {
             Vec::new()
         };
-        v.sort();
-        v.dedup();
+        sort_anchor_symbols(&mut v);
         v
+    };
+
+    // Spec 1647 FR-002 (research R3): the anchor symbols this ELF file
+    // defines in its static symbol table, where a static link leaves
+    // liblzma's. `.symtab` can be large (every internal function of an
+    // unstripped program), so it is iterated only when its string table
+    // holds `lzma_version_` at all: one substring search per ELF file. An
+    // undefined entry is an import and never anchors.
+    let static_anchor_symbols: Vec<AnchorSymbol> = if class == "elf" {
+        use super::version_strings::ANCHOR_SYMBOLS;
+        use object::Object;
+        use object::ObjectSymbol;
+        let gate = file
+            .section_by_name(".strtab")
+            .and_then(|s| s.data().ok())
+            .is_some_and(|d| memchr::memmem::find(d, b"lzma_version_").is_some());
+        let mut v: Vec<AnchorSymbol> = if gate {
+            file.symbols()
+                .filter(|s| !s.is_undefined())
+                .filter_map(|s| {
+                    let name = s.name().ok().filter(|n| ANCHOR_SYMBOLS.contains(n))?;
+                    Some(AnchorSymbol { name: name.to_string(), table: SymbolTable::Symtab, binding: binding_of(&s) })
+                })
+                .collect()
+        } else {
+            Vec::new()
+        };
+        sort_anchor_symbols(&mut v);
+        v
+    } else {
+        Vec::new()
+    };
+    let elf_type = if class == "elf" {
+        use object::Object;
+        Some(match file.kind() {
+            object::ObjectKind::Executable => "exec",
+            object::ObjectKind::Dynamic => "dyn",
+            object::ObjectKind::Relocatable => "rel",
+            _ => "other",
+        })
+    } else {
+        None
     };
 
     // Milestone 098 FR-001 — ELF `.comment` compiler stamps.
@@ -413,6 +460,8 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         packer: packer_kind,
         symbol_names,
         anchor_symbols,
+        static_anchor_symbols,
+        elf_type,
         comment_stamps,
         macho_build_version,
         pe_linker_version,
@@ -431,6 +480,25 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
 /// `_libc_start_main` / `_cxa_atexit` — those don't appear in the
 /// fingerprint corpus (no fingerprint record lists symbols with
 /// leading underscores) so the false-negative cost is zero.
+/// Spec 1647: an ELF symbol's binding, for the census.
+fn binding_of<'data, S: object::ObjectSymbol<'data>>(s: &S) -> Binding {
+    if s.is_weak() {
+        Binding::Weak
+    } else if s.is_local() {
+        Binding::Local
+    } else if s.is_global() {
+        Binding::Global
+    } else {
+        Binding::Unknown
+    }
+}
+
+/// Spec 1647: one entry per (name, table), in a fixed order.
+fn sort_anchor_symbols(v: &mut Vec<AnchorSymbol>) {
+    v.sort_by(|a, b| (a.name.as_str(), a.table).cmp(&(b.name.as_str(), b.table)));
+    v.dedup_by(|a, b| a.name == b.name && a.table == b.table);
+}
+
 fn strip_macho_underscore_prefix(name: &str) -> &str {
     name.strip_prefix('_').unwrap_or(name)
 }
@@ -597,6 +665,8 @@ fn scan_fat_macho(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         // Spec 1644: fat Mach-O symbols are not read (as `symbol_names`), so
         // liblzma in a fat binary has no anchor and gets no version.
         anchor_symbols: Vec::new(),
+        static_anchor_symbols: Vec::new(),
+        elf_type: None,
         // Milestone 098: `.comment` is ELF-only.
         comment_stamps: Vec::new(),
         // Milestone 098 FR-002: extract LC_BUILD_VERSION from the FIRST

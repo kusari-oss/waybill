@@ -330,6 +330,131 @@ pub fn elf_shared_lib_with_dynsym(rodata: &[u8], defined: &[&str], undefined: &[
     f
 }
 
+/// Spec 1647: an ELF64 file of type `e_type` (2 = `ET_EXEC`, 3 = `ET_DYN`)
+/// whose `.rodata` holds `rodata` and whose static symbol table (`.symtab`
+/// with `.strtab`) lists `defined` as global functions in `.rodata` and
+/// `undefined` as `SHN_UNDEF` entries. No `.dynsym`: the shape of an
+/// unstripped static program.
+pub fn elf_with_symtab(e_type: u16, rodata: &[u8], defined: &[&str], undefined: &[&str]) -> Vec<u8> {
+    elf_with_tables(e_type, rodata, None, (defined, undefined))
+}
+
+/// Spec 1647: like [`elf_with_symtab`], plus a `.dynsym` (with `.dynstr`)
+/// when `dynsym` is `Some((defined, undefined))`.
+pub fn elf_with_tables(
+    e_type: u16,
+    rodata: &[u8],
+    dynsym: Option<(&[&str], &[&str])>,
+    symtab: (&[&str], &[&str]),
+) -> Vec<u8> {
+    // One symbol table and its string table, the null symbol first.
+    fn table(defined: &[&str], undefined: &[&str]) -> (Vec<u8>, Vec<u8>) {
+        let mut strs = vec![0u8];
+        let mut syms = vec![0u8; 24];
+        for (names, shndx) in [(defined, 1u16), (undefined, 0u16)] {
+            for n in names {
+                let st_name = strs.len() as u32;
+                strs.extend_from_slice(n.as_bytes());
+                strs.push(0);
+                syms.extend_from_slice(&st_name.to_le_bytes());
+                syms.push(0x12); // STB_GLOBAL << 4 | STT_FUNC
+                syms.push(0);
+                syms.extend_from_slice(&shndx.to_le_bytes());
+                syms.extend_from_slice(&0u64.to_le_bytes());
+                syms.extend_from_slice(&0u64.to_le_bytes());
+            }
+        }
+        (syms, strs)
+    }
+
+    let mut shstrtab = vec![0u8];
+    let mut name = |n: &str| {
+        let off = shstrtab.len() as u32;
+        shstrtab.extend_from_slice(n.as_bytes());
+        shstrtab.push(0);
+        off
+    };
+    let n_rodata = name(".rodata");
+    let n_dyn = dynsym.map(|_| (name(".dynsym"), name(".dynstr")));
+    let (n_symtab, n_strtab, n_shstr) = (name(".symtab"), name(".strtab"), name(".shstrtab"));
+
+    let dyn_tables = dynsym.map(|(d, u)| table(d, u));
+    let (symtab_bytes, strtab_bytes) = table(symtab.0, symtab.1);
+
+    let align8 = |v: usize| (v + 7) & !7;
+    let rodata_off = 64usize;
+    let mut off = align8(rodata_off + rodata.len().max(1024));
+    let dyn_offs = dyn_tables.as_ref().map(|(s, t)| {
+        let so = off;
+        let to = so + s.len();
+        off = align8(to + t.len());
+        (so, to)
+    });
+    let symtab_off = off;
+    let strtab_off = symtab_off + symtab_bytes.len();
+    let shstr_off = strtab_off + strtab_bytes.len();
+    let shoff = align8(shstr_off + shstrtab.len());
+    // null, .rodata, [.dynsym, .dynstr], .symtab, .strtab, .shstrtab
+    let shnum: u16 = if dyn_tables.is_some() { 7 } else { 5 };
+
+    let mut f = Vec::new();
+    f.extend_from_slice(b"\x7fELF");
+    f.extend_from_slice(&[2, 1, 1, 0]);
+    f.extend_from_slice(&[0u8; 8]);
+    f.extend_from_slice(&e_type.to_le_bytes());
+    f.extend_from_slice(&62u16.to_le_bytes()); // x86_64
+    f.extend_from_slice(&1u32.to_le_bytes());
+    f.extend_from_slice(&0u64.to_le_bytes());
+    f.extend_from_slice(&0u64.to_le_bytes());
+    f.extend_from_slice(&(shoff as u64).to_le_bytes());
+    f.extend_from_slice(&0u32.to_le_bytes());
+    f.extend_from_slice(&64u16.to_le_bytes());
+    f.extend_from_slice(&0u16.to_le_bytes());
+    f.extend_from_slice(&0u16.to_le_bytes());
+    f.extend_from_slice(&64u16.to_le_bytes());
+    f.extend_from_slice(&shnum.to_le_bytes());
+    f.extend_from_slice(&(shnum - 1).to_le_bytes()); // e_shstrndx: last
+    f.extend_from_slice(rodata);
+    if let (Some((s, t)), Some((so, _))) = (&dyn_tables, dyn_offs) {
+        f.resize(so, 0);
+        f.extend_from_slice(s);
+        f.extend_from_slice(t);
+    }
+    f.resize(symtab_off, 0);
+    f.extend_from_slice(&symtab_bytes);
+    f.extend_from_slice(&strtab_bytes);
+    f.extend_from_slice(&shstrtab);
+    f.resize(shoff, 0);
+    #[allow(clippy::too_many_arguments)]
+    let mut sh = |name: u32, ty: u32, flags: u64, off: usize, size: usize, link: u32, info: u32, entsize: u64| {
+        f.extend_from_slice(&name.to_le_bytes());
+        f.extend_from_slice(&ty.to_le_bytes());
+        f.extend_from_slice(&flags.to_le_bytes());
+        f.extend_from_slice(&0u64.to_le_bytes());
+        f.extend_from_slice(&(off as u64).to_le_bytes());
+        f.extend_from_slice(&(size as u64).to_le_bytes());
+        f.extend_from_slice(&link.to_le_bytes());
+        f.extend_from_slice(&info.to_le_bytes());
+        f.extend_from_slice(&8u64.to_le_bytes());
+        f.extend_from_slice(&entsize.to_le_bytes());
+    };
+    sh(0, 0, 0, 0, 0, 0, 0, 0);
+    sh(n_rodata, 1, 2, rodata_off, rodata.len(), 0, 0, 0); // PROGBITS, SHF_ALLOC
+    let symtab_idx: u32 = if let (Some((nd, ns)), Some((s, t)), Some((so, to))) = (n_dyn, &dyn_tables, dyn_offs) {
+        sh(nd, 11, 2, so, s.len(), 3, 1, 24); // SHT_DYNSYM, link .dynstr (3)
+        sh(ns, 3, 2, to, t.len(), 0, 0, 0);
+        4
+    } else {
+        2
+    };
+    // SHT_SYMTAB, link .strtab (the next section), sh_info 1: every entry
+    // after the null symbol is global.
+    sh(n_symtab, 2, 0, symtab_off, symtab_bytes.len(), symtab_idx + 1, 1, 24);
+    sh(n_strtab, 3, 0, strtab_off, strtab_bytes.len(), 0, 0, 0);
+    sh(n_shstr, 3, 0, shstr_off, shstrtab.len(), 0, 0, 0);
+    f
+}
+
 /// A 64-bit little-endian Mach-O dylib (`MH_DYLIB`) that loads each of
 /// `loads` and whose `__TEXT,__cstring` section holds `cstring`.
 ///
