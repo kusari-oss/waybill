@@ -40,8 +40,8 @@ In `waybill-cli/src/resolve/deduplicator.rs`:
 - **S2**, `fold_declared_not_cached` (~line 516), folds a declared-but-not-cached entry into its on-disk twin(s). That twin can be a binary match.
 
 **Decision**: one helper, `absorb_method(best: &mut ResolutionEvidence, other: &ResolutionEvidence)`, called at S1 and S2. It adds `other`'s technique, and its `also`, to `best.also` when all of these hold:
-- one side is a **binary side** (FR-002 and FR-008: merges without a binary match are untouched). A side is binary when its `technique` is `BinaryAnalysis`, when its `also` contains `BinaryAnalysis`, or when its `evidence_kind` is `embedded-version-string` or `symbol-fingerprint`. The `evidence_kind` clause makes the rule, and its census, work on the log-only commit, before T010 sets the technique. The `also` clause carries it through chained merges;
-- the technique differs from `best.technique`;
+- one side is a **binary side** (FR-002 and FR-008: merges without a binary match are untouched). The rule compares each side's **effective technique**: `BinaryAnalysis` when its `evidence_kind` is `embedded-version-string` or `symbol-fingerprint`, and its stored `technique` otherwise. A side is binary when its effective technique is `BinaryAnalysis` or its `also` contains it. The effective technique makes the rule, and its census, compute the same result on the log-only commit, before T010 stores the technique. The `also` clause carries it through chained merges;
+- the technique differs from `best`'s effective technique;
 - the technique is not already in `best.also`, so there is one method per technique.
 
 The census (R6) logs every call, and each site's name, so FR-006's merge sites are observed rather than assumed.

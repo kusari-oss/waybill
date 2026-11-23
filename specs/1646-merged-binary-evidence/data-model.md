@@ -18,10 +18,14 @@ A new variant, `BinaryAnalysis`. It is emitted as `binary-analysis` in CycloneDX
 
 ## Absorb rule (S1 and S2)
 
-On merging `other` into `best`, `absorb_method` considers each technique in `{other.technique} ∪ other.also`. It adds the technique to `best.also` only when all of these hold:
-- either side is a binary side: its `technique` is `BinaryAnalysis`, its `also` contains `BinaryAnalysis`, or its `evidence_kind` is `embedded-version-string` or `symbol-fingerprint`. The last clause works before the technique is set, so the log-only census sees merges;
-- the technique differs from `best.technique`;
+A side's **effective technique** is `BinaryAnalysis` when its `evidence_kind` is `embedded-version-string` or `symbol-fingerprint`, and its `technique` otherwise. Before T010 sets the technique, this is what makes a banner entry read as binary analysis, so the log-only census and the wired rule compute the same thing.
+
+On merging `other` into `best`, `absorb_method` considers each technique in `{effective(other)} ∪ other.also`. It adds the technique to `best.also` only when all of these hold:
+- either side is a binary side: its effective technique is `BinaryAnalysis`, or its `also` contains it;
+- the technique differs from `effective(best)`;
 - the technique is not already in `best.also`.
+
+When `best` is itself the binary side and wins (its effective technique is `BinaryAnalysis`), the absorbed technique is the record's, for example `PackageDatabase`.
 
 Otherwise nothing changes.
 
