@@ -63,11 +63,11 @@ The components read from BuildInfo (`go_binary.rs::emit_entries_from_info`) set 
 ## R4. The log-only census (decision, as in spec 1646)
 
 The log-only commit changes no output. It adds:
-- **`technique_change`**, reusing spec 1646's event name and shape: emitted at conversion for each entry whose `binary_kind_technique` differs from the technique it is given. On the log-only commit that is every `dynamic-linkage` and `embedded-source-path` entry.
+- **`kind_technique_change`**, with spec 1646's `technique_change` shape but its own name: emitted at conversion for each entry whose `binary_kind_technique` differs from the technique it is given. On the log-only commit that is every `dynamic-linkage` and `embedded-source-path` entry. It does not reuse spec 1646's name, because spec 1646's control in `census-versions.yml` is still live: its wired check asserts there is no `technique_change`, and its log-only check expects an exact set (analyze I2).
 - **`kind_merge`**: emitted at spec 1646's merge sites S1 and S2 when either side's kind is one that R1 newly makes binary, with both sides' kind and mechanism. These are the merges whose methods would change.
 - **`go-buildinfo`**, as in R3.
 
-At the wired commit, `technique_change` and `kind_merge` are removed, as spec 1646 removed `technique_change`. Spec 1646's permanent `binary_merge` then reports the absorptions.
+At the wired commit, `kind_technique_change` and `kind_merge` are removed, as spec 1646 removed its `technique_change`. Spec 1646's permanent `binary_merge` then reports the absorptions.
 
 ## R5. Where to count (decision)
 

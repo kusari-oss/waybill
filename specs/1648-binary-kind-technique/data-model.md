@@ -28,9 +28,9 @@ Invariants:
 
 | Event | When | Fields |
 |---|---|---|
-| `technique_change` | an entry's decided technique differs from the one it is converted with | `evidence_kind`, `purl`, `old`, `new` (spec 1646's shape) |
+| `kind_technique_change` | an entry's decided technique differs from the one it is converted with | `evidence_kind`, `purl`, `old`, `new` (spec 1646's shape) |
 | `kind_merge` | a merge at S1 or S2 where either side's kind is `dynamic-linkage` or `embedded-source-path` | `site`, `purl`, and `winner` and `loser`, each `{evidence_kind, mechanism}` |
 | `binary_derived_kind` | as in spec 1646, except that the `detected_go` value is renamed `detected-go` | `evidence_kind`, `purl`, `technique` |
 | `binary_derived_kind` with `evidence_kind: "go-buildinfo"` | each entry `go_binary.rs::emit_entries_from_info` creates | `purl`, `path` (the binary), `technique` |
 
-At the wired commit, `technique_change` and `kind_merge` are removed. The two `binary_derived_kind` corrections stay.
+At the wired commit, `kind_technique_change` and `kind_merge` are removed. The two `binary_derived_kind` corrections stay.

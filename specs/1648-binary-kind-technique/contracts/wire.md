@@ -33,7 +33,7 @@ Every case runs `waybill sbom parity-check` over its three documents.
 The shapes are in data-model.md. Log-only examples:
 
 ```
-technique_change={"evidence_kind":"dynamic-linkage","new":"binary-analysis","old":"package-database","purl":"pkg:generic/libwaybill-fixture-dep.so.1"}
+kind_technique_change={"evidence_kind":"dynamic-linkage","new":"binary-analysis","old":"package-database","purl":"pkg:generic/libwaybill-fixture-dep.so.1"}
 kind_merge={"loser":{"evidence_kind":"dynamic-linkage","mechanism":null},"purl":"…","site":"S1","winner":{"evidence_kind":null,"mechanism":"pkg-config"}}
 binary_derived_kind={"evidence_kind":"go-buildinfo","path":"…/waybill-fixture-gobin","purl":"pkg:golang/…","technique":"package-database"}
 ```

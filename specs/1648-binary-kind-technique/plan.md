@@ -13,7 +13,7 @@ Spec 1646 labels two binary evidence kinds `binary-analysis` through a private l
 The deduplicator's absorption gate reads the same decision, so merges follow automatically (FR-004). The Go census label is corrected by counting build info where `go_binary.rs` emits it (R3, FR-005).
 
 The order of work:
-1. **Census first.** A log-only commit adds `technique_change`, `kind_merge` and the corrected Go events, with output unchanged (R4).
+1. **Census first.** A log-only commit adds `kind_technique_change`, `kind_merge` and the corrected Go events, with output unchanged (R4).
 2. **The census.** TheRock, the quality corpus and the public corpus are counted, with real builds on the runner and synthetic fixtures as positive controls (R5).
 3. **Wire.** Both sites read `binary_kind_technique`, and `BINARY_KINDS` and the log-only events are removed.
 
@@ -69,7 +69,7 @@ specs/1648-binary-kind-technique/
 
 ```text
 waybill-cli/src/scan_fs/binary/mod.rs          # binary_kind_technique; totality test
-waybill-cli/src/scan_fs/mod.rs                 # entry_technique; technique_change census; detected-go label
+waybill-cli/src/scan_fs/mod.rs                 # entry_technique; kind_technique_change census; detected-go label
 waybill-cli/src/scan_fs/package_db/nix/closure/contents.rs   # same conversion
 waybill-cli/src/resolve/deduplicator.rs        # effective_technique / is_binary_side read the decision; kind_merge census; BINARY_KINDS removed
 waybill-cli/src/scan_fs/package_db/go_binary.rs # go-buildinfo census at emission

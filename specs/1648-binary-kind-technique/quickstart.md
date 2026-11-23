@@ -15,7 +15,7 @@ jq '[.. | objects | select((.properties // []) | any(.value == "dynamic-linkage"
 
 ```sh
 RUST_LOG=waybill::version_census=debug ./target/debug/waybill --offline sbom scan --path <dir> ... 2> <dir>.log
-grep -E 'technique_change=|kind_merge=|binary_derived_kind=' <dir>.log
+grep -E 'kind_technique_change=|kind_merge=|binary_derived_kind=' <dir>.log
 ```
 
 ## The tests

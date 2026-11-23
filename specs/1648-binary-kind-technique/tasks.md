@@ -40,15 +40,15 @@ Output does not change in this phase.
   - It returns `None` for anything else.
   - Unit tests `s1648_*`: every entry of `BINARY_EVIDENCE_KINDS` maps to `Some` (totality, FR-006); each kind maps to its decided technique; a non-binary kind (`requirements-txt`) maps to `None`.
   - Nothing calls it on this commit except the census (T005).
-- [ ] T005 In `SM` and `NC`, at the conversion sites, emit the census `technique_change` event (spec 1646's shape: `evidence_kind`, `purl`, `old`, `new`) for each entry whose `binary_kind_technique` differs from the technique it is converted with. The technique given is unchanged.
+- [ ] T005 In `SM` and `NC`, at the conversion sites, emit the census `kind_technique_change` event (spec 1646's `technique_change` shape, `evidence_kind`, `purl`, `old`, `new`, under its own name so spec 1646's live control is not affected) for each entry whose `binary_kind_technique` differs from the technique it is converted with. The technique given is unchanged.
   - In `census_entry_technique`, rename the `detected_go` label to `detected-go` (R3).
 - [ ] T006 [P] In `GB::emit_entries_from_info`, emit a `binary_derived_kind` census event with `evidence_kind: "go-buildinfo"`, the entry's PURL, the binary's path and `technique: "package-database"`, for each entry it creates (R3, FR-005). Off unless `waybill::version_census=debug` is enabled.
 - [ ] T007 In `DD`, at S1 and S2, emit `kind_merge` (data-model) when either side's evidence kind is `dynamic-linkage` or `embedded-source-path`. Do not change `best`.
 - [ ] T008 Write K1–K7 in `IT` with their expected results (wire.md):
   - K1, K2 and K6 are red on this commit; K3, K4, K5 and K7 pass.
   - Each case also asserts its census:
-    - K1 and K2: one `technique_change` with `new: binary-analysis`;
-    - K3, K4 and K5: no `technique_change`;
+    - K1 and K2: one `kind_technique_change` with `new: binary-analysis`;
+    - K3, K4 and K5: no `kind_technique_change`;
     - K5: one `binary_derived_kind` `go-buildinfo` per BuildInfo entry, and none labelled `go-buildinfo` from `detected_go`;
     - K6: one `kind_merge`.
   - **K6 feasibility**: first establish which pair can merge at all. A `dynamic-linkage` PURL carries no version, while a pkg-config record's does. Use the first pair that gives equal PURLs. If none does, record that in `MS/control.md` and make K6 a unit test in `DD` on constructed components (wire.md, K6 note).
@@ -57,9 +57,9 @@ Output does not change in this phase.
 - [ ] T010 Census (FR-001, R5).
 
   In `FR`:
-  - extend `census/versions.py` to parse `kind_merge` and to summarise `technique_change` by kind, `binary_derived_kind` by kind (with `detected-go` and `go-buildinfo` side by side), and `kind_merge` with both sides;
+  - extend `census/versions.py` to parse `kind_merge` and to summarise `kind_technique_change` by kind, `binary_derived_kind` by kind (with `detected-go` and `go-buildinfo` side by side), and `kind_merge` with both sides;
   - add to the `control` job: compile a dynamically linked C program (`gcc`, no `-static`) and a minimal Go program (`go build`), scan them, and assert:
-    - log-only: the C program's `dynamic-linkage` components have `technique_change` events, and the Go binary has `go-buildinfo` events;
+    - log-only: the C program's `dynamic-linkage` components have `kind_technique_change` events, and the Go binary has `go-buildinfo` events;
     - wired: those `dynamic-linkage` components are `binary-analysis` in the document;
     - the assertion accepts both states.
 
@@ -72,6 +72,8 @@ Output does not change in this phase.
   - `kind_merge` events;
   - `detected-go` against `go-buildinfo`, beside spec 1646's figures;
   - every zero stated plainly.
+
+  Also confirm that spec 1646's and 1647's controls in the same job still pass.
 - [ ] T011 **Checkpoint.** If a count contradicts FR-002 to FR-005, amend the spec first. Expected, as a prediction from spec 1646's census:
   - TheRock: about 49 `dynamic-linkage` and 15 `embedded-source-path` PURLs;
   - pants-backend-ai 8 and cpp-mongo 3 `dynamic-linkage`;
@@ -87,7 +89,7 @@ Output does not change in this phase.
 - [ ] T012 [US1] Wire:
   - `SM::entry_technique` and `NC` use `binary_kind_technique(kind).unwrap_or(PackageDatabase)`;
   - `DD::effective_technique` and `is_binary_side` use `binary_kind_technique(kind) == Some(BinaryAnalysis)`;
-  - remove `DD::BINARY_KINDS`, the `technique_change` event and the `kind_merge` event (data-model).
+  - remove `DD::BINARY_KINDS`, the `kind_technique_change` event and the `kind_merge` event (data-model).
 
   Then remove the `#[ignore]` from K1, K2 and K6, update their census assertions to the wired state, and update unit tests that referred to `BINARY_KINDS`.
 
@@ -116,7 +118,8 @@ Output does not change in this phase.
   - every component that changed, traced to its kind;
   - with UUIDs, timestamps and those components' technique masked, 0 differing lines;
   - `waybill sbom parity-check` on both arms, with the D1 row traced;
-  - SC-006's timing: one warm-up per arm, 3 interleaved runs, min/median/max and the median ratio.
+  - SC-006's timing: one warm-up per arm, 3 interleaved runs, min/median/max and the median ratio;
+  - the change in spec 1646's `binary_merge` debug-event count. Every dedup of one soname across binaries now has a binary side, so a large rise is expected. It is log volume, not output, and is stated as such (analyze L2).
 
 ## Phase 7: Polish
 
@@ -126,7 +129,7 @@ Output does not change in this phase.
 - [ ] T019 [P] `CHANGELOG.md`: a Fixed entry citing #1668, built from T010, T016 and T017.
 - [ ] T020 Run the full gate on the final commit, and record in `MS/gate-log.md` the per-target totals, `GATE_RESULT`, the expected line, and that `git diff 33c445f6 -- Cargo.lock '*Cargo.toml'` is empty.
 - [ ] T021 Close-out. Check each task's claim against the committed tree and the measurements. Note every as-built difference inline, then tick the task.
-  - File a follow-up issue for the two path-identified collapse kinds (`jdk-runtime-collapsed`, `python-stdlib-collapsed`), with T010's counts if any, and the question of CycloneDX's `filename` technique.
+  - File a follow-up issue for the two path-identified collapse kinds (`jdk-runtime-collapsed`, `python-stdlib-collapsed`), with T010's counts if any, and the question of CycloneDX's `filename` technique. `ResolutionTechnique::FilePathPattern` already emits `filename` (`generate/cyclonedx/evidence.rs:64`), so no new variant would be needed.
 
 ## Dependencies
 

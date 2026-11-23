@@ -102,7 +102,7 @@ Components of every other evidence kind produce the same documents as on `main`.
 
 ### Edge Cases
 
-- **A `dynamic-linkage` component that also has a package-database record** (the library is owned by dpkg, rpm or apk). The record and the linkage component merge, so the merged component lists both methods (User Story 3). FR-001 counts how often this happens.
+- **A `dynamic-linkage` component for a library a package manager owns** (dpkg, rpm, apk). The two do not merge: the record is `pkg:deb/…`, `pkg:rpm/…` and so on, and the linkage component is `pkg:generic/<soname>`, so their PURLs differ. A merge is possible only with a `pkg:generic` record of the same name and version, such as a pkg-config or CMake record. FR-001 counts any that occur (research R2).
 - **The file-level component of a binary** (`pkg:generic/<file>?file-sha256=…`). It is the binary itself, found by walking the tree, not identified from another binary's content. Its technique is unchanged.
 - **A Go source-tree main module with `detected_go`.** It is not build info. Its technique is unchanged, and the census no longer counts it as build info (FR-005).
 - **An evidence kind added later.** It keeps `manifest-analysis` until a spec decides it. The decision is one exhaustive list, so a new kind is a visible choice rather than a silent default (FR-006).
@@ -121,7 +121,7 @@ Components of every other evidence kind produce the same documents as on `main`.
 
 - **FR-002 (binary analysis)**: A component whose evidence kind is `dynamic-linkage` or `embedded-source-path` MUST report technique `binary-analysis`: in CycloneDX `evidence.identity[].methods[].technique`, and as `binary-analysis` in the SPDX 2.3 and SPDX 3 D1 annotations. Its confidence is unchanged.
 
-- **FR-003 (embedded manifests unchanged)**: Components from Go BuildInfo, `cargo-auditable` and ELF package notes (`elf-note-package`) MUST keep `manifest-analysis` (`package-database` in SPDX D1), byte-identical to `main`.
+- **FR-003 (embedded manifests unchanged)**: Components from Go BuildInfo, `cargo-auditable` and ELF package notes (`elf-note-package`) MUST keep `manifest-analysis` (`package-database` in SPDX D1), byte-identical to `main`. The two other binary-reader kinds, `jdk-runtime-collapsed` and `python-stdlib-collapsed`, identify a runtime by its files' paths rather than their content. They also keep their technique here; whether CycloneDX's `filename` fits them better is a follow-up (research R1).
 
 - **FR-004 (merges)**: The two kinds in FR-002 MUST count as binary for spec 1646's merge absorption. A component that merges with one of them lists both methods, in the order and form spec 1646 defines. A merge between two `manifest-analysis` sides absorbs nothing.
 
