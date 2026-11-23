@@ -101,6 +101,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A library named by a binary's imports, or by source paths compiled into it, is labelled `binary-analysis` (#1668).**
+  These components reported `manifest-analysis`, as though a package manager had listed them; the evidence came from the binary. CycloneDX 1.6 defines `binary-analysis` as examining a compiled binary, and `manifest-analysis` as examining a package management system.
+  - **Now:** `dynamic-linkage` and `embedded-source-path` components report `binary-analysis` in CycloneDX `evidence.identity` and in the SPDX 2.3 and SPDX 3 `evidence.identity` annotations.
+  - **Unchanged:** manifests a toolchain writes into a binary (cargo-auditable, ELF package notes, Go BuildInfo) keep `manifest-analysis`, as do the JDK and CPython runtimes recognised by their install paths. One decision covers every evidence kind a binary reader emits, and a test fails if a new kind has none.
+  - **Measured:** on the ROCm 7.14 SDK, 694 components change technique (49 `dynamic-linkage`; 645 `embedded-source-path` naming 15 packages) and nothing else changes. 11 components change in 2 of 18 open-source projects scanned before and after. The public corpus is unchanged, and scan time on the SDK is 1.000× `main`.
+
 - **A program that statically links liblzma, unstripped, now gets liblzma's version (#1664).**
   liblzma's version was read only when the binary defined `lzma_version_string` or `lzma_version_number` as a dynamic symbol, which a static link never does. It puts them in the static symbol table (`.symtab`), so an unstripped static program got no liblzma component.
   - **Now:** a definition in either table anchors liblzma, and an imported (undefined) symbol in either still never does. If the same binary also holds GMP's anchor text, a version string both libraries accept versions neither, as before.

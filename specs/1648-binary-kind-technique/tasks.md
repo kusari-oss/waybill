@@ -130,20 +130,27 @@ Output does not change in this phase.
 - [X] T015 [US4] Mutations M1–M5 (R7). Copy spec 1647's `measurements/mutate.py` to `MS/mutate.py` and replace its table. Record the killing tests in `MS/mutations.md`. Every mutation must be killed. Afterwards, `diff -r` the source against a copy taken before the run, and rebuild.
   - *As built*: 5 of 5 killed (`MS/mutations.md`). M4 is killed by the unit test only, because no tree reaches the merge.
 
-- [ ] T016 [US4] Public corpus at the final code commit (`-f branch=1648-binary-kind-technique`), with the scanned commit confirmed. Expected: no drift (spec Background). If there is drift, trace each line to a component of a changed kind, regenerate with `regen_goldens=true`, `cmp` the regenerated files with the traced output, commit them, and confirm 166 of 166. Record in `MS/corpus.md`.
-- [ ] T017 [US4] Quality corpus (`census-versions.yml`) and TheRock (`measure-full`, base `33c445f6` against the final code commit), at full SHAs, with every `refs.txt` verified. Record in `MS/therock.md`:
+- [X] T016 [US4] Public corpus at the final code commit (`-f branch=1648-binary-kind-technique`), with the scanned commit confirmed. Expected: no drift (spec Background). If there is drift, trace each line to a component of a changed kind, regenerate with `regen_goldens=true`, `cmp` the regenerated files with the traced output, commit them, and confirm 166 of 166. Record in `MS/corpus.md`.
+  - *As built*: no drift. Run 45245331467 scanned `bc7d589c` and passed 166 of 166 (`MS/corpus.md`).
+
+- [X] T017 [US4] Quality corpus (`census-versions.yml`) and TheRock (`measure-full`, base `33c445f6` against the final code commit), at full SHAs, with every `refs.txt` verified. Record in `MS/therock.md`:
   - every component that changed, traced to its kind;
   - with UUIDs, timestamps and those components' technique masked, 0 differing lines;
   - `waybill sbom parity-check` on both arms, with the D1 row traced;
   - SC-006's timing: one warm-up per arm, 3 interleaved runs, min/median/max and the median ratio;
   - the change in spec 1646's `binary_merge` debug-event count. Every dedup of one soname across binaries now has a binary side, so a large rise is expected. It is log volume, not output, and is stated as such (analyze L2).
+  - *As built*: TheRock: 694 components change technique only (49 `dynamic-linkage`; 645 `embedded-source-path`, 15 PURLs), with 0 other differences, and every format at 0 lines with technique masked. parity-check gives 260 of 261 on both arms (A5), with D1 identical. Quality corpus: pants-backend-ai 8 and cpp-mongo 3, nothing else. `binary_merge` unchanged at 23, 2 and 0. Median ratio 1.000 (`MS/therock.md`).
 
 ## Phase 7: Polish
 
-- [ ] T018 [P] Docs:
+- [X] T018 [P] Docs:
   - `docs/reference/binary-identity.md`: which evidence kinds report `binary-analysis` and which keep `manifest-analysis`, with the CycloneDX definitions' reasoning in one sentence each;
   - `docs/reference/sbom-format-mapping.md` D1 row, if it names the kinds that report `binary-analysis`.
-- [ ] T019 [P] `CHANGELOG.md`: a Fixed entry citing #1668, built from T010, T016 and T017.
+  - *As built*: the D1 row names the kinds, and `binary-identity.md` gains a per-kind table with the definitions.
+
+- [X] T019 [P] `CHANGELOG.md`: a Fixed entry citing #1668, built from T010, T016 and T017.
+  - *As built*: a Fixed entry above #1664's, from T010, T016 and T017.
+
 - [ ] T020 Run the full gate on the final commit, and record in `MS/gate-log.md` the per-target totals, `GATE_RESULT`, the expected line, and that `git diff 33c445f6 -- Cargo.lock '*Cargo.toml'` is empty.
 - [ ] T021 Close-out. Check each task's claim against the committed tree and the measurements. Note every as-built difference inline, then tick the task.
   - File a follow-up issue for the two path-identified collapse kinds (`jdk-runtime-collapsed`, `python-stdlib-collapsed`), with T010's counts if any, and the question of CycloneDX's `filename` technique. `ResolutionTechnique::FilePathPattern` already emits `filename` (`generate/cyclonedx/evidence.rs:64`), so no new variant would be needed.
