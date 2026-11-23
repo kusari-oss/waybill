@@ -63,7 +63,7 @@ Output does not change in this phase.
   - *As built*: **K6 has no record merge.** These kinds' PURLs carry no version, and a record's always does. Two imports of one library are joined by the linkage aggregator before deduplication (K6b, no `kind_merge`). So K6 is an integration check that the joined component lists one method (K6b), plus T014's unit test. Red: K1, K2, K6. The control matches `main` on all 7 cases (`MS/control.md`).
 - [X] T009 Mark K1, K2 and K6 `#[ignore = "spec 1648: red until T012"]`. Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, then check `GATE_RESULT=pass`, the expected line and the per-target totals. Commit the log-only change and push.
   - *As built*: the gate passed: 431 suites, 11,068 passed, 0 failed, 52 ignored (48 before, plus K1, K2, K6 and the control).
-- [ ] T010 Census (FR-001, R5).
+- [X] T010 Census (FR-001, R5).
 
   In `FR`:
   - extend `census/versions.py` to parse `kind_merge` and to summarise `kind_technique_change` by kind, `binary_derived_kind` by kind (with `detected-go` and `go-buildinfo` side by side), and `kind_merge` with both sides;
@@ -83,12 +83,15 @@ Output does not change in this phase.
   - every zero stated plainly.
 
   Also confirm that spec 1646's and 1647's controls in the same job still pass.
-- [ ] T011 **Checkpoint.** If a count contradicts FR-002 to FR-005, amend the spec first. Expected, as a prediction from spec 1646's census:
+  - *As built*: census run 45240732755 (20 of 20 jobs, every `refs.txt` at `56d12eea`) and public corpus run 45240738665 (166 of 166). The runner's real builds fired both counters. TheRock: `dynamic-linkage` 49 and `embedded-source-path` 645 events / 15 PURLs; pants-backend-ai 8; cpp-mongo 3; `kind_merge` 0 everywhere. Go: `detected-go` 38 and 1 against `go-buildinfo` 0 and 0 (`MS/census.md`).
+
+- [X] T011 **Checkpoint.** If a count contradicts FR-002 to FR-005, amend the spec first. Expected, as a prediction from spec 1646's census:
   - TheRock: about 49 `dynamic-linkage` and 15 `embedded-source-path` PURLs;
   - pants-backend-ai 8 and cpp-mongo 3 `dynamic-linkage`;
   - few or no `kind_merge` events.
 
   Record whether `detected-go` and `go-buildinfo` differ, and by how much.
+  - *As built*: no contradiction and no amendment. Every count matches spec 1646's census, and FR-005's correction is confirmed.
 
 ## Phase 3: User Story 1 — a library inferred from a binary's structure says so (P1) 🎯 MVP
 
