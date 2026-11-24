@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.24)
+project(urldep LANGUAGES CXX)
+add_library(urldep STATIC urldep.cpp)
+target_include_directories(urldep PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS urldep)
+install(FILES urldep.hpp DESTINATION include)

@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.24)
+project(extproj LANGUAGES CXX)
+add_library(extproj STATIC extproj.cpp)
+target_include_directories(extproj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS extproj)
+install(FILES extproj.hpp DESTINATION include)

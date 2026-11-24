@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.24)
+project(extra LANGUAGES CXX)
+add_library(extra STATIC extra.cpp)
+target_include_directories(extra PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS extra)
+install(FILES extra.hpp DESTINATION include)
