@@ -26,7 +26,9 @@ Each runs on a synthetic three-format scan with `design`, `source` and `build` c
 |---|---|---|
 | R1 | `--retier design=source` | every former `design` is `source` with C243 `design`; everything else is byte-identical apart from C194 and the type |
 | R2 | `--retier design=source --retier source=build` | original `design` becomes `source` and original `source` becomes `build`; no component moves twice |
-| R3 | `--retier analyzed=build` on a scan with no `analyzed` | succeeds; C194 shows `matched: 0`; nothing else changes |
+| R3 | `--retier analyzed=build` on a scan with no `analyzed`; and `--retier design=source --retier design=source` | the first succeeds with `matched: 0`; in the second, the repeated mapping records `changed: 0`; nothing else changes |
+| R7 | `--retier image=build` on a hand-made document carrying `image` | relabelled; C243 says `image` |
+| D1 | `--drop` of every `design` component plus `--retier source=build` | the type is recomputed from the output's tiers; with `--drop` alone the type is unchanged, as today |
 | R4 | R1, then the output edited with `--retier source=build` | C243 still says `design`; C194 has an `ancestors` entry; `verify-chain` passes |
 | R5 | R1 with `--drop-annotations waybill:` before `--retier` | the tiers are gone, so `matched: 0`; C243 never appears |
 | R6 | R1's output edited with `--drop-annotations waybill:retiered` | C243 is kept (protected) |

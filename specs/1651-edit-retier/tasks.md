@@ -21,7 +21,7 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
   - `locked/`: `package.json` plus `package-lock.json`, declaring `waybill-fixture-locked-dep`, which scans as `source`;
   - `declared/`: `package.json` only, declaring `waybill-fixture-declared-dep` and a dev dependency `waybill-fixture-dev-dep`, which scan as `design`, one of them `scope: excluded`.
 
-  Add `FX/README.md` saying the tests scan it at run time; nothing in it is a golden. Confirm with one `waybill --offline sbom scan` that the scan carries both `source` and `design`, and record the tiers in `MS/fixture.md`. If npm does not give `design` for the manifest-only part, use the ecosystem that does (spec Background: hpack-ogmios is `design` without a lockfile) and note it.
+  Add `FX/README.md` saying the tests scan it at run time; nothing in it is a golden. Confirm with one `waybill --offline sbom scan` that the scan carries both `source` and `design`, and record the tiers in `MS/fixture.md`. npm without a lockfile gives `design`: the committed npm-express golden has 27 `required` and 16 `excluded` `design` components (analyze U5).
 - [ ] T002 Create `IT` with the harness. Reuse `tests/sbom_edit_support/mod.rs` (`edit`, `edit_to`, `components`, `edges`) by `#[path]` module, as the other `sbom_edit_*.rs` tests do. Add:
   - `scan(project, extra_flags) -> [PathBuf; 3]`: an offline three-format scan into a tempdir, with `HOME` isolated;
   - `tier_of(doc, name)` for all three formats, and `marker_of(doc, name)` for C243;
@@ -31,9 +31,9 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 
 ## Phase 2: Foundational
 
-- [ ] T003 In `LP`, add `aggregate_phases_from_tiers` and `aggregate_spdx3_sbom_types_from_tiers`, over `impl IntoIterator<Item = &str>` plus `Option<SbomType>`, and make `aggregate_phases` and `aggregate_spdx3_sbom_types` call them (R5). Unit test: for a mixed tier set, the old and new functions agree. Run the corpus golden byte-identity tests that exercise these (`cargo test -p waybill --test public_corpus golden_matrix_is_evaluable_and_gated`, plus the `*_regression` golden tests) to show emission is unchanged.
+- [ ] T003 In `LP`, add `aggregate_phases_from_tiers` and `aggregate_spdx3_sbom_types_from_tiers`, over `impl IntoIterator<Item = &str>` plus `Option<SbomType>`, and make `aggregate_phases` and `aggregate_spdx3_sbom_types` call them (R5). Unit test: for a mixed tier set, the old and new functions agree. Emission must be unchanged. T020's full gate runs every golden test, so no subset is named here (analyze U4).
 - [ ] T004 In `ED/mod.rs`:
-  - add `EditOp::Retier { from: String, to: String }`, with category `retier`;
+  - add `EditOp::Retier { from: String, to: SbomType }` (`generate::lifecycle_phases::SbomType`), with category `retier` (analyze I1);
   - add `OpReport { from: Option<String>, to: Option<String> }`, serialised only when present (R3);
   - add `waybill:retiered-from` to `PROTECTED_ANNOTATIONS` (R4).
 
@@ -44,12 +44,12 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 **Goal**: FR-001, FR-003, FR-008.
 **Independent test**: R1, R2, R3 and the parity check.
 
-- [ ] T005 [US1] Write R1, R2 and R3 in `IT`, each editing all three formats of one scan and checking parity. They are red on this commit, since the flag does not parse.
+- [ ] T005 [US1] Write R1, R2, R3 and R7 in `IT`, each editing all three formats of one scan and checking parity. They are red on this commit, since the flag does not parse.
 - [ ] T006 [US1] In `CE`, add `--retier <FROM=TO>`, repeatable and sequence-stamped (`parse_retier`). Validation (R7) is written in Phase 6; here, parse the form only.
 - [ ] T007 [US1] Add `fn set_tier(&mut self, id: &str, to: &str) -> Option<String>` to `SbomAdapter` in `ED/mod.rs`. It returns the previous tier, and writes C243 with that tier when the component has no C243 yet. Implement it in `ED/cdx.rs` (the property), `ED/spdx23.rs` (the package annotation envelope) and `ED/spdx3.rs` (the `Annotation` element). Unit tests per adapter:
   - only the tier and the marker change;
   - an existing marker keeps its value.
-- [ ] T008 [US1] In `ED/mod.rs::run`, apply `EditOp::Retier` with a run-local `relabelled` set (R2), filling `matched`, `changed`, `from` and `to`. R1, R2 and R3 pass, with parity clean.
+- [ ] T008 [US1] In `ED/mod.rs::run`, apply `EditOp::Retier` with a run-local `relabelled` set (R2), filling `matched`, `changed`, `from` and `to`. R1, R2, R3 and R7 pass, with parity clean.
 
 ## Phase 4: User Story 2 — the relabel cannot be mistaken for a scan (P1)
 
@@ -70,21 +70,21 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 **Goal**: FR-006, FR-007.
 **Independent test**: T1, T2, C1.
 
-- [ ] T012 [US3] Write T1, T2 and C1 in `IT`. T2 scans the fixture with `--sbom-type build`. C1 uses a scan whose completeness reason names an ecosystem: the declared-only part should give one; if not, use a hand-made document and note it.
+- [ ] T012 [US3] Write T1, T2, C1 and D1 in `IT`. T2 scans the fixture with `--sbom-type build`. C1 uses a scan whose completeness reason names an ecosystem: the declared-only part should give one; if not, use a hand-made document and note it.
 - [ ] T013 [US3] In `ED/mod.rs`, after the operation loop, call a new adapter method, `recompute_document_type(original_tiers, new_tiers)`, implemented in all three adapters:
   - if the document's current type equals the aggregate of `original_tiers` (`LP`'s `*_from_tiers`), replace it with that of `new_tiers` in CycloneDX `metadata.lifecycles`, the SPDX 2.3 `creationInfo.comment` phases clause, and SPDX 3 `software_sbomType` and its comment;
   - otherwise keep it, and set `EditReport.document_type_kept = true`, which the CLI prints.
 
-  Run it only when a `Retier` changed at least one component. Never call `downgrade_graph_completeness` for a retier (R6). T1, T2 and C1 pass.
+  `original_tiers` are the input's, read before any operation runs; `new_tiers` are the output's, after every operation (analyze U1). Run it only when a `Retier` changed at least one component. Never call `downgrade_graph_completeness` for a retier (R6). T1, T2, C1 and D1 pass.
 
 ## Phase 6: User Story 4 — misuse is refused clearly (P2)
 
 - [ ] T014 [US4] Write the refusal cases in `IT`, from contracts/cli.md's table. Each asserts a non-zero exit, the message naming the problem, and that no output file exists.
 - [ ] T015 [US4] In `CE`, implement R7:
-  - `parse_retier` refuses a missing `=`, an empty side, `FROM == TO`, and a `TO` outside the CISA six, naming the six;
+  - `parse_retier` refuses a missing `=`, an empty side and `FROM == TO`, and parses `TO` with `SbomType::parse`, which refuses anything outside the CISA six with `--sbom-type`'s message;
   - a post-parse check refuses one `FROM` with two targets.
 
-  Unit tests in `CE`. The refusal cases pass.
+  The same mapping given twice is accepted. Unit tests in `CE`, including that `image=build` is accepted (analyze U3). The refusal cases pass.
 
 ## Phase 7: Measurement and mutations
 

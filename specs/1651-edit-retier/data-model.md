@@ -1,9 +1,9 @@
 # Data Model: `sbom edit --retier`
 
-## `EditOp::Retier { from: String, to: CisaTier }`
+## `EditOp::Retier { from: String, to: SbomType }`
 
 - **`from`:** matched exactly against `waybill:sbom-tier`. Any string.
-- **`to`:** one of `design`, `source`, `build`, `analyzed`, `deployed`, `runtime`.
+- **`to`:** a `generate::lifecycle_phases::SbomType`, parsed by `SbomType::parse`, the same parser and error as `--sbom-type` (analyze I1).
 - **Parsing:** from `--retier FROM=TO` and sequence-stamped in command-line order, like every edit operation.
 - **Run-level validation:** no `FROM` maps to two targets.
 
@@ -40,7 +40,7 @@
 
 ## The document type (R5)
 
-1. `derived_before` is the aggregate of the **original's** component tiers, computed by the shared `*_from_tiers` aggregators.
+1. `derived_before` is the aggregate of the **input's** component tiers, before any operation, computed by the shared `*_from_tiers` aggregators. The recompute runs only when a `Retier` changed at least one component; the new type is the aggregate of the **output's** tiers, after every operation (analyze U1).
 2. If the document's current type equals `derived_before`, it is replaced by the aggregate of the **relabelled** tiers, in:
    - CycloneDX `metadata.lifecycles`;
    - SPDX 2.3 `creationInfo.comment`, the `Observed lifecycle phases: …` clause only;

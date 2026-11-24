@@ -65,7 +65,7 @@ C194's `operations` array holds `OpReport { category, matched, changed }`, and p
 
 The parser refuses:
 - a value with no `=`, or an empty side;
-- a `TO` outside `{design, source, build, analyzed, deployed, runtime}` (case-sensitive, matching `--sbom-type`'s rule);
+- a `TO` outside `{design, source, build, analyzed, deployed, runtime}`. It is parsed with `SbomType::parse`, so `--retier` and `--sbom-type` refuse the same values with the same message;
 - `FROM` equal to `TO`;
 - the same `FROM` twice with different targets.
 
