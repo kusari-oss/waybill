@@ -86,4 +86,4 @@ The consumer rule was modelled on the committed goldens at `main` `18691d8`: dro
 | hpack-ogmios-no-generated-cabal | 95 of 95 | 0 |
 | haskell-language-server | 325 of 354 | 0 |
 
-`T0xx` re-measures this with the built command (tasks.md), and commits the measurement script beside the spec.
+T016 re-measures this with the built command, and commits the measurement script beside the spec.
