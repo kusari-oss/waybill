@@ -413,6 +413,9 @@ pub fn compute_graph_completeness(
     if let Some(code) = classify_go_transitive_coverage_degraded(components) {
         reason_codes.push(code);
     }
+    if let Some(code) = classify_boot_library_edges_incomplete(components) {
+        reason_codes.push(code);
+    }
 
     let value = if reason_codes.is_empty() && orphan_count == 0 {
         GraphCompletenessValue::Complete
@@ -461,6 +464,36 @@ pub fn apply_scope_drop(
         result.value = GraphCompletenessValue::Partial;
     }
     result
+}
+
+/// Spec 1653 (FR-005) — boot libraries whose dependency edges the document
+/// cannot carry, read from their own C247. Like
+/// [`classify_go_transitive_coverage_degraded`], it reads what each component
+/// says about itself, so no fact is threaded in from the scan.
+///
+/// Only on the classified path: a C247 is carried by a boot library, which is
+/// never a file-tier component, so an empty set has none to count.
+fn classify_boot_library_edges_incomplete(components: &[ResolvedComponent]) -> Option<ReasonCode> {
+    let (mut incomplete, mut unknown) = (0usize, 0usize);
+    for c in components {
+        let Some(raw) = c
+            .extra_annotations
+            .get(crate::resolve::boot_library_edges::ANN_BOOT_LIBRARY_DEPENDENCIES)
+            .and_then(|v| v.as_str())
+        else {
+            continue;
+        };
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(raw) else {
+            unknown += 1;
+            continue;
+        };
+        if v.get("reason").is_some() {
+            unknown += 1;
+        } else if v.get("absent").and_then(|a| a.as_array()).is_some_and(|a| !a.is_empty()) {
+            incomplete += 1;
+        }
+    }
+    (incomplete + unknown > 0).then_some(ReasonCode::BootLibraryEdgesIncomplete { incomplete, unknown })
 }
 
 /// Milestone 1273 FR-005 — one reason code for every unread manifest.
@@ -1415,5 +1448,43 @@ mod s1652_scope_drop_tests {
         let r = apply_scope_drop(complete, Some(&drop_of(1)));
         assert_eq!(r.value, GraphCompletenessValue::Partial);
         assert_eq!(r.reason_codes.len(), 1);
+    }
+
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1653_boot_library_edges_tests {
+    //! Spec 1653: `classify_boot_library_edges_incomplete` (FR-005).
+    use super::*;
+
+    fn boot_with(c245: &str) -> ResolvedComponent {
+        let mut c = crate::generate::graph_completeness::test_support::mk_component("pkg:hackage/base@4.20.2.0");
+        c.extra_annotations.insert(
+            crate::resolve::boot_library_edges::ANN_BOOT_LIBRARY_DEPENDENCIES.to_string(),
+            serde_json::Value::String(c245.to_string()),
+        );
+        c
+    }
+
+    #[test]
+    fn boot_library_edges_incomplete_counts_absent_and_unknown() {
+        let cs = vec![
+            boot_with(r#"{"absent":["rts"],"source":"ghc-boot-dependencies/2026-11-24"}"#),
+            boot_with(r#"{"absent":["ghc-internal"],"source":"ghc-boot-dependencies/2026-11-24"}"#),
+            boot_with(r#"{"reason":"release-not-in-table"}"#),
+            boot_with(r#"{"source":"ghc-boot-dependencies/2026-11-24"}"#),
+        ];
+        assert_eq!(
+            classify_boot_library_edges_incomplete(&cs),
+            Some(ReasonCode::BootLibraryEdgesIncomplete { incomplete: 2, unknown: 1 })
+        );
+    }
+
+    #[test]
+    fn boot_library_edges_complete_fires_nothing() {
+        let cs = vec![boot_with(r#"{"source":"ghc-boot-dependencies/2026-11-24"}"#)];
+        assert_eq!(classify_boot_library_edges_incomplete(&cs), None);
+        assert_eq!(classify_boot_library_edges_incomplete(&[]), None);
     }
 }

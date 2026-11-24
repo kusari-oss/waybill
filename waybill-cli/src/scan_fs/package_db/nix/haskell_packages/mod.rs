@@ -18,6 +18,7 @@
 //!   all, and is reported as such rather than resolved from the default set
 //!   (FR-014c).
 
+pub(crate) mod boot_dependencies;
 pub(crate) mod boot_libraries;
 pub(crate) mod boot_table;
 pub(crate) mod closure;

@@ -1052,6 +1052,8 @@ cdx_anno!(c243_cdx, "waybill:retiered-from", component);
 cdx_anno!(c244_cdx, "waybill:project-discovery-dropped", document);
 cdx_anno!(c245_cdx, "waybill:cmake-build-settlement", component);
 cdx_anno!(c246_cdx, "waybill:cmake-build-tree-coverage", document);
+// Spec 1653: C247 — where a boot library's dependency edges came from.
+cdx_anno!(c247_cdx, "waybill:boot-library-dependencies", component);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);
