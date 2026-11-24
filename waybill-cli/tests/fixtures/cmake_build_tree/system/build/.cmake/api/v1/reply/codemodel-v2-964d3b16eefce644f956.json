@@ -1,0 +1,241 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.24"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						3,
+						4
+					]
+				},
+				{
+					"build" : "_deps/urldep-build",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-_deps.urldep-build-f0b82e26fc53021a4f98.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.24"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "@BUILD@/_deps/urldep-src",
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"build" : "_deps/mixedcase-build",
+					"jsonFile" : "directory-_deps.mixedcase-build-d52e0799048657c05568.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.24"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "@BUILD@/_deps/mixedcase-src",
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"build" : "_deps/extra-build",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-_deps.extra-build-c0ec65002a8f6a34a651.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.24"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 3,
+					"source" : "@BUILD@/_deps/extra-src",
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"build" : "_deps/bdep-build",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-_deps.bdep-build-6242a0530b35b280fe4a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.24"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 4,
+					"source" : "@BUILD@/_deps/bdep-src",
+					"targetIndexes" : 
+					[
+						2
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "probe",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						3,
+						4
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "urldep",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "mixedcase",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "extra",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						4
+					],
+					"name" : "bdep",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ExtMixed::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ExtMixed-231fba405a37a9a69159.json",
+					"name" : "ExtMixed",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "app::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-app-f3728dd20b7af2d98477.json",
+					"name" : "app",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "bdep::@67e945dd66fbbbfb0841",
+					"jsonFile" : "target-bdep-48802662f90ec2584068.json",
+					"name" : "bdep",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "extgit::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-extgit-25c7488def9a51c53313.json",
+					"name" : "extgit",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "extproj::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-extproj-abb802a7913eaa266253.json",
+					"name" : "extproj",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "extra::@58f74fa063ef29da1a0d",
+					"jsonFile" : "target-extra-30db1e88fdd5f4bad297.json",
+					"name" : "extra",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "mixedcase_lib::@1f8afec34b07a36eaf5c",
+					"jsonFile" : "target-mixedcase_lib-a082003c27145ab2b9c3.json",
+					"name" : "mixedcase_lib",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "urldep::@6067ed1d3dae8d90f556",
+					"jsonFile" : "target-urldep-af2ce08559005a0e4de6.json",
+					"name" : "urldep",
+					"projectIndex" : 1
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "@BUILD@",
+		"source" : "@SRC@"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

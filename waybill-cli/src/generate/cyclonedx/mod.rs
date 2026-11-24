@@ -189,6 +189,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_bundled_source_trees(scan.bundled_source_trees.map(str::to_string))
             .with_declared_downloads(scan.declared_downloads.map(str::to_string))
             .with_cmake_fetch_coverage(scan.cmake_fetch_coverage.map(str::to_string))
+            .with_cmake_build_tree_coverage(scan.cmake_build_tree_coverage.map(str::to_string))
             .with_cmake_find_coverage(scan.cmake_find_coverage.map(str::to_string))
             .with_python_owned_binaries(scan.python_owned_binaries.map(str::to_string))
             .with_closure_ecosystem_identity(

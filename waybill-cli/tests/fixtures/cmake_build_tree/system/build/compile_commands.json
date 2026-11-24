@@ -1,0 +1,32 @@
+[
+{
+  "directory": "@BUILD@",
+  "command": "/usr/bin/c++ -I@BUILD@/_deps/urldep-src -isystem @PREFIX@/include -o CMakeFiles/app.dir/main.cpp.o -c @SRC@/main.cpp",
+  "file": "@SRC@/main.cpp",
+  "output": "CMakeFiles/app.dir/main.cpp.o"
+},
+{
+  "directory": "@BUILD@",
+  "command": "/usr/bin/c++ -I@BUILD@/_deps/urldep-src -o _deps/urldep-build/CMakeFiles/urldep.dir/urldep.cpp.o -c @BUILD@/_deps/urldep-src/urldep.cpp",
+  "file": "@BUILD@/_deps/urldep-src/urldep.cpp",
+  "output": "_deps/urldep-build/CMakeFiles/urldep.dir/urldep.cpp.o"
+},
+{
+  "directory": "@BUILD@",
+  "command": "/usr/bin/c++ -I@BUILD@/_deps/mixedcase-src -o _deps/mixedcase-build/CMakeFiles/mixedcase_lib.dir/mixedcase.cpp.o -c @BUILD@/_deps/mixedcase-src/mixedcase.cpp",
+  "file": "@BUILD@/_deps/mixedcase-src/mixedcase.cpp",
+  "output": "_deps/mixedcase-build/CMakeFiles/mixedcase_lib.dir/mixedcase.cpp.o"
+},
+{
+  "directory": "@BUILD@",
+  "command": "/usr/bin/c++ -I@BUILD@/_deps/extra-src -o _deps/extra-build/CMakeFiles/extra.dir/extra.cpp.o -c @BUILD@/_deps/extra-src/extra.cpp",
+  "file": "@BUILD@/_deps/extra-src/extra.cpp",
+  "output": "_deps/extra-build/CMakeFiles/extra.dir/extra.cpp.o"
+},
+{
+  "directory": "@BUILD@",
+  "command": "/usr/bin/c++ -I@BUILD@/_deps/bdep-src -o _deps/bdep-build/CMakeFiles/bdep.dir/bdep.cpp.o -c @BUILD@/_deps/bdep-src/bdep.cpp",
+  "file": "@BUILD@/_deps/bdep-src/bdep.cpp",
+  "output": "_deps/bdep-build/CMakeFiles/bdep.dir/bdep.cpp.o"
+}
+]

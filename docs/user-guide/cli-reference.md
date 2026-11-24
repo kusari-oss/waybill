@@ -771,6 +771,7 @@ Exactly one of `--path` or `--image` is required.
 | `--no-package-db` | bool | off | Skip installed-package DB reads (dpkg/apk). |
 | `--no-binary-scan <MODE>` | enum (`go`, `all`) | (unset) | Skip binary-scanning reader(s). `all` drops the entire binary tier for max speed; `go` is a component filter (deprecated as perf lever post-[#781](https://github.com/kusari-oss/waybill/issues/781)). Also via `WAYBILL_NO_BINARY_SCAN=<MODE>`. See [`--no-binary-scan`](#--no-binary-scan-mode). |
 | `--include-vendored` | bool | off | Emit CMake `add_subdirectory(third_party/\|vendor/...)` entries. |
+| `--cmake-build-tree <PATH>` | path (repeatable) | (none) | Read a CMake build tree of the scanned source to settle which fetch declarations the build took (C244, C245). Directory scans only. |
 | `--include-test-binaries` | bool | off | In a `--path` scan, also read binaries under `test/`, `tests/`, `unittests/` and `Inputs/`. Also via `WAYBILL_INCLUDE_TEST_BINARIES=1`. See [`--include-test-binaries`](#--include-test-binaries). |
 | `--no-deep-hash` | bool | off | Skip per-file SHA-256 of installed-package contents. |
 | `--nix-allow-ifd` | bool | off | Allow import-from-derivation in Nix evaluation. Nix **builds** derivations while evaluating the flake; do not use on an untrusted flake. Requires `--nix-closure` or `--nix-eval`. See [`--nix-allow-ifd`](#--nix-allow-ifd). |
@@ -1121,6 +1122,34 @@ env WAYBILL_NO_BINARY_SCAN=all waybill sbom scan --path . --output sbom.cdx.json
 ```
 
 Full recipe: `specs/665-no-binary-scan-flag/quickstart.md`.
+
+### `--cmake-build-tree`
+
+Name a CMake build tree of the source being scanned (spec 1652). Source
+scanning can only say what a CMake tree *might* fetch: a `FetchContent_Declare`
+with `FIND_PACKAGE_ARGS` is marked optional because a system copy may be found
+instead. The build tree records what happened. waybill reads, beneath each
+named path, every `CMakeCache.txt`, FetchContent's `_deps/<name>-src/`
+populations and ExternalProject's `<name>-download` stamps, and settles each
+CMake fetch declaration as `taken`, `not-taken`, `incomplete` or `no-evidence`
+(C244). A `taken` declaration is reported in scope whatever its fallback shape
+said. A population no declaration accounts for is emitted as a build-only
+component. The document gets one C245 coverage record.
+
+```bash
+cmake -S . -B build && cmake --build build
+waybill sbom scan --path . --cmake-build-tree build --output project.cdx.json
+```
+
+- **Repeatable.** For a build split across CI stages, name each stage's tree.
+  For a super-build, name the top of its build tree: every configured
+  subproject beneath it is found.
+- **Configure is enough for FetchContent**, which populates during configure.
+  ExternalProject downloads happen at build time.
+- **Read-only.** Nothing is written into the build tree, and no host path from
+  it reaches the SBOM: build directories appear as `build:<relative path>`.
+- A path that does not exist is an error (exit 2). The flag cannot be combined
+  with `--image`. Without it, output is unchanged.
 
 ### `--include-vendored`
 

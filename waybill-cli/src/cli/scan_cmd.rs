@@ -1319,6 +1319,21 @@ pub struct ScanArgs {
     #[arg(long)]
     pub cmake_third_party_recursive: bool,
 
+    /// Spec 1652 (#1535): a CMake build tree of the scanned source. Every
+    /// CMake build directory beneath it is read (`CMakeCache.txt`,
+    /// FetchContent populations, ExternalProject stamps) to settle which
+    /// fetch declarations the build took: C244 per component, C245 for the
+    /// document. Repeatable, e.g. one per CI stage. Directory scans only.
+    /// Without it, output is unchanged.
+    #[arg(
+        long = "cmake-build-tree",
+        value_name = "PATH",
+        action = clap::ArgAction::Append,
+        value_parser = existing_dir,
+        conflicts_with = "image"
+    )]
+    pub cmake_build_tree: Vec<PathBuf>,
+
     /// Milestone 235 — Gradle transitive dependency resolution flags.
     /// See `GradleCliFlags` docstring for individual flag semantics.
     #[command(flatten)]
@@ -3350,6 +3365,16 @@ pub async fn execute(
         }
     }
 
+    // Spec 1652: `--cmake-build-tree`, by the same side channel (contracts/cli.md).
+    if !args.cmake_build_tree.is_empty() {
+        let joined = std::env::join_paths(&args.cmake_build_tree)
+            .map_err(|e| anyhow::anyhow!("--cmake-build-tree: {e}"))?;
+        // SAFETY: see comment above — single-threaded.
+        unsafe {
+            std::env::set_var(crate::scan_fs::package_db::cmake::build_tree::ENV_BUILD_TREES, joined);
+        }
+    }
+
     // Milestone 108 FR-002: propagate the `--fingerprints-corpus`
     // opt-in to the env var that the binary-scan loop's fingerprint
     // matcher reads directly. Same pattern as WAYBILL_INCLUDE_VENDORED
@@ -3936,6 +3961,7 @@ pub async fn execute(
         non_runtime_declared_anchors,
         declared_downloads,
         cmake_fetch_coverage,
+        cmake_build_tree_coverage,
         cmake_find_coverage,
         python_owned_binaries,
         installed_library_coverage,
@@ -6141,6 +6167,7 @@ pub async fn execute(
         bundled_source_trees: bundled_source_trees.as_deref(),
         declared_downloads: declared_downloads.as_deref(),
         cmake_fetch_coverage: cmake_fetch_coverage.as_deref(),
+        cmake_build_tree_coverage: cmake_build_tree_coverage.as_deref(),
         cmake_find_coverage: cmake_find_coverage.as_deref(),
         python_owned_binaries: python_owned_binaries.as_deref(),
         closure_ecosystem_identity: closure_ecosystem_identity_value,
@@ -9308,6 +9335,7 @@ mod tests {
             include_test_binaries: false,
             // Milestone 156 — default third_party/ recursive-walk OFF.
             cmake_third_party_recursive: false,
+            cmake_build_tree: Vec::new(),
             // Milestone 235 — default Gradle ladder opt-out (subprocess off,
             // no daemon, no buildscript, 300s timeout, no extra configs).
             gradle: GradleCliFlags::default(),
@@ -12215,5 +12243,18 @@ mod closure_contents_tests {
         let err = closure_root_contents_verdict(true, true, Some(Err("nix-missing".into())), None)
             .unwrap_err();
         assert!(err.contains("nix-missing"), "{err}");
+    }
+}
+
+/// Spec 1652 (contracts/cli.md): a `--cmake-build-tree` path must be an
+/// existing directory; anything else is an operator error (clap exits 2).
+fn existing_dir(s: &str) -> Result<PathBuf, String> {
+    let p = PathBuf::from(s);
+    if p.is_dir() {
+        Ok(p)
+    } else if p.exists() {
+        Err(format!("{s} is not a directory"))
+    } else {
+        Err(format!("{s} does not exist"))
     }
 }

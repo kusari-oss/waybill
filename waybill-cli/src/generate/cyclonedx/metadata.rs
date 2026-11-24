@@ -214,6 +214,7 @@ pub struct MetadataExtras<'a> {
     /// C229 (spec 1535) — declared CMake downloads.
     pub declared_downloads: Option<&'a str>,
     pub cmake_fetch_coverage: Option<&'a str>,
+    pub cmake_build_tree_coverage: Option<&'a str>,
     pub cmake_find_coverage: Option<&'a str>,
     /// C230 (spec 1536) — binaries a Python package owns.
     pub python_owned_binaries: Option<&'a str>,
@@ -317,6 +318,7 @@ pub fn build_metadata(
         bundled_source_trees,
         declared_downloads,
         cmake_fetch_coverage,
+        cmake_build_tree_coverage,
         cmake_find_coverage,
         python_owned_binaries,
         closure_ecosystem_identity,
@@ -568,6 +570,10 @@ pub fn build_metadata(
     // C231 (spec 1538): present only when a CMake fetch declaration was read.
     if let Some(record) = cmake_fetch_coverage {
         properties.push(json!({ "name": crate::scan_fs::package_db::cmake::fetches::ANN_CMAKE_FETCH_COVERAGE, "value": record }));
+    }
+    // C245 (spec 1652): present only when `--cmake-build-tree` was given.
+    if let Some(record) = cmake_build_tree_coverage {
+        properties.push(json!({ "name": crate::scan_fs::package_db::cmake::build_tree::ANN_CMAKE_BUILD_TREE_COVERAGE, "value": record }));
     }
     // C237 (spec 1614): present only when a CMake package search was read.
     if let Some(record) = cmake_find_coverage {

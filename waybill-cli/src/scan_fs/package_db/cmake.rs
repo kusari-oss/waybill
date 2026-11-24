@@ -52,6 +52,8 @@ use super::PackageDbEntry;
 
 // Spec 1538 (#1516, #1519): the blocks around a fetch, and why it might not be taken.
 pub(crate) mod blocks;
+// Spec 1652 (#1535): what a build tree says the build used.
+pub(crate) mod build_tree;
 pub(crate) mod conditions;
 pub(crate) mod fallback;
 pub(crate) mod fetches;
@@ -209,7 +211,9 @@ pub(crate) fn finalize(
     {
         return (Vec::new(), Default::default(), Default::default());
     }
-    read_with_downloads(scan_root, include_vendored, exclude_set, Some(marker.files), &marker.config_templates)
+    // Spec 1652: build trees named with `--cmake-build-tree`, read once.
+    let build_tree = build_tree::BuildEvidence::from_env(scan_root);
+    read_with_downloads(scan_root, include_vendored, exclude_set, Some(marker.files), &marker.config_templates, build_tree.as_ref())
 }
 
 pub fn read(
@@ -217,7 +221,7 @@ pub fn read(
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
-    read_with_downloads(scan_root, include_vendored, exclude_set, None, &[]).0
+    read_with_downloads(scan_root, include_vendored, exclude_set, None, &[], None).0
 }
 
 /// [`read`], plus the spec 1535 declared-download counts (C229) and the
@@ -234,6 +238,7 @@ pub(crate) fn read_with_downloads(
     exclude_set: &super::exclude_path::ExclusionSet,
     walked: Option<Vec<PathBuf>>,
     config_templates: &[PathBuf],
+    build_tree: Option<&build_tree::BuildEvidence>,
 ) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage, FetchCoverage) {
     // Milestone 156: opt-in recursive descent for third_party/. Default
     // depth-1 (matches milestone-102 behavior) unless the CLI flag
@@ -257,7 +262,7 @@ pub(crate) fn read_with_downloads(
     let mut fetch_files = walked.unwrap_or_else(|| cmake_files.clone());
     fetch_files.sort();
     fetch_files.dedup();
-    let (fetch_entries, mut fetches, mut decls) = fetches::read_declarations(scan_root, &fetch_files);
+    let (fetch_entries, mut fetches, mut decls) = fetches::read_declarations(scan_root, &fetch_files, build_tree);
     if tree_wide {
         // FR-009: a narrow-set file the walker skips (`cmake/**/vendor/`)
         // was read for package searches before; it still is.
@@ -383,9 +388,72 @@ pub(crate) fn read_with_downloads(
     entries.extend(datasets.iter().filter_map(dataset_entry));
     fetches.links = links::read_links(scan_root, &fetch_files);
     entries.extend(fetch_entries);
+    // Spec 1652 (FR-007): what a build directory fetched that no declaration
+    // it owns accounts for.
+    if let (Some(ev), Some(bt)) = (build_tree, fetches.build_tree.as_mut()) {
+        entries.extend(build_only_entries(ev, bt, &decls.build_matched, scan_root));
+        let n = |k: &str| bt.declarations.get(k).copied().unwrap_or(0);
+        tracing::info!(
+            target: "waybill::cmake_build_tree",
+            build_dirs = bt.build_dirs,
+            taken = n("taken"),
+            not_taken = n("not-taken"),
+            incomplete = n("incomplete"),
+            no_evidence = n("no-evidence"),
+            build_only = bt.build_only,
+            conflicts = bt.conflicts,
+            "cmake build tree: fetch declarations settled (spec 1652)"
+        );
+    }
     fold_vendored_into_projects(&mut entries, &mut project_entries, scan_root);
     entries.extend(project_entries);
     (entries, coverage, fetches)
+}
+
+/// Spec 1652 (FR-007, contracts/settlement.md "Build-only populations"):
+/// one component per FetchContent population or ExternalProject download a
+/// build directory holds that no declaration it owns matches. Named as the
+/// build wrote it, with no version, URL or hash (research R4). Its declaring
+/// file is the build's source `CMakeLists.txt`; a build whose source lies
+/// outside the scan root contributes none, so no host path is emitted
+/// (FR-006); C245 counts it in `source-mismatch`.
+fn build_only_entries(
+    ev: &build_tree::BuildEvidence,
+    bt: &mut build_tree::BuildTreeCoverage,
+    matched: &BTreeSet<(usize, String)>,
+    scan_root: &Path,
+) -> Vec<PackageDbEntry> {
+    use build_tree::settle::{EvidenceKind, Settlement, SettlementState};
+    let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let mut out = Vec::new();
+    for (i, d) in ev.dirs.iter().enumerate() {
+        let Some(home) = d.home.as_ref().filter(|h| h.starts_with(&canonical_root)) else { continue };
+        let found = d
+            .populations
+            .iter()
+            .map(|n| (n, "cmake-fetchcontent", EvidenceKind::DepsSrcDir))
+            .chain(d.downloads.iter().map(|n| (n, "cmake-externalproject", EvidenceKind::DownloadStamp)));
+        for (name, mechanism, basis) in found {
+            if matched.contains(&(i, name.clone())) {
+                continue;
+            }
+            let Ok(purl) = Purl::new(&format!("pkg:generic/{}", encode_purl_segment(name))) else { continue };
+            let source_path = home.join("CMakeLists.txt").to_string_lossy().into_owned();
+            let mut e = build_cmake_entry(name, "", &source_path, purl, None, None, false, mechanism);
+            let s = Settlement {
+                state: SettlementState::Taken,
+                basis: BTreeSet::from([basis]),
+                dirs: BTreeSet::from([i]),
+                conflict: false,
+                signal_disagreement: false,
+            };
+            e.extra_annotations
+                .insert(build_tree::ANN_CMAKE_BUILD_SETTLEMENT.to_string(), build_tree::settlement_value(ev, &s, true));
+            bt.build_only += 1;
+            out.push(e);
+        }
+    }
+    out
 }
 
 /// Spec 1618 research R5: with `--include-vendored`, a `third_party/<n>` or
