@@ -16,6 +16,7 @@ A manifest with no `!include` and no `<<` passes steps 1, 2 and 4 unchanged, so 
 
 | Field | Meaning |
 |---|---|
+| `manifest` | the `package.yaml` the include belongs to (FR-005) |
 | `file` | the file containing the `!include` (the manifest, or an included file) |
 | `include` | the path as written |
 | `outcome` | `Resolved`, or `Unresolved(reason)` with `reason` one of `missing`, `outside-root`, `cycle`, `too-deep`, `unreadable` or `unsupported-position` (an enum, matched exhaustively) |
@@ -25,8 +26,8 @@ A manifest with no `!include` and no `<<` passes steps 1, 2 and 4 unchanged, so 
 Each key appears only when its list is non-empty.
 
 ```json
-"includes-resolved":   [{"file": "<path>", "include": "<as written>"}],
-"includes-unresolved": [{"file": "<path>", "include": "<as written>", "reason": "<reason>"}]
+"includes-resolved":   [{"manifest": "<package.yaml>", "file": "<path>", "include": "<as written>"}],
+"includes-unresolved": [{"manifest": "<package.yaml>", "file": "<path>", "include": "<as written>", "reason": "<reason>"}]
 ```
 
 - **A manifest with any unresolved include** is listed under `manifests-partial` with `unmodelled-construct: include`, as today.

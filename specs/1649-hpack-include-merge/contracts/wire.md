@@ -17,7 +17,9 @@ Each is a synthetic `waybill-fixture-*` tree, scanned in three formats with pari
 | M3 | two merges both setting `dependencies` (`[base]`, `[text]`) | `base` (the first merge) |
 | M4 | merge `[base]` and explicit `[text]`, explicit written first, and again with it last | `text` both times |
 | M5 | `<<: *s`, `*s` a sequence | no dependency from it; `read` |
-| I1 | manifest includes `common.yaml`, which defines `&deps`; `library: {dependencies: *deps}` | the anchored dependencies; `read`; `includes-resolved` lists it |
+| I1 | manifest includes `common.yaml`, which defines `&deps`; `library: {dependencies: *deps}` | the anchored dependencies; `read`; `includes-resolved` lists it with its `manifest` |
+| I5 | `_common/lib: !include "../waybill-fixture-common.yaml"` (a key with a slash; the path one directory up), then `<<: *lib` | resolved; `read` |
+| I6 | `key: !include shared.yaml` (unquoted path) | resolved; `read` |
 | I2 | `<<: !include "a.yaml"`, where `a.yaml` does `<<: !include "b.yaml"` relative to its own directory | `b`'s keys apply; `read` |
 | I3 | `library: !include "lib.yaml"`, and `lib.yaml` uses `*d` defined in the manifest before the include | resolved (downward anchor) |
 | I4 | an anchor defined in the manifest and redefined in an include after it | the later definition |

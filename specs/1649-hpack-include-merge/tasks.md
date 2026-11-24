@@ -3,7 +3,7 @@
 **Input**: `specs/1649-hpack-include-merge/` (spec.md, plan.md, research.md, data-model.md, contracts/wire.md, quickstart.md)
 
 **Tests**: requested by the spec (SC-001 to SC-006).
-- **Written red.** M1–M4 and I1–I4 are written before the code that makes them pass. U1–U5 are written red against the include code before the bounds land.
+- **Written red.** M1–M4 and I1–I6 are written before the code that makes them pass. U1–U5 are written red against the include code before the bounds land.
 - **Guards.** M5 and N1 pass throughout.
 
 **Paths**:
@@ -12,7 +12,7 @@
 - `IT` = `waybill-cli/tests/hpack_include_merge.rs` (new)
 - `MS` = `specs/1649-hpack-include-merge/measurements/`
 - `SP` = the session scratchpad
-- Research decisions are R1–R9, and cases are contracts/wire.md's M1–M5, I1–I4, U1–U5 and N1.
+- Research decisions are R1–R9, and cases are contracts/wire.md's M1–M5, I1–I6, U1–U5 and N1.
 
 ## Phase 1: Setup
 
@@ -23,7 +23,7 @@
   - `outcome(s, file)`: `read`, `partial` or `unread` for one manifest.
 - [ ] T003 [P] Corpus copies for measurement (R9). In `SP`, check out the four #1677 repositories at their pins (hs-opentelemetry `25f5b2d6…`, lootbox `2cd7b1e0…`, hs-temporal-sdk `d24313e3…`, ogmios `435189ae…`), each as committed and as a copy with the hpack-generated `.cabal` removed (the first four lines contain `hpack`, #1677's rule). Record the commands and file counts in `MS/corpus-copies.md`.
 - [ ] T004 Write `MS/hpack_agreement.py` (R7):
-  - for each `package.yaml` in a no-generated-cabal copy, run `nix run nixpkgs#hpack -- --force` in a scratch copy of its directory tree;
+  - for each repository, make a **third, dedicated copy** for hpack (hpack resolves `../` includes, so it needs the whole tree, and it writes a `.cabal` beside each `package.yaml`). Run `nix run nixpkgs#hpack -- --force` there for each manifest, then delete that copy. T003's eight copies are never written to: run inside a no-generated-cabal copy, hpack would put back exactly the files it removed (analyze U1);
   - take the dependency names of every `build-depends` in the generated `.cabal`, unioned per package;
   - compare them with the names of the `pkg:hackage` dependency edges of that package's main module in a waybill CycloneDX document;
   - print per-package agreement and every difference.
@@ -35,11 +35,11 @@
 - [ ] T005 In `HP`, unit tests `s1649_serde_yaml_*` for R8:
   - an anchor redefined later in a document resolves to the later definition;
   - a key named `<<__waybill_merge_0` survives `serde_yaml::from_str` as an ordinary key;
-  - a document with 20 aliases to one anchor parses (the corpus's size class).
+  - a document with 20 aliases to one anchor parses. T018 counts the aliases in the corpus's largest spliced document, and this test's number is raised to at least that (analyze L1).
 
   If any fails, stop and amend research R1 or R3 before going on.
 - [ ] T006 In `HK` and `HP`, thread `rootfs` from `haskell::read` through `finalize` to `hpack::read_manifest(path, root)`. There is no behaviour change; every existing test passes.
-- [ ] T007 In `HP`, add `IncludeResolution { file, include, outcome }` and `UnresolvedReason { Missing, OutsideRoot, Cycle, TooDeep, Unreadable, UnsupportedPosition }`, each with `as_str`. Carry them in `HpackReadOutcome`, and emit `includes-resolved` and `includes-unresolved` in `to_document_value` only when non-empty (R6). Nothing fills them yet, so output is unchanged.
+- [ ] T007 In `HP`, add `IncludeResolution { manifest, file, include, outcome }` and `UnresolvedReason { Missing, OutsideRoot, Cycle, TooDeep, Unreadable, UnsupportedPosition }`, each with `as_str`. Carry them in `HpackReadOutcome`, and emit `includes-resolved` and `includes-unresolved` in `to_document_value` only when non-empty (R6). Nothing fills them yet, so output is unchanged.
 
 ## Phase 3: User Story 1 — a manifest that merges shared settings keeps them (P1) 🎯 MVP
 
@@ -62,17 +62,17 @@
 ## Phase 4: User Story 2 — a manifest that includes shared files is read through them (P1)
 
 **Goal**: block-context `!include` is spliced, with anchors across files.
-**Independent test**: I1–I4 pass; T004's agreement improves.
+**Independent test**: I1–I6 pass; T004's agreement improves.
 
-- [ ] T012 [US2] Write I1–I4 in `IT`. They are red on this commit.
+- [ ] T012 [US2] Write I1–I6 in `IT`. They are red on this commit.
 - [ ] T013 [US2] In `HP`, `splice_includes(text, file, root, chain) -> (String, Vec<IncludeResolution>)` (R1):
-  - for a line whose value is `!include "<path>"` after `key:` or `- `, replace the tag with the included file's text, recursively spliced first, relative to `file`'s directory;
+  - for a line whose value is `!include <path>` (quoted or unquoted) after a key or `- `, replace the tag with the included file's text, recursively spliced first, relative to `file`'s directory. A key is any plain or quoted scalar ending at the first `: `, slashes included (analyze U2);
   - re-indent that text by the key's column + 2, and drop `---`, `...` and a BOM;
   - record each `Resolved` include;
   - leave any other `!include` in place.
 
-  Wire it before T009's rename (an included file's `<<` keys are renamed with the rest). Unit tests `s1649_splice_*`: indentation at columns 0, 2 and 4; a sequence item; a nested include relative to the including file; a block scalar inside an included file keeps its relative indentation.
-- [ ] T014 [US2] Fill C200's `includes-resolved` from `read_manifest`'s resolutions in `HK`. A manifest whose includes all resolve, and that has no `defaults:`, is `read`: an `Include` unmodelled construct is reported only for an unresolved include. I1–I4 pass, and N1 is still byte-identical.
+  Wire it before T009's rename (an included file's `<<` keys are renamed with the rest). Unit tests `s1649_splice_*`: indentation at columns 0, 2 and 4; a sequence item; a nested include relative to the including file; a block scalar inside an included file keeps its relative indentation; a `_common/lib:` key; a quoted key; an unquoted path.
+- [ ] T014 [US2] Fill C200's `includes-resolved` from `read_manifest`'s resolutions in `HK`. A manifest whose includes all resolve, and that has no `defaults:`, is `read`: an `Include` unmodelled construct is reported only for an unresolved include. I1–I6 pass, and N1 is still byte-identical.
 
 ## Phase 5: User Story 3 — an include that cannot be resolved is reported (P2)
 
@@ -102,7 +102,7 @@
   - M-f the depth bound removed.
 
   Record the killing tests in `MS/mutations.md`. Every mutation must be killed, the source is restored with `cp`, and the binary rebuilt.
-- [ ] T018 [US4] FR-001 measurement (R9): scan T003's eight copies with this branch and with T001's binary. Record in `MS/corpus-counts.md`, per target, the manifests moving between `read`, `partial` and `unread`, and the `pkg:hackage` components gained or lost. Run T004's agreement on the four no-generated-cabal copies and record it in `MS/agreement-branch.md`. Every difference is fixed or explained (SC-002).
+- [ ] T018 [US4] FR-001 measurement (R9): first confirm each no-generated-cabal copy still has 0 hpack-generated `.cabal` (analyze U1). Then scan T003's eight copies with this branch and with T001's binary. Record in `MS/corpus-counts.md`, per target, the manifests moving between `read`, `partial` and `unread`, and the `pkg:hackage` components gained or lost. Run T004's agreement on the four no-generated-cabal copies and record it in `MS/agreement-branch.md`. Every difference is fixed or explained (SC-002).
   - **Checkpoint**: if a count contradicts the spec, amend the spec first.
 - [ ] T019 [US4] Corpus: dispatch `public-corpus.yml` with `-f branch=1649-hpack-include-merge -f regen_goldens=true`, and confirm the scanned commit.
   - Install only the `hpack-*` goldens from the artifact.

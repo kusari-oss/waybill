@@ -17,7 +17,7 @@ Observations are at `main` `ea149065`. "Measured" means executed, with hpack 0.3
 
 **Decision**: before parsing, replace each `!include "<path>"` in **block context** with the included file's text, re-indented to that position, recursively and relative to the file that names it. The result is one YAML document with every anchor in document order, which is what hpack's event-level splice produces.
 
-- `key: !include "x"` becomes `key:` followed by `x`'s lines, indented by the key's column + 2.
+- `key: !include "x"` becomes `key:` followed by `x`'s lines, indented by the key's column + 2. A key is any plain or quoted YAML scalar ending at the first `: `, slashes included: the corpus's commonest form is `_common/lib: !include "../package-common.yaml"` (32 of 49 includes are key values). The path may be quoted or unquoted.
 - `<<: !include "x"` is the same, with key `<<`.
 - `- !include "x"` becomes `-` followed by the indented lines.
 - Document markers (`---`, `...`) and a leading BOM in the included file are dropped.
@@ -84,8 +84,8 @@ R2 found no hazard in the corpus, so these tests guard the general case.
 C200 is one JSON value, built in `HpackReadOutcome::to_document_value` (`hpack.rs:181`). All three formats carry it through the same annotation, and the parity extractors compare it whole (`parity/extractors/mod.rs:711`: `c200_cdx`, `c200_spdx23`, `c200_spdx3`). So added keys reach every format identically with no catalog change.
 
 Two keys are added, each sorted by file then include:
-- `includes-resolved`: `[{"file", "include"}]`;
-- `includes-unresolved`: `[{"file", "include", "reason"}]`, with reason `missing`, `outside-root`, `cycle`, `too-deep`, `unreadable` or `unsupported-position`.
+- `includes-resolved`: `[{"manifest", "file", "include"}]`;
+- `includes-unresolved`: `[{"manifest", "file", "include", "reason"}]`, with reason `missing`, `outside-root`, `cycle`, `too-deep`, `unreadable` or `unsupported-position`.
 
 Both are omitted when empty. That keeps C200 byte-identical for a scan with no `!include` (FR-007), and leaves every #1677 target with an include as the only C200 change.
 

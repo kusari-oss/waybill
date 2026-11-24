@@ -22,7 +22,7 @@ Every behaviour it encodes was measured with hpack 0.38.3 (spec Background, R1, 
 **Storage**: N/A. Per manifest, in process.
 **Testing**: `./scripts/pre-pr.sh` through `scripts/gate.sh`.
 - `s1649_*` unit tests in `hpack.rs` (the rename, the merge fold, R8's serde_yaml checks).
-- A new integration file `waybill-cli/tests/hpack_include_merge.rs` (contracts/wire.md M1–M5, I1–I4, U1–U5, N1).
+- A new integration file `waybill-cli/tests/hpack_include_merge.rs` (contracts/wire.md M1–M5, I1–I6, U1–U5, N1).
 - Mutations (spec SC-005).
 - The corpus: the seven `hpack-*` targets, regenerated through CI.
 
@@ -61,7 +61,7 @@ specs/1649-hpack-include-merge/
 ├── research.md            # R1–R9
 ├── data-model.md
 ├── quickstart.md
-├── contracts/wire.md      # M1–M5, I1–I4, U1–U5, N1
+├── contracts/wire.md      # M1–M5, I1–I6, U1–U5, N1
 ├── measurements/          # hpack_agreement.py, counts, timing
 ├── checklists/requirements.md
 └── tasks.md               # /speckit-tasks

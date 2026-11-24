@@ -138,7 +138,7 @@ Manifests that use neither construct produce the same documents as on `main`.
 
 ### Functional Requirements
 
-- **FR-001 (count before design)**: Before output changes, the planning work MUST measure on the seven `hpack-*` corpus targets:
+- **FR-001 (count before the goldens move)**: Before the corpus goldens are refreshed, the work MUST measure on the seven `hpack-*` corpus targets, using the new reader on local copies of the public repositories (research R9: the counts need the new reader, so they cannot come earlier):
   - per target, manifests moving between `read`, `partial` and `unread`;
   - the `pkg:hackage` components each would gain or lose, against the committed goldens;
   - **the positive control:** for every corpus `package.yaml` that hpack 0.38.3 renders, hpack's generated `build-depends` per component, compared with waybill's dependency set for the same component. This measures agreement; the same comparison is the acceptance test (SC-002).
@@ -158,7 +158,7 @@ Manifests that use neither construct produce the same documents as on `main`.
 
 - **FR-004 (bounds)**: An include MUST NOT be read when its resolved real path lies outside the scanned root, when it closes a cycle, or when it is more than **8** levels deep (research confirms 8 covers every counted corpus chain). In each case, and when the file cannot be read or parsed, the including manifest MUST be `partial`. Content that could be read is kept, and nothing is invented for the unresolved include.
 
-- **FR-005 (reporting)**: C200 MUST record, per manifest, the includes it resolved and those it could not, with the reason for each unresolved one. A manifest whose every include resolved and that uses no other unmodelled construct is `read`. The added content MUST appear identically in all three formats.
+- **FR-005 (reporting)**: C200 MUST record, per manifest, the includes it resolved and those it could not, with the reason for each unresolved one. Each entry names the manifest it belongs to as well as the file containing the include, so a nested include is attributed to its manifest. A manifest whose every include resolved and that uses no other unmodelled construct is `read`. The added content MUST appear identically in all three formats.
 
 - **FR-006 (no network)**: Resolution reads only local files under the scanned root. `defaults:` stays unmodelled and `partial`.
 
