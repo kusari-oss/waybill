@@ -111,8 +111,8 @@
   - C245 is not emitted in SPDX 3;
   - `absent` is never filled;
   - the pass reads the fake store output's `package.conf.d` when present (it must fail the SC-002a test).
-- [ ] T018 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm `GATE_RESULT=pass`, the expected line, and every per-target `test result: ok. N passed; 0 failed`.
-- [ ] T019 Push, then dispatch the corpus with `regen_goldens=true`. Enumerate every job's conclusion and confirm the run scanned the branch head. Download the regenerated goldens and commit them. Trace every golden diff with a normalised, sorted diff, as SC-005 requires:
+- [X] T018 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm `GATE_RESULT=pass`, the expected line, and every per-target `test result: ok. N passed; 0 failed`.
+- [X] T019 Push, then dispatch the corpus with `regen_goldens=true`. Enumerate every job's conclusion and confirm the run scanned the branch head. Download the regenerated goldens and commit them. Trace every golden diff with a normalised, sorted diff, as SC-005 requires:
   - only the five closure goldens change;
   - only by edges between C218 components, C245, C104/C105 and `compositions[]`, plus the orphan classification that follows: `waybill:orphan-reason` on a boot library that gains an incoming edge, and C105's orphan count. Each such change is traced to a specific new edge (spec US3 scenario 2).
 
