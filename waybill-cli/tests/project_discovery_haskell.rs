@@ -321,6 +321,51 @@ fn us2_strict_ignores_declarations() {
     assert_eq!(rec["main-modules"], serde_json::json!([A, B, E]));
 }
 
+/// A declaration at the root is the root project's: its root-level
+/// components (here a `flake.lock` input, `["."]`) stay in scope, even with
+/// no root package (T032). Two packages, because with one the scan links the
+/// flake's inputs to it and the edge alone keeps them (haskell-security-
+/// advisories, with six, lost all three of its inputs).
+#[test]
+fn us2_declaration_only_scope_keeps_root_level_components() {
+    let t = tempfile::tempdir().unwrap();
+    std::fs::write(t.path().join("cabal.project"), "packages: pkgs/*\n").unwrap();
+    for n in ["a", "b"] {
+        std::fs::create_dir_all(t.path().join("pkgs").join(n)).unwrap();
+        std::fs::write(
+            t.path().join("pkgs").join(n).join("package.yaml"),
+            format!("name: waybill-fixture-{n}\nversion: 0.1.0\nlibrary:\n  dependencies: [base]\n"),
+        )
+        .unwrap();
+    }
+    std::fs::write(
+        t.path().join("flake.lock"),
+        r#"{"nodes":{"waybill-fixture-input":{"locked":{"lastModified":1700000000,"narHash":"sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","owner":"waybill-fixture-org","repo":"waybill-fixture-input","rev":"0123456789abcdef0123456789abcdef01234567","type":"github"},"original":{"owner":"waybill-fixture-org","repo":"waybill-fixture-input","type":"github"}},"root":{"inputs":{"waybill-fixture-input":"waybill-fixture-input"}}},"root":"root","version":7}"#,
+    )
+    .unwrap();
+    let all = same_purls_everywhere(&scan(t.path(), "all"));
+    let input: Vec<&String> = all.iter().filter(|p| p.starts_with("pkg:github/")).collect();
+    assert_eq!(input.len(), 1, "control: the flake input is emitted under all: {all:?}");
+    let d = scan(t.path(), "root-only");
+    assert!(!fell_back(&d), "{}", d.log);
+    let scoped = same_purls_everywhere(&d);
+    assert!(scoped.contains(input[0]), "the root's flake input stays: {scoped:?}");
+    assert!(scoped.contains(A), "{scoped:?}");
+}
+
+/// A component with no directory provenance and no edge cannot be attributed
+/// to any project, so the scope keeps it: f5's Stack snapshot (T033).
+#[test]
+fn us2_unattributable_snapshot_component_is_kept() {
+    let snapshot = "pkg:generic/stackage-lts-22.0@unspecified";
+    let all = same_purls_everywhere(&scan(&fixture("f5-stack"), "all"));
+    assert!(all.contains(snapshot), "control: emitted under all: {all:?}");
+    for mode in ["root-only", "strict"] {
+        let p = same_purls_everywhere(&scan(&fixture("f5-stack"), mode));
+        assert!(p.contains(snapshot), "{mode}: {p:?}");
+    }
+}
+
 // ---------------- US3: the drop is recorded (FR-004 to FR-006) ----------------
 
 /// SC-003's positive control.

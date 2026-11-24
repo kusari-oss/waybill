@@ -83,13 +83,15 @@ degrades to `root-only` behaviour rather than inventing a new heuristic.
 
 **Root-level is decided by directory.** A main module is root-level when the directory of its manifest is the scan root, whatever the manifest is called. Before spec 1652 a root `package.yaml`, `*.cabal` or `pubspec.yaml` was never root-level, because only some manifest names were stripped to their directory. Every Haskell repository fell back to a full scan under both modes; on the corpus, 8 targets of 8.
 
+**A component that cannot be attributed to any project is kept:** one that is not a main module, has no `waybill:workspace-member` directory and touches no relationship. The Stack snapshot and compiler components are the case on the corpus.
+
 **A nested main module the root depends on is kept**, with its own dependencies and the edges between them, under `root-only` and `strict`. That is what the root builds. One that nothing in scope reaches is dropped, along with everything only it reaches.
 
 **A Haskell root declaration sets the scope under `root-only`.** A root `cabal.project` `packages:` (or `optional-packages:`), or a root `stack.yaml` `packages:`, names the project's packages:
 - `cabal.project` accepts directories, directory globs, and `.cabal` paths or globs, separated by whitespace or commas;
 - `stack.yaml` accepts a list of directories, and its default is `[.]`.
 
-The declared packages are in-scope roots. With no root package of any ecosystem, they are the only roots, so the scan does not fall back. A nested package the declaration does not list, and nothing in scope reaches, is dropped. A declaration that matches no package is treated as no declaration. `strict` ignores declarations: it drops workspace members, and a declared package is one.
+The declared packages are in-scope roots. With no root package of any ecosystem, they are the only roots, so the scan does not fall back, and the root directory is still the root project's: root-level components, such as a root `flake.lock`'s inputs, stay. A nested package the declaration does not list, and nothing in scope reaches, is dropped. A declaration that matches no package is treated as no declaration. `strict` ignores declarations: it drops workspace members, and a declared package is one.
 
 ## What a scoped document says it dropped
 

@@ -742,10 +742,9 @@ impl HaskellParseSummary {
     /// Spec 1652 (FR-006, contracts/wire.md) — C200 names the hpack manifests
     /// whose package `--project-discovery` dropped.
     ///
-    /// `candidates` are those packages' manifest paths, each spelled every way
-    /// the scan root can be spelled (raw and canonical): C200's entries are the
-    /// reader's joined paths, and a scan through a symlink makes the two
-    /// differ. An entry of `manifests-read` equal to a candidate is listed,
+    /// `candidates` are those packages' manifest paths, joined to the root the
+    /// reader joined C200's entries to (the canonical one): a scan through a
+    /// symlink is where a raw root would differ. An entry of `manifests-read` equal to a candidate is listed,
     /// sorted, under `manifests-dropped-by-scope`. `manifests-read` itself is
     /// untouched — the manifest WAS read. Nothing matched inserts nothing, so
     /// every other C200 value is byte-identical.

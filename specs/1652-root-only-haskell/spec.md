@@ -110,6 +110,8 @@ A consumer reading a `root-only` SBOM can tell how many projects were left out a
 - **The root depends on a nested package through a versionless, declared reference** (`waybill-fixture-a` with no version) while the nested main module carries a version. The plan measures whether the edge targets the main module or a separate declared component, and the rule covers both.
 - **`cabal.project` `packages:` entries** can be globs (`local-packages/*`), directories, or `.cabal` file paths. The plan matches the forms the existing #1032 reader already parses, and reuses it.
 - **A root `cabal.project` without `packages:`** declares nothing. Under #1032 it governs nothing, and the same applies here.
+- **A declaration-only repository's root-level components** (a root `flake.lock`'s inputs, for example) belong to the root project, because the declaration is a manifest at the root. They stay in scope (T032, found by the corpus run).
+- **A component with no directory provenance and no relationship** cannot be attributed to any project, so the scope keeps it rather than dropping it on no evidence. On the corpus these are the Haskell reader's Stack snapshot and compiler components (T033).
 - **A Nix-built monorepo** (`callCabal2nix` per package) may declare its packages only in Nix. That is out of scope; #1676 flags it as inference.
 
 ## Requirements *(mandatory)*

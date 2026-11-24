@@ -4620,11 +4620,14 @@ pub async fn execute(
                 components = out_c;
                 relationships = out_r;
                 // Spec 1652 (FR-006): each dropped main module's manifest,
-                // joined to both spellings of the root (research R7).
+                // joined to the canonical root, which is the root the readers
+                // join C200's paths to. A scan through a symlink is where the
+                // raw root would differ; `us3_symlinked_root_c200_matches`
+                // pins this (research R7, measurements/after.md M11).
                 let candidates: Vec<PathBuf> = report
                     .dropped_evidence_paths
                     .iter()
-                    .flat_map(|p| [root_path.join(p), canonical_root.join(p)])
+                    .map(|p| canonical_root.join(p))
                     .collect();
                 (
                     Some(mode),

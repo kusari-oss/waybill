@@ -88,6 +88,7 @@ pub fn apply_scope_filter(
     // projected like a root. With no root package, the declared ones ARE the
     // roots, so a declaration alone sets the scope (Clarification 1).
     // `Strict` drops members, so it ignores declarations (Clarification 2).
+    let mut declared_roots_added = false;
     if mode.follows_workspace_members() && !declared_member_dirs.is_empty() {
         let declared: BTreeSet<&str> = declared_member_dirs.iter().map(String::as_str).collect();
         let already: BTreeSet<String> =
@@ -98,6 +99,7 @@ pub fn apply_scope_filter(
             }
             if declared.contains(dir_key(&super::root_dir(r, scan_root)).as_str()) {
                 in_scope_roots.push(r.clone());
+                declared_roots_added = true;
             }
         }
     }
@@ -226,6 +228,14 @@ pub fn apply_scope_filter(
                 .iter()
                 .map(|r| dir_key(&super::root_dir(r, scan_root))),
         );
+        // Spec 1652 (T032): a root declaration is a manifest at the scan
+        // root, so the root directory is the root project's even when no
+        // package lives there. Without this, a declaration-only repository
+        // lost its root-level components — haskell-security-advisories all
+        // three `flake.lock` inputs, hs-opentelemetry its devenv inputs.
+        if declared_roots_added {
+            in_scope_dirs.insert(".".to_string());
+        }
 
         let follows_members = mode.follows_workspace_members();
         annotation_follow_up(
@@ -269,6 +279,30 @@ pub fn apply_scope_filter(
                     &mut reachable,
                     &mut workspace_members_followed,
                 );
+            }
+        }
+    }
+
+    // Step 3b (spec 1652, T033): a component that is not a main module, has
+    // no directory provenance (`waybill:workspace-member` absent) and touches
+    // no relationship cannot be attributed to any project, so the scope has
+    // no evidence to drop it. On the corpus these are exactly the Haskell
+    // reader's Stack snapshot and compiler components (`stackage-lts-*`,
+    // `ghc-*`, `snapshot.yaml`), which the root `stack.yaml` names; dropping
+    // them made `root-only` lose the root project's toolchain silently.
+    {
+        let touched: BTreeSet<&str> = relationships
+            .iter()
+            .flat_map(|r| [r.from.as_str(), r.to.as_str()])
+            .collect();
+        for c in &components {
+            let key = c.purl.as_str();
+            if !reachable.contains(key)
+                && !is_main_module(c)
+                && !c.extra_annotations.contains_key(WORKSPACE_MEMBER_KEY)
+                && !touched.contains(key)
+            {
+                reachable.insert(key.to_string());
             }
         }
     }
@@ -960,5 +994,40 @@ mod tests {
         assert_eq!(report.root_main_modules, 0);
         assert_eq!(out.len(), input.len(), "fell back to the full scan");
         assert!(report.dropped_main_modules.is_empty());
+    }
+
+    /// T032: a declaration-only scope keeps root-level (`["."]`) components.
+    #[test]
+    fn declaration_only_scope_keeps_root_directory_components() {
+        let cwd = std::env::current_dir().unwrap();
+        let mut input = declared_shape();
+        input.push(with_member_dirs(
+            mk_component("pkg:github/waybill-fixture-org/waybill-fixture-input@0123456", None),
+            &["."],
+        ));
+        let decl = vec!["local-packages/a".to_string(), "local-packages/b".to_string()];
+        let (out, _r, _report) =
+            apply_scope_filter(input, vec![], ProjectDiscoveryMode::RootOnly, &cwd, &decl);
+        assert!(purls_of(&out).contains("pkg:github/waybill-fixture-org/waybill-fixture-input@0123456"));
+    }
+
+    /// T033: no provenance and no relationship: kept, under both modes. With
+    /// a relationship to a dropped project, it is attributable, and dropped.
+    #[test]
+    fn unattributable_components_are_kept_attributable_ones_are_not() {
+        let cwd = std::env::current_dir().unwrap();
+        let root = mk_component("pkg:cargo/root@0.1.0", Some("main-module"));
+        let nested_p = nested("pkg:npm/alone@0.1.0", "services/alone");
+        let loose = mk_component("pkg:generic/stackage-lts-22.0@unspecified", None);
+        let owned = mk_component("pkg:npm/owned-dep@1.0.0", None);
+        let input = vec![root, nested_p, loose, owned];
+        let rels = vec![dep("pkg:npm/alone@0.1.0", "pkg:npm/owned-dep@1.0.0")];
+        for mode in [ProjectDiscoveryMode::RootOnly, ProjectDiscoveryMode::Strict] {
+            let (out, _r, report) = apply_scope_filter(input.clone(), rels.clone(), mode, &cwd, &[]);
+            let kept = purls_of(&out);
+            assert!(kept.contains("pkg:generic/stackage-lts-22.0@unspecified"), "{mode}: {kept:?}");
+            assert!(!kept.contains("pkg:npm/owned-dep@1.0.0"), "{mode}: {kept:?}");
+            assert_partition(&input, &out, &report);
+        }
     }
 }

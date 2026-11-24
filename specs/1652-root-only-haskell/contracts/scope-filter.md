@@ -18,6 +18,8 @@ Returns its inputs untouched, before reading any other argument. The output is b
    - Each in-scope root is projected through dependency edges with `split::project_for_root`, unchanged. The BFS crosses main modules, so a nested main module that the root depends on, directly or through a chain, is reached (FR-002).
    - This holds under both modes.
 5. **Follow-up.** The directory follow-up and fixpoint run as today. The in-scope directories are seeded from `root_dir`, not `source_dir`.
+   - When declared roots were added (`root-only`), `.` is also seeded: the declaration is a manifest at the scan root (T032).
+   - **Unattributable components are kept** (T033, both modes). These are not main modules, carry no `waybill:workspace-member`, and are the endpoint of no relationship.
 6. **Filter.** Components and relationships are kept when reached. Order is preserved.
 7. **Drop.**
    - `dropped_main_modules` is the sorted PURLs of the roots from step 1 that are not reached.

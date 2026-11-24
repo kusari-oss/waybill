@@ -147,6 +147,11 @@
   - **As built:** `amend_scope_dropped` is a method on `HaskellParseSummary` in `haskell.rs`, because `haskell/hpack.rs` is a private module that `scan_cmd` cannot reach. The filter's report carries `dropped_evidence_paths`, the dropped main modules' manifests, because the filter consumes the components. `scan_cmd` joins them to both spellings of the root.
 - [X] T021 [US3] Run T014 to T020's tests until green. Then run `cargo test -p waybill --test project_discovery_scope --test go_per_mainmod_scope --test sbom_format_mapping_coverage --test holistic_parity`, plus `cargo test -p waybill --lib parity`, because the catalog-and-extractor gate is in the lib target.
 
+### Added during T028 (the corpus run found two silent losses)
+
+- [X] T032 [US2] Fix a declaration-only scope losing its root-level components: haskell-security-advisories lost its three `flake.lock` inputs, which carry `["."]`. In `waybill-cli/src/generate/project_discovery/filter.rs`, when declared roots were added, seed `.` into the in-scope directories, because the declaration is a manifest at the scan root. Tested by `us2_declaration_only_scope_keeps_root_level_components` (two packages, since with one the scan links the flake inputs to it), `declaration_only_scope_keeps_root_directory_components`, and mutation M12.
+- [X] T033 [US2] Keep components that cannot be attributed to any project. These are non-main-modules with no `waybill:workspace-member` and no relationship; on the corpus, exactly the Haskell reader's Stack snapshot and compiler components (`stackage-lts-*`, `ghc-*`, `snapshot.yaml`). Implemented as filter Step 3b, under both modes. Tested by `us2_unattributable_snapshot_component_is_kept` (f5), `unattributable_components_are_kept_attributable_ones_are_not`, and mutation M13.
+
 ## Phase 6: User Story 4 — Nothing else changes (P2)
 
 **Goal:** `all` is byte-identical, `--split` is unchanged, and #1045's fall-back holds (FR-007, SC-004).
@@ -178,7 +183,7 @@
   - the log count fix.
 
   Refs #1676, #1691.
-- [ ] T027 Run the mutations (research R9), each via a `cp` backup, rebuild, the targeted test (which must fail), then `cp` back and rebuild. Record each in `specs/1652-root-only-haskell/measurements/after.md` with the failing test's name:
+- [X] T027 Run the mutations (research R9), each via a `cp` backup, rebuild, the targeted test (which must fail), then `cp` back and rebuild. Record each in `specs/1652-root-only-haskell/measurements/after.md` with the failing test's name:
   - `root_dir` returns `source_dir`;
   - `split::project_for_root` skips nested main modules (never committed): `us1_f2_root_only_keeps_chain_drops_independent` and `us1_f2_strict_keeps_chain` must both fail, proving the tests watch reachability and not only root detection (SC-006);
   - declared roots not added (comment out the extend), then once with only `cabal.project` resolution removed, and once with only `stack.yaml` resolution removed;
@@ -189,7 +194,7 @@
   - the `compositions` arm removed;
   - the C200 key not inserted;
   - C244 not emitted in SPDX 3 only, which parity must catch.
-- [ ] T028 SC-005: rerun `measurements/run-corpus`-equivalent scans (the 12 targets in `measurements/baseline.md`, same pins, `--offline`) with the branch binary. Add the "after" table to `specs/1652-root-only-haskell/measurements/after.md`, with each target's C244 count, and compare against the R9 prediction (7 of 8 Haskell targets stop falling back; ogmios does not). Explain any mismatch from the code before going on.
+- [X] T028 SC-005: rerun `measurements/run-corpus`-equivalent scans (the 12 targets in `measurements/baseline.md`, same pins, `--offline`) with the branch binary. Add the "after" table to `specs/1652-root-only-haskell/measurements/after.md`, with each target's C244 count, and compare against the R9 prediction (7 of 8 Haskell targets stop falling back; ogmios does not). Explain any mismatch from the code before going on.
 
   FR-001 also asks for the targets with neither a root package nor a root declaration: copy `hpack-ogmios` to the scratchpad, add a root `package.json` (`{"name":"waybill-fixture-root-js","version":"1.0.0"}`), scan it under `root-only` and `strict` with the `main` and branch binaries, and record the components kept and the C244 count.
 - [ ] T029 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm `GATE_RESULT=pass`, the expected line, and every per-target `test result: ok. N passed; 0 failed` line. Enumerate any `---- … stdout ----` before calling it green.
