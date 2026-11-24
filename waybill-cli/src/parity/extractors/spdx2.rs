@@ -766,6 +766,8 @@ spdx23_anno!(c241_spdx23, "waybill:vendored-signals", component);
 // C242 — `waybill:fingerprint-also-matched` (spec 1639 FR-007): the other
 // libraries whose symbol fingerprints matched the same binary, a sorted array.
 spdx23_anno!(c242_spdx23, "waybill:fingerprint-also-matched", component);
+// Spec 1651: C243 — a relabelled component's tier before `sbom edit --retier`.
+spdx23_anno!(c243_spdx23, "waybill:retiered-from", component);
 spdx23_anno!(c42_spdx23, "waybill:lifecycle-scope", component);
 spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
 spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);

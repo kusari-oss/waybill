@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **`waybill sbom edit --retier FROM=TO` relabels `waybill:sbom-tier`, for testing consumers that act on the tier (#1683, kusaridev/iac#3552).**
+  Some consumers read the tier and act on it. One ingest pipeline drops every `design` component as if it were dev-only, then everything left unreachable, but `design` means "declared, version not resolved" and says nothing about scope. Until such a consumer is fixed, and to test any of them, the same graph can now be produced under another tier without rescanning.
+  - **What it does:** each component whose tier is `FROM` takes `TO` (one of the six CISA types, as `--sbom-type` accepts), at most once and from its tier in the input. Nothing else about the component changes. Each relabelled component carries `waybill:retiered-from` (new row C243, protected from removal), and the derivation record gets one `retier` entry per mapping with its `from` and `to`.
+  - **The document type** (lifecycle phases in all three formats) is recomputed only when it equalled what the input's own tiers give, so a type asserted with `--sbom-type` is kept. Graph completeness is never touched: a relabel resolves nothing.
+  - **Measured** on npm-express, haskell-language-server and a full scan of ogmios, against a model of that consumer rule: runtime (`required`) components lost go from 27 of 29, 325 of 354 and 95 of 369 to 0, with components and edges otherwise identical. `waybill sbom verify-chain` validates the edited documents.
+
 - **bzip2, GMP and liblzma (xz) are versioned from the version string they
   embed (#1641).** Their version is a bare string with no name beside it, so
   each is read only when the same binary also holds the library's anchor:

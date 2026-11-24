@@ -65,3 +65,20 @@ fn edited_outputs_agree_and_carry_the_same_derivation_projection() {
     let projection = (c194.cdx)(&docs[0]);
     assert_eq!(projection.len(), 1, "one derivation record");
 }
+
+/// Spec 1651 — a relabel keeps every universal-parity row in agreement,
+/// C5 (the tier) and C243 (the marker) included, and the three formats'
+/// C194 projections carry the same `retier` entry with its mapping.
+#[test]
+fn retiered_outputs_agree_and_record_the_mapping() {
+    let docs = edit_all(&["--retier", "source=build"]);
+    assert_parity("retiered", &docs[0], &docs[1], &docs[2]);
+    let c243 = extractors::EXTRACTORS.iter().find(|e| e.row_id == "C243").unwrap();
+    assert!(!(c243.cdx)(&docs[0]).is_empty(), "C243 extracted nothing: the case would pass vacuously");
+    let c194 = extractors::EXTRACTORS.iter().find(|e| e.row_id == "C194").unwrap();
+    let projections = [(c194.cdx)(&docs[0]), (c194.spdx23)(&docs[1]), (c194.spdx3)(&docs[2])];
+    assert_eq!(projections[0], projections[1]);
+    assert_eq!(projections[0], projections[2]);
+    let text = format!("{:?}", projections[0]);
+    assert!(text.contains("retier") && text.contains("source") && text.contains("build"), "{text}");
+}

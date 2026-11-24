@@ -283,6 +283,43 @@ impl SbomAdapter for Spdx23 {
         }
     }
 
+    fn set_tier(&mut self, id: &str, to: &str) -> Option<String> {
+        let p = self.component_subtrees_mut(id).into_iter().next()?;
+        let annotations = p.get_mut("annotations")?.as_array_mut()?;
+        let field_of = |a: &Value| a.get("comment").and_then(Value::as_str).and_then(envelope_field);
+        let (idx, field) = [super::SBOM_TIER, "waybill:component-tier"].iter().find_map(|f| {
+            annotations.iter().position(|a| field_of(a).as_deref() == Some(*f)).map(|i| (i, *f))
+        })?;
+        let previous = annotations[idx]
+            .get("comment")
+            .and_then(Value::as_str)
+            .and_then(envelope_value)
+            .and_then(|v| v.as_str().map(str::to_string))?;
+        annotations[idx]["comment"] = json!(envelope(field, json!(to)));
+        if !annotations.iter().any(|a| field_of(a).as_deref() == Some(super::RETIERED_FROM)) {
+            // Same date, type and annotator as the tier it describes.
+            let mut marker = annotations[idx].clone();
+            marker["comment"] = json!(envelope(super::RETIERED_FROM, json!(previous)));
+            annotations.push(marker);
+        }
+        Some(previous)
+    }
+
+    fn document_type_is(&self, phases: &[&str], _spdx3_types: &[&str]) -> bool {
+        self.doc
+            .pointer("/creationInfo/comment")
+            .and_then(Value::as_str)
+            .and_then(super::comment_phases)
+            .is_some_and(|text| text == super::phases_text(phases))
+    }
+
+    fn set_document_type(&mut self, phases: &[&str], _spdx3_types: &[&str]) {
+        let Some(comment) = self.doc.pointer("/creationInfo/comment").and_then(Value::as_str) else { return };
+        if let Some(new) = super::with_comment_phases(comment, phases) {
+            self.doc["creationInfo"]["comment"] = json!(new);
+        }
+    }
+
     fn dangling_references(&self) -> Vec<String> {
         let mut known: BTreeSet<String> = BTreeSet::from(["SPDXRef-DOCUMENT".to_string()]);
         for key in ["packages", "files", "snippets"] {

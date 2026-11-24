@@ -336,6 +336,49 @@ impl SbomAdapter for Spdx3 {
         }
     }
 
+    fn set_tier(&mut self, id: &str, to: &str) -> Option<String> {
+        let field_of = |e: &Value| e.get("statement").and_then(Value::as_str).and_then(envelope_field);
+        let about = |e: &Value| ty(e) == "Annotation" && e.get("subject").and_then(Value::as_str) == Some(id);
+        let graph = self.graph_mut();
+        let (idx, field) = [super::SBOM_TIER, "waybill:component-tier"].iter().find_map(|f| {
+            graph.iter().position(|e| about(e) && field_of(e).as_deref() == Some(*f)).map(|i| (i, *f))
+        })?;
+        let previous = graph[idx]
+            .get("statement")
+            .and_then(Value::as_str)
+            .and_then(envelope_value)
+            .and_then(|v| v.as_str().map(str::to_string))?;
+        graph[idx]["statement"] = json!(envelope(field, json!(to)));
+        if !graph.iter().any(|e| about(e) && field_of(e).as_deref() == Some(super::RETIERED_FROM)) {
+            let mut marker = graph[idx].clone();
+            marker["spdxId"] = json!(format!("{id}/anno-retiered-from"));
+            marker["statement"] = json!(envelope(super::RETIERED_FROM, json!(previous)));
+            graph.push(marker);
+        }
+        Some(previous)
+    }
+
+    fn document_type_is(&self, _phases: &[&str], spdx3_types: &[&str]) -> bool {
+        self.graph()
+            .iter()
+            .find(|e| ty(e) == "software_Sbom")
+            .and_then(|e| e.get("software_sbomType"))
+            .and_then(Value::as_array)
+            .is_some_and(|a| a.iter().filter_map(Value::as_str).eq(spdx3_types.iter().copied()))
+    }
+
+    fn set_document_type(&mut self, phases: &[&str], spdx3_types: &[&str]) {
+        for e in self.graph_mut().iter_mut() {
+            if ty(e) == "software_Sbom" {
+                e["software_sbomType"] = json!(spdx3_types);
+            } else if ty(e) == "SpdxDocument" {
+                if let Some(new) = e.get("comment").and_then(Value::as_str).and_then(|c| super::with_comment_phases(c, phases)) {
+                    e["comment"] = json!(new);
+                }
+            }
+        }
+    }
+
     fn dangling_references(&self) -> Vec<String> {
         let mut known: BTreeSet<String> = self.graph().iter().filter_map(sid).map(str::to_string).collect();
         known.extend(["NoAssertionElement", "NoneElement"].map(str::to_string));

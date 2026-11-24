@@ -299,6 +299,42 @@ impl SbomAdapter for Cdx {
         }
     }
 
+    fn set_tier(&mut self, id: &str, to: &str) -> Option<String> {
+        let c = self.component_subtrees_mut(id).into_iter().next()?;
+        let props = c.get_mut("properties")?.as_array_mut()?;
+        let named = |p: &Value, n: &str| p.get("name").and_then(Value::as_str) == Some(n);
+        let idx = props
+            .iter()
+            .position(|p| named(p, super::SBOM_TIER))
+            .or_else(|| props.iter().position(|p| named(p, "waybill:component-tier")))?;
+        let previous = props[idx].get("value").and_then(Value::as_str)?.to_string();
+        props[idx]["value"] = json!(to);
+        if !props.iter().any(|p| named(p, super::RETIERED_FROM)) {
+            props.push(json!({"name": super::RETIERED_FROM, "value": previous}));
+        }
+        Some(previous)
+    }
+
+    fn document_type_is(&self, phases: &[&str], _spdx3_types: &[&str]) -> bool {
+        let current: Vec<&str> = self
+            .doc
+            .pointer("/metadata/lifecycles")
+            .and_then(Value::as_array)
+            .map(|a| a.iter().filter_map(|l| l.get("phase").and_then(Value::as_str)).collect())
+            .unwrap_or_default();
+        current == phases
+    }
+
+    fn set_document_type(&mut self, phases: &[&str], _spdx3_types: &[&str]) {
+        let Some(meta) = self.doc.get_mut("metadata").and_then(Value::as_object_mut) else { return };
+        if phases.is_empty() {
+            meta.remove("lifecycles");
+        } else {
+            let lifecycles: Vec<Value> = phases.iter().map(|p| json!({"phase": p})).collect();
+            meta.insert("lifecycles".into(), Value::Array(lifecycles));
+        }
+    }
+
     fn dangling_references(&self) -> Vec<String> {
         let known: BTreeSet<String> = self.all_components().into_iter().filter_map(id_of).collect();
         let mut out = Vec::new();

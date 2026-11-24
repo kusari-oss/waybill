@@ -44,6 +44,25 @@ fn parse_drop_annotations(s: &str) -> Result<Sequenced, String> {
     Ok(stamp(EditOp::DropAnnotations { namespace: s.to_string() }))
 }
 
+/// Spec 1651: `FROM=TO`. `FROM` is any tier value, matched exactly; `TO` is
+/// parsed by `SbomType::parse_str`, so it accepts and refuses exactly what
+/// `--sbom-type` does.
+fn parse_retier(s: &str) -> Result<Sequenced, String> {
+    let Some((from, to)) = s.split_once('=') else {
+        return Err(format!("`{s}`: expected FROM=TO, e.g. `design=source`"));
+    };
+    if from.is_empty() || to.is_empty() {
+        return Err(format!("`{s}`: both sides of FROM=TO are required"));
+    }
+    if from == to {
+        return Err(format!("`{s}`: FROM and TO are the same tier"));
+    }
+    let to = crate::generate::lifecycle_phases::SbomType::parse_str(to).map_err(|_| {
+        format!("`{to}` is not a CISA SBOM type; valid values are design, source, build, analyzed, deployed, runtime")
+    })?;
+    Ok(stamp(EditOp::Retier { from: from.to_string(), to }))
+}
+
 /// `<class>[:<mode>][=<pattern>]`. The pattern may itself contain `:`.
 fn parse_redact(s: &str) -> Result<Sequenced, String> {
     let (head, pattern) = match s.split_once('=') {
@@ -100,6 +119,14 @@ pub struct EditArgs {
     #[arg(long = "redact", value_name = "SPEC", value_parser = parse_redact, action = clap::ArgAction::Append)]
     pub redact: Vec<Sequenced>,
 
+    /// Relabel `waybill:sbom-tier`: `FROM=TO`, e.g. `design=source`. TO is
+    /// one of design, source, build, analyzed, deployed, runtime. Each
+    /// component is relabelled at most once, from its tier in the input, and
+    /// records its original tier in `waybill:retiered-from`. For testing
+    /// consumers that act on the tier; repeatable.
+    #[arg(long = "retier", value_name = "FROM=TO", value_parser = parse_retier, action = clap::ArgAction::Append)]
+    pub retier: Vec<Sequenced>,
+
     /// The pseudonymisation key (bytes of the file, trailing newline
     /// ignored). Required when any redaction pseudonymises. Never written
     /// to the output or logged.
@@ -144,7 +171,7 @@ impl EditArgs {
     /// The operations, in command-line order.
     pub fn ops(&self) -> Vec<EditOp> {
         let mut all: Vec<&Sequenced> =
-            self.drop.iter().chain(&self.drop_annotations).chain(&self.redact).collect();
+            self.drop.iter().chain(&self.drop_annotations).chain(&self.redact).chain(&self.retier).collect();
         all.sort_by_key(|s| s.seq);
         all.into_iter().map(|s| s.op.clone()).collect()
     }
@@ -186,6 +213,24 @@ fn read_key(path: &Path) -> anyhow::Result<Vec<u8>> {
 /// in command-line order and a global flag has no place in that order, and
 /// edit bridges a dropped component's edges where scan's filter removes
 /// them, so one flag name would mean two different things.
+/// Spec 1651 (FR-002): one FROM mapped to two targets is ambiguous. The
+/// same mapping twice is not: the second relabels nothing.
+fn refuse_conflicting_retiers(ops: &[EditOp]) -> anyhow::Result<()> {
+    let mut seen: std::collections::BTreeMap<&str, &str> = std::collections::BTreeMap::new();
+    for op in ops {
+        if let EditOp::Retier { from, to } = op {
+            match seen.insert(from.as_str(), to.as_str()) {
+                Some(prev) if prev != to.as_str() => anyhow::bail!(
+                    "--retier maps `{from}` to both `{prev}` and `{}`; give one target",
+                    to.as_str()
+                ),
+                _ => {}
+            }
+        }
+    }
+    Ok(())
+}
+
 pub fn refuse_exclude_scope(scopes: &[waybill_common::resolution::LifecycleScope]) -> anyhow::Result<()> {
     if scopes.is_empty() {
         return Ok(());
@@ -206,8 +251,9 @@ pub fn refuse_exclude_scope(scopes: &[waybill_common::resolution::LifecycleScope
 pub async fn execute(args: EditArgs) -> anyhow::Result<ExitCode> {
     let ops = args.ops();
     if ops.is_empty() {
-        anyhow::bail!("no operation given: use --drop, --drop-annotations or --redact");
+        anyhow::bail!("no operation given: use --drop, --drop-annotations, --redact or --retier");
     }
+    refuse_conflicting_retiers(&ops)?;
     let to_stdout = args.output.as_os_str() == "-";
     let mode = args.signing_mode();
     if to_stdout && mode.is_enabled() {
@@ -227,7 +273,18 @@ pub async fn execute(args: EditArgs) -> anyhow::Result<ExitCode> {
     let outcome = crate::edit::run(&input, &ops, &opts)?;
 
     for op in &outcome.report.ops {
-        eprintln!("{}: matched {}, changed {}", op.category, op.matched, op.changed);
+        match (&op.from, &op.to) {
+            (Some(from), Some(to)) => {
+                eprintln!("{} {from}={to}: matched {}, changed {}", op.category, op.matched, op.changed)
+            }
+            _ => eprintln!("{}: matched {}, changed {}", op.category, op.matched, op.changed),
+        }
+    }
+    if outcome.report.document_type_kept {
+        eprintln!(
+            "document type kept: it does not match the input's own component tiers, so it was \
+             asserted (--sbom-type) or written by another tool"
+        );
     }
     if outcome.report.dependency_lists_changed > 0 {
         eprintln!(
@@ -328,6 +385,26 @@ mod tests {
     struct Harness {
         #[command(flatten)]
         args: EditArgs,
+    }
+
+    /// Spec 1651 (R7): the accepted and refused forms of `--retier`.
+    #[test]
+    fn s1651_parse_retier() {
+        assert!(matches!(parse_retier("image=build").unwrap().op, EditOp::Retier { ref from, .. } if from == "image"));
+        assert!(parse_retier("design=source").is_ok());
+        for bad in ["design", "=source", "design=", "design=design", "design=sources", "design=Build"] {
+            assert!(parse_retier(bad).is_err(), "{bad}");
+        }
+        let same = [
+            EditOp::Retier { from: "design".into(), to: crate::generate::lifecycle_phases::SbomType::Source },
+            EditOp::Retier { from: "design".into(), to: crate::generate::lifecycle_phases::SbomType::Source },
+        ];
+        assert!(refuse_conflicting_retiers(&same).is_ok(), "the same mapping twice is accepted");
+        let conflict = [
+            EditOp::Retier { from: "design".into(), to: crate::generate::lifecycle_phases::SbomType::Source },
+            EditOp::Retier { from: "design".into(), to: crate::generate::lifecycle_phases::SbomType::Build },
+        ];
+        assert!(refuse_conflicting_retiers(&conflict).is_err());
     }
 
     #[test]

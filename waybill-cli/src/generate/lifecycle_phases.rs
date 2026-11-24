@@ -56,7 +56,8 @@ use waybill_common::resolution::ResolvedComponent;
 /// vocabulary mirrors the CISA framework verbatim — no
 /// `waybill:`-prefix bridge needed because the SPDX 3 native field
 /// already accepts these 6 values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum SbomType {
     Design,
     Source,
@@ -231,17 +232,23 @@ pub fn aggregate_phases<'a>(
     components: impl IntoIterator<Item = &'a ResolvedComponent>,
     override_assertion: Option<SbomType>,
 ) -> Vec<&'static str> {
+    aggregate_phases_from_tiers(
+        components.into_iter().filter_map(|c| c.sbom_tier.as_deref()),
+        override_assertion,
+    )
+}
+
+/// [`aggregate_phases`] over tier strings: the one definition the emitter
+/// and `sbom edit --retier` share, so an edited document's type is computed
+/// exactly as a scan's is (spec 1651, research R5).
+pub fn aggregate_phases_from_tiers<'a>(
+    tiers: impl IntoIterator<Item = &'a str>,
+    override_assertion: Option<SbomType>,
+) -> Vec<&'static str> {
     if let Some(t) = override_assertion {
         return vec![t.as_cdx_phase()];
     }
-    let mut phases: BTreeSet<&'static str> = BTreeSet::new();
-    for c in components {
-        if let Some(ref tier) = c.sbom_tier {
-            if let Some(phase) = tier_to_phase(tier) {
-                phases.insert(phase);
-            }
-        }
-    }
+    let phases: BTreeSet<&'static str> = tiers.into_iter().filter_map(tier_to_phase).collect();
     phases.into_iter().collect()
 }
 
@@ -262,17 +269,23 @@ pub fn aggregate_spdx3_sbom_types<'a>(
     components: impl IntoIterator<Item = &'a ResolvedComponent>,
     override_assertion: Option<SbomType>,
 ) -> Vec<&'static str> {
+    aggregate_spdx3_sbom_types_from_tiers(
+        components.into_iter().filter_map(|c| c.sbom_tier.as_deref()),
+        override_assertion,
+    )
+}
+
+/// [`aggregate_spdx3_sbom_types`] over tier strings (see
+/// [`aggregate_phases_from_tiers`]).
+pub fn aggregate_spdx3_sbom_types_from_tiers<'a>(
+    tiers: impl IntoIterator<Item = &'a str>,
+    override_assertion: Option<SbomType>,
+) -> Vec<&'static str> {
     if let Some(t) = override_assertion {
         return vec![t.as_spdx3_iri()];
     }
-    let mut values: BTreeSet<&'static str> = BTreeSet::new();
-    for c in components {
-        if let Some(ref tier) = c.sbom_tier {
-            if let Some(v) = tier_to_spdx3_sbomtype_value(tier) {
-                values.insert(v);
-            }
-        }
-    }
+    let values: BTreeSet<&'static str> =
+        tiers.into_iter().filter_map(tier_to_spdx3_sbomtype_value).collect();
     values.into_iter().collect()
 }
 
@@ -332,6 +345,19 @@ mod tests {
             extra_annotations: Default::default(),
             binary_role: None,
         }
+    }
+
+    #[test]
+    fn s1651_tier_string_aggregators_agree_with_the_component_ones() {
+        let tiers = ["design", "source", "build", "analyzed", "deployed", "image", "design"];
+        let comps: Vec<ResolvedComponent> =
+            tiers.iter().enumerate().map(|(i, t)| component_with_tier(&format!("pkg:npm/x{i}@1"), Some(t))).collect();
+        assert_eq!(aggregate_phases(&comps, None), aggregate_phases_from_tiers(tiers, None));
+        assert_eq!(aggregate_spdx3_sbom_types(&comps, None), aggregate_spdx3_sbom_types_from_tiers(tiers, None));
+        assert_eq!(
+            aggregate_phases(&comps, Some(SbomType::Build)),
+            aggregate_phases_from_tiers(tiers, Some(SbomType::Build))
+        );
     }
 
     #[test]
