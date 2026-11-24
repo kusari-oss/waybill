@@ -43,6 +43,13 @@ Measured on the committed corpus goldens at `main` `91d84d1`. A boot library is 
   - It records **no dependencies**. Its sources (GHC release notes, Stack's global hints, release tags) list versions.
   - Using it would mean adding a `depends` column, from a source still to be chosen and measured.
 
+## Clarifications
+
+### Session 2026-11-24
+
+- Q: Where do boot-library edges come from at scan time? → A: A committed per-release table only. A probe builds it from each GHC release's own package database. Package databases present in the store are used only to check the table (FR-001), never at scan time, so the same closure gives the same edges on any machine.
+- Q: Which releases does the dependency table cover? → A: The same 36 releases as milestone 966's version table (9.0.1 to 9.14.1). A test asserts the two tables cover the same releases.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A boot library's dependencies are in the graph (Priority: P1)
@@ -51,11 +58,11 @@ A consumer walks a closure document's dependency graph, for reachability or vuln
 
 **Why this priority**: today the walk stops at `base`. Every boot library is a leaf, so anything reached only through one is invisible to a graph consumer, though it is in the document.
 
-**Independent Test**: a synthetic closure whose compiler package database declares `base` → `ghc-prim`. The document has that edge, and says where it came from.
+**Independent Test**: a synthetic closure whose compiler release the table records with `base` → `ghc-prim`. The document has that edge, and says where it came from.
 
 **Acceptance Scenarios**:
 
-1. **Given** a closure whose compiler's package database is available, **When** scanned, **Then** each boot library of that compiler carries the edges the database records, to the boot-library components of the same compiler that the document already contains.
+1. **Given** a closure whose compiler release is in the committed dependency table, **When** scanned, **Then** each boot library of that compiler carries the edges the table records for that release, to the boot-library components of the same compiler that the document already contains. The result does not depend on what the machine's store holds.
 2. **Given** a recorded dependency on a library the document does not contain, **When** scanned, **Then** no component is synthesised for it. The edge is omitted, and that boot library counts as having unknown dependencies (User Story 2).
 3. **Given** two compilers in one closure (project and bootstrap), **When** scanned, **Then** edges never cross compilers: `base` of `ghc-9.10.3` depends on `ghc-prim` of `ghc-9.10.3`.
 4. **Given** any added edge, **When** the document is read, **Then** it says where that boot library's dependencies came from, identically in all three formats.
@@ -64,7 +71,7 @@ A consumer walks a closure document's dependency graph, for reachability or vuln
 
 ### User Story 2 - A boot library whose dependencies are unknown is not presented as complete (Priority: P1)
 
-When the dependencies of one or more boot libraries cannot be established, for example because the compiler's output was not present and no other source covers that release, the document's graph-completeness verdict is not `complete`. The reason says how many boot libraries, and in which ecosystem.
+When the dependencies of one or more boot libraries cannot be established, because the table has no entry for that compiler's release or for that library, the document's graph-completeness verdict is not `complete`. The reason says how many boot libraries, and in which ecosystem.
 
 **Why this priority**: shellcheck reads `complete` over 38 boot libraries whose dependencies were never established. That is a confident wrong answer about exactly the components a reachability consumer trusts most.
 
@@ -87,52 +94,55 @@ When the dependencies of one or more boot libraries cannot be established, for e
 
 ### Edge Cases
 
-- **The bootstrap compiler's output is absent on every target.** Its boot libraries' dependencies are unknown unless another source covers that release (FR-001).
-- **The two sources disagree for a release,** for example a table row against a package database. The plan defines precedence, and the disagreement is recorded rather than resolved silently.
-- **A package database names a dependency by unit id** (`ghc-prim-0.12.0`). The edge goes to the component of that name and version from the same compiler. When the name matches and the version does not, the plan decides whether that is an edge or an unknown, and records it.
+- **The bootstrap compiler's output is absent on every target.** The table covers its release like any other, so its boot libraries get edges without the output being present.
+- **The table disagrees with a package database present in CI** (nixpkgs patching a boot library's dependencies, for example). That is found by FR-001's check and recorded in the plan's measurements. It is never resolved at scan time, because scans read only the table.
+- **A dependency is recorded by unit id** in a release's package database (`ghc-prim-0.12.0`). The table keeps the library name, and the edge goes to the component of that name from the same compiler. The version is the one milestone 966's table already gives that library in that release. When the two tables disagree on a version for the same release, the plan records it, and the edge is still drawn by name within the compiler.
 - **A boot library appears once per compiler,** and edges are keyed by the compiler (C218), so the two `base` components never share edges.
 - **A dependency outside the boot-library set** (an external library the compiler links). It is not a component, so no edge is drawn (US1 scenario 2).
-- **A compiler release outside the table and with no present output.** All its boot libraries are unknown, and the reason counts them.
+- **A compiler release outside the table.** All its boot libraries are unknown, and the reason counts them, whatever the machine's store holds.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001 (measure first)**: Before the design is fixed, the work MUST record, per closure target (moat, shellcheck, slack-web, openai, slacklinker) and per compiler (project, bootstrap):
-  - how many boot-library edges each candidate source yields: the compiler's package database when its output is present, and a committed per-release table if one is built;
-  - whether the sources agree where both apply;
-  - which source the closure tier already has on disk in CI.
+- **FR-001 (measure first)**: Before the design is fixed, the work MUST:
+  - choose the public source of each release's package database, and measure the probe against it;
+  - record, per closure target (moat, shellcheck, slack-web, openai, slacklinker) and per compiler (project, bootstrap), how many boot-library edges the table yields;
+  - check the table against the package database of every compiler output present in CI (the project compilers of slack-web, openai and slacklinker), recording every disagreement.
 
-  Any number in the plan that describes a source's coverage is traceable to that record.
+  Any number in the plan that describes coverage is traceable to that record.
+- **FR-001a (the table)**: Boot-library dependencies MUST come from a committed per-release table, embedded in the binary. It MUST cover exactly the releases milestone 966's version table covers (36, 9.0.1 to 9.14.1), and a test MUST fail when the two tables' release sets differ. It follows milestone 966's discipline: observed from named public sources, dated, and regenerable by a committed probe. Scans MUST NOT read a compiler's package database from the store.
 - **FR-002 (edges)**: Under `--nix-closure`, each boot library MUST carry dependency edges to the boot-library components of the **same compiler** that its established dependencies name, and that the document already contains. No component may be synthesised for an edge.
 - **FR-003 (provenance)**: Each boot library with established dependencies MUST say where they came from, identically in CycloneDX, SPDX 2.3 and SPDX 3. Use a standards-native construct first (Principle V); otherwise an existing row, extended compatibly; only failing both, a new row with its parity extractor.
 - **FR-004 (known leaves)**: A boot library whose established dependency list is empty is a known leaf, and does not count as unknown.
 - **FR-005 (completeness)**: When at least one boot library in the document has unknown dependencies, `waybill:graph-completeness` MUST NOT be `complete`. Its reason MUST be a closed-vocabulary code naming the count and the ecosystem. CycloneDX `compositions[]` MUST agree, through an explicit case for the code.
-- **FR-006 (no new network, no new eval)**: Establishing edges MUST NOT fetch, build or evaluate anything the closure tier does not already. Reading an output already present in the store is allowed (milestone 1378's rule), and so is committed data embedded in the binary.
+- **FR-006 (no new network, no new eval)**: Establishing edges MUST NOT fetch, build, evaluate or read anything at scan time beyond what the closure tier already does. The table is committed data embedded in the binary; the probe that builds it runs at development time only.
 - **FR-007 (unchanged otherwise)**: Scans without `--nix-closure` MUST be byte-identical. On closure scans, nothing other than FR-002, FR-003 and FR-005's outputs may change.
 - **FR-008 (no new dependencies)**: Zero new Cargo dependencies.
 
 ### Key Entities
 
 - **Boot library**: a component carrying C218, keyed by its compiler (`ghc-9.10.3`, `ghc-binary-9.8.4`).
-- **Dependency source**: where a boot library's dependencies come from, either the compiler's package database or a committed per-release record.
+- **Dependency table**: the committed per-release record of each boot library's dependencies, built by a probe from each GHC release's own package database.
 - **Known leaf**: a boot library whose source records no dependencies.
-- **Unknown boot library**: one no source covers.
+- **Unknown boot library**: one the table does not cover, because its release or its library is missing.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001 (the counts)**: For each of the five closure targets, the number of boot libraries with at least one edge, and of edges, is recorded before and after, per compiler. FR-001's per-source counts are recorded beside them.
-- **SC-002 (`base` is right)**: In every closure golden where `base`'s dependencies are established, its edges are exactly those the compiler's own package database records for it, restricted to components present in the document.
+- **SC-001 (the counts)**: For each of the five closure targets, the number of boot libraries with at least one edge, and of edges, is recorded before and after, per compiler.
+- **SC-002 (`base` is right)**: In every closure golden, `base`'s edges are exactly those its release's own package database records for it, restricted to components present in the document. For the three project compilers present in CI, the table is checked against that build's package database.
+- **SC-002a (machine independence)**: A closure scan gives the same boot-library edges whether or not the compiler's output is present in the store.
+- **SC-002b (coverage)**: The dependency table and milestone 966's version table cover the same 36 releases. A release added to one and not the other fails a test.
 - **SC-003 (no false `complete`)**: No closure golden reads `complete` while a boot library it lists has unknown dependencies. Shellcheck's verdict is re-derived and explained.
-- **SC-004 (positive control and mutations)**: A synthetic closure whose compiler package database declares `base` → `ghc-prim` emits that edge in all three formats with no parity gap. Removing the edge source fails a test. Removing the completeness reason, or its `compositions[]` case, fails a test.
+- **SC-004 (positive control and mutations)**: A synthetic closure whose compiler release the table records with `base` → `ghc-prim` emits that edge in all three formats with no parity gap. Removing the edge source fails a test. Removing the completeness reason, or its `compositions[]` case, fails a test.
 - **SC-005 (nothing else)**: Every non-closure corpus golden is byte-identical. Every closure golden diff, regenerated only by the CI corpus dispatch with `regen_goldens=true`, is traced to FR-002, FR-003 or FR-005. I11 and the existing invariants pass.
 
 ## Assumptions
 
 - **The five closure goldens are the measurement surface.** Their documents were produced on an x86_64-linux runner, and C214 on each compiler member says whether its output was present there.
-- **A committed per-release table, if the plan chooses one,** follows milestone 966's discipline:
+- **The committed per-release table** follows milestone 966's discipline:
   - observed from named public sources;
   - dated;
   - regenerable by a committed probe;
