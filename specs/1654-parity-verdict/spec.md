@@ -35,6 +35,12 @@ Spec 1653 found it: removing one row from SPDX 3 alone left the row `universal_p
 
 **On a live scan of the stub closure fixture** (`tests/fixtures/nix_closure_boot_versions`, `--nix-closure`), `parity_gaps` is 3: B1 9/12/12, B2 4/1/1, E1 absent/1/1. Without the closure it is 0.
 
+## Clarifications
+
+### Session 2026-11-24
+
+- Q: What is in scope once the shared helper can fail? → A: Fix every gap that the eleven test files' own fixtures show, plus the closure gaps and anything sharing their cause. Gaps seen only in corpus goldens are measured and filed. There is no per-test exclusion.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A consumer can read each row's parity verdict (Priority: P1)
@@ -61,7 +67,7 @@ Every integration test that claims parity uses one shared helper, which fails wh
 
 **Acceptance Scenarios**:
 
-1. **Given** each of the ten files and `tests/boot_library_edges.rs`, **When** their parity helper is replaced by the shared one, **Then** they pass, or each new failure is traced to a real gap and fixed or recorded (User Story 3).
+1. **Given** each of the ten files and `tests/boot_library_edges.rs`, **When** their parity helper is replaced by the shared one, **Then** they pass. Each failure it exposes is traced to its cause, and the gap is fixed in the emitter or extractor, or the row is made format-restricted with a reason. No test excludes a row.
 2. **Given** each of those eleven files, **When** a mutation drops one format's value of a row that file exercises, **Then** a test in that file fails.
 3. **Given** the shared helper, **When** a scan has a gap that this spec has not resolved, **Then** the helper fails. No allowlist of known gaps remains, including the one in `tests/boot_library_edges.rs`.
 
@@ -86,7 +92,7 @@ A `--nix-closure` document says the same thing in CycloneDX, SPDX 2.3 and SPDX 3
 
 **Acceptance Scenarios**:
 
-1. **Given** scans without `--nix-closure`, **When** compared with `main`, **Then** documents are byte-identical, unless a fix under User Story 3 shares its cause with a non-closure target. Any such change is traced and listed.
+1. **Given** any scan, **When** compared with `main`, **Then** documents are byte-identical, unless an FR-005 fix applies to them. Each such change is traced and listed.
 2. **Given** existing consumers of `parity-check --format json`, **When** run, **Then** they read every field they read today, unchanged.
 
 ### Edge Cases
@@ -94,7 +100,9 @@ A `--nix-closure` document says the same thing in CycloneDX, SPDX 2.3 and SPDX 3
 - **A row whose formats are all absent** is unexercised. Its verdict says so, and it is not a failure, as today's rule treats it.
 - **CycloneDX-subset rows (A12)** pass when CycloneDX's set is a subset of each SPDX set, whatever the counts.
 - **Presence-only rows (D1, E1)** pass when every format is present or every format is absent.
-- **A gap on a non-closure target that shares a cause with a closure gap** (B1 and B2 also differ on Go, Haskell, Maven and Python targets) is fixed with it, and the change is traced. A gap with a cause of its own is measured and filed, not fixed here.
+- **A gap on a non-closure target that shares a cause with a closure gap** (B1 and B2 also differ on Go, Haskell, Maven and Python targets) is fixed with it, and the change is traced.
+- **A gap in a fixture one of the eleven test files scans** is in scope, whatever the target (Clarification 1).
+- **A gap seen only in a corpus golden,** with a cause of its own (A8 on the postgres image, for example), is measured and filed, not fixed here.
 
 ## Requirements *(mandatory)*
 
@@ -107,9 +115,13 @@ A `--nix-closure` document says the same thing in CycloneDX, SPDX 2.3 and SPDX 3
 - **FR-002 (verdict)**: `parity-check --format json` MUST give each row a verdict computed by the same rule that counts toward `summary.parity_gaps`, distinguishing passed, failed and not-checked. No existing field, summary value, or the human-readable table may change.
 - **FR-003 (shared helper)**: The integration tests MUST share one parity helper that fails on any failing verdict. All eleven files named in User Story 2 adopt it, and no allowlist of known gaps remains.
 - **FR-004 (each file can fail)**: For each of the eleven files, a mutation that drops one format's value of a row the file exercises MUST fail a test in that file.
-- **FR-005 (closure gaps)**: On the stub closure fixture and the five closure goldens, every universal row MUST pass, or be recorded in the catalog as format-restricted for the format that cannot carry it, with the reason. Fixes are to emitters or extractors, whichever FR-001 shows is wrong.
+- **FR-005 (gaps in scope)**: Every universal row MUST pass, or be recorded in the catalog as format-restricted for the format that cannot carry it, with the reason. This applies on:
+  - the stub closure fixture and the five closure goldens;
+  - every fixture the eleven test files scan.
+
+  Fixes are to emitters or extractors, whichever FR-001 shows is wrong. Gaps seen only in other corpus goldens are measured, and filed as issues with the per-row measurement.
 - **FR-006 (corpus before and after)**: The per-target, per-row gap list MUST be recorded for every corpus golden before and after, and every changed golden traced. Goldens are regenerated only by the CI corpus dispatch.
-- **FR-007 (unchanged otherwise)**: Existing `parity-check` consumers and non-closure documents MUST be unchanged, except for fixes that share a cause with a closure gap, which are traced.
+- **FR-007 (unchanged otherwise)**: Existing `parity-check` consumers and documents MUST be unchanged, except where FR-005 fixes a gap, and every such change is traced.
 - **FR-008 (no new dependencies)**: Zero new Cargo dependencies.
 
 ### Key Entities
@@ -124,12 +136,12 @@ A `--nix-closure` document says the same thing in CycloneDX, SPDX 2.3 and SPDX 3
 
 - **SC-001 (verdict consistency)**: On every corpus golden and every test fixture scanned in the suite, the number of rows whose verdict is a failure equals `summary.parity_gaps`.
 - **SC-002 (helpers can fail)**: Eleven of eleven files adopt the shared helper. Eleven of eleven mutations, one per file, are killed.
-- **SC-003 (closure parity)**: The stub closure fixture and all five closure goldens report 0 parity gaps. Any row that would otherwise fail is format-restricted in the catalog with a stated reason.
+- **SC-003 (parity where it is tested)**: The stub closure fixture, the five closure goldens, and every fixture the eleven test files scan report 0 parity gaps. Any row that would otherwise fail is format-restricted in the catalog with a stated reason. Every remaining gap in other corpus goldens is in a filed issue.
 - **SC-004 (the counts)**: The table of gaps per golden and per row is recorded before (80 in total today) and after, and every golden whose documents change is traced.
-- **SC-005 (nothing else)**: Existing JSON fields and the table output are unchanged. Non-closure documents are byte-identical, apart from traced shared-cause fixes.
+- **SC-005 (nothing else)**: Existing JSON fields and the table output are unchanged. Every document that changes does so because of an FR-005 fix, traced.
 
 ## Assumptions
 
-- **Scope of the fixes:** the request scopes fixes to closure scans. Gaps found only on non-closure targets (A8 on the postgres image, for example) are measured and filed as issues unless they share a cause with a closure gap. Whether to widen the scope is a question for `/speckit-clarify`.
+- **Scope of the fixes** (Clarification 1): closure scans, every fixture the eleven test files scan, and anything sharing a cause with either. Gaps found only in other corpus goldens are measured and filed.
 - **Rules and catalog:** the per-row rule is today's per-directionality rule, unchanged. A row moves to format-restricted only with a stated reason in the catalog.
 - **Masking:** the goldens are masked documents, so a masking artefact found by FR-001 is fixed in how parity is measured on goldens, not in the emitters.
