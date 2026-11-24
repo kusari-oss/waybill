@@ -17,12 +17,12 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `FX/project/`, a synthetic two-part npm tree:
+- [X] T001 Create `FX/project/`, a synthetic two-part npm tree: *As built: confirmed in `MS/fixture.md`; the completeness reason is `transitive-edges-unresolvable: npm`, which C1 uses.*
   - `locked/`: `package.json` plus `package-lock.json`, declaring `waybill-fixture-locked-dep`, which scans as `source`;
   - `declared/`: `package.json` only, declaring `waybill-fixture-declared-dep` and a dev dependency `waybill-fixture-dev-dep`, which scan as `design`, one of them `scope: excluded`.
 
   Add `FX/README.md` saying the tests scan it at run time; nothing in it is a golden. Confirm with one `waybill --offline sbom scan` that the scan carries both `source` and `design`, and record the tiers in `MS/fixture.md`. npm without a lockfile gives `design`: the committed npm-express golden has 27 `required` and 16 `excluded` `design` components (analyze U5).
-- [ ] T002 Create `IT` with the harness. Reuse `tests/sbom_edit_support/mod.rs` (`edit`, `edit_to`, `components`, `edges`) by `#[path]` module, as the other `sbom_edit_*.rs` tests do. Add:
+- [X] T002 Create `IT` with the harness. Reuse `tests/sbom_edit_support/mod.rs` (`edit`, `edit_to`, `components`, `edges`) by `#[path]` module, as the other `sbom_edit_*.rs` tests do. Add: *As built: `IT` includes `tests/common` too, since the support module needs it; tiers are compared on CycloneDX, and cross-format agreement on C5 and C243 comes from `parity-check` in every multi-format case.*
   - `scan(project, extra_flags) -> [PathBuf; 3]`: an offline three-format scan into a tempdir, with `HOME` isolated;
   - `tier_of(doc, name)` for all three formats, and `marker_of(doc, name)` for C243;
   - `derivation_ops(doc)`;
@@ -31,8 +31,8 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 
 ## Phase 2: Foundational
 
-- [ ] T003 In `LP`, add `aggregate_phases_from_tiers` and `aggregate_spdx3_sbom_types_from_tiers`, over `impl IntoIterator<Item = &str>` plus `Option<SbomType>`, and make `aggregate_phases` and `aggregate_spdx3_sbom_types` call them (R5). Unit test: for a mixed tier set, the old and new functions agree. Emission must be unchanged. T020's full gate runs every golden test, so no subset is named here (analyze U4).
-- [ ] T004 In `ED/mod.rs`:
+- [X] T003 In `LP`, add `aggregate_phases_from_tiers` and `aggregate_spdx3_sbom_types_from_tiers`, over `impl IntoIterator<Item = &str>` plus `Option<SbomType>`, and make `aggregate_phases` and `aggregate_spdx3_sbom_types` call them (R5). Unit test: for a mixed tier set, the old and new functions agree. Emission must be unchanged. T020's full gate runs every golden test, so no subset is named here (analyze U4).
+- [X] T004 In `ED/mod.rs`:
   - add `EditOp::Retier { from: String, to: SbomType }` (`generate::lifecycle_phases::SbomType`), with category `retier` (analyze I1);
   - add `OpReport { from: Option<String>, to: Option<String> }`, serialised only when present (R3);
   - add `waybill:retiered-from` to `PROTECTED_ANNOTATIONS` (R4).
@@ -44,34 +44,34 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 **Goal**: FR-001, FR-003, FR-008.
 **Independent test**: R1, R2, R3 and the parity check.
 
-- [ ] T005 [US1] Write R1, R2, R3 and R7 in `IT`, each editing all three formats of one scan and checking parity. They are red on this commit, since the flag does not parse.
-- [ ] T006 [US1] In `CE`, add `--retier <FROM=TO>`, repeatable and sequence-stamped (`parse_retier`). Validation (R7) is written in Phase 6; here, parse the form only.
-- [ ] T007 [US1] Add `fn set_tier(&mut self, id: &str, to: &str) -> Option<String>` to `SbomAdapter` in `ED/mod.rs`. It returns the previous tier, and writes C243 with that tier when the component has no C243 yet. Implement it in `ED/cdx.rs` (the property), `ED/spdx23.rs` (the package annotation envelope) and `ED/spdx3.rs` (the `Annotation` element). Unit tests per adapter:
+- [X] T005 [US1] Write R1, R2, R3 and R7 in `IT`, each editing all three formats of one scan and checking parity. They are red on this commit, since the flag does not parse. *As built: R1, R2, R3 and R7 were written together with the code rather than red first; T017's mutations show each one fails when its rule is removed.*
+- [X] T006 [US1] In `CE`, add `--retier <FROM=TO>`, repeatable and sequence-stamped (`parse_retier`). Validation (R7) is written in Phase 6; here, parse the form only.
+- [X] T007 [US1] Add `fn set_tier(&mut self, id: &str, to: &str) -> Option<String>` to `SbomAdapter` in `ED/mod.rs`. It returns the previous tier, and writes C243 with that tier when the component has no C243 yet. Implement it in `ED/cdx.rs` (the property), `ED/spdx23.rs` (the package annotation envelope) and `ED/spdx3.rs` (the `Annotation` element). Unit tests per adapter: *As built: the per-adapter unit test is one test over all three formats (`s1651_set_tier_keeps_the_first_marker_in_every_format`).*
   - only the tier and the marker change;
   - an existing marker keeps its value.
-- [ ] T008 [US1] In `ED/mod.rs::run`, apply `EditOp::Retier` with a run-local `relabelled` set (R2), filling `matched`, `changed`, `from` and `to`. R1, R2, R3 and R7 pass, with parity clean.
+- [X] T008 [US1] In `ED/mod.rs::run`, apply `EditOp::Retier` with a run-local `relabelled` set (R2), filling `matched`, `changed`, `from` and `to`. R1, R2, R3 and R7 pass, with parity clean.
 
 ## Phase 4: User Story 2 — the relabel cannot be mistaken for a scan (P1)
 
 **Goal**: FR-004, FR-005; C243 as a catalog row.
 **Independent test**: R4, R5, R6, V1.
 
-- [ ] T009 [US2] Write R4, R5, R6 and V1 in `IT`. V1 covers `verify-chain`, with a key-signed and an unsigned original, as `sbom_edit_chain.rs` does.
-- [ ] T010 [P] [US2] Add C243 `waybill:retiered-from`:
+- [X] T009 [US2] Write R4, R5, R6 and V1 in `IT`. V1 covers `verify-chain`, with a key-signed and an unsigned original, as `sbom_edit_chain.rs` does.
+- [X] T010 [P] [US2] Add C243 `waybill:retiered-from`:
   - extractors in `PX/cdx.rs`, `PX/spdx2.rs` and `PX/spdx3.rs`, with the same macros as C218;
   - a `ParityExtractor` entry in `PX/mod.rs`, `SymmetricEqual`, with its unit test;
   - the catalog row in `docs/reference/sbom-format-mapping.md`, with the standards-native audit (R4: KEEP-NO-NATIVE).
 
   The gate's catalog/extractor check must pass.
-- [ ] T011 [US2] Extend `waybill-cli/tests/sbom_edit_parity.rs` with a `--retier design=source` case on `IT`'s scan, asserting the C194 `operations` projection, including `from` and `to`, agrees across the three formats. R4, R5, R6 and V1 pass.
+- [X] T011 [US2] Extend `waybill-cli/tests/sbom_edit_parity.rs` with a `--retier design=source` case on `IT`'s scan, asserting the C194 `operations` projection, including `from` and `to`, agrees across the three formats. R4, R5, R6 and V1 pass.
 
 ## Phase 5: User Story 3 — the document stays self-consistent (P2)
 
 **Goal**: FR-006, FR-007.
 **Independent test**: T1, T2, C1.
 
-- [ ] T012 [US3] Write T1, T2, C1 and D1 in `IT`. T2 scans the fixture with `--sbom-type build`. C1 uses a scan whose completeness reason names an ecosystem: the declared-only part should give one; if not, use a hand-made document and note it.
-- [ ] T013 [US3] In `ED/mod.rs`, after the operation loop, call a new adapter method, `recompute_document_type(original_tiers, new_tiers)`, implemented in all three adapters:
+- [X] T012 [US3] Write T1, T2, C1 and D1 in `IT`. T2 scans the fixture with `--sbom-type build`. C1 uses a scan whose completeness reason names an ecosystem: the declared-only part should give one; if not, use a hand-made document and note it.
+- [X] T013 [US3] In `ED/mod.rs`, after the operation loop, call a new adapter method, `recompute_document_type(original_tiers, new_tiers)`, implemented in all three adapters: *As built: implemented as `document_type_is` and `set_document_type` on each adapter; the SPDX 3 comment lives on `SpdxDocument`.*
   - if the document's current type equals the aggregate of `original_tiers` (`LP`'s `*_from_tiers`), replace it with that of `new_tiers` in CycloneDX `metadata.lifecycles`, the SPDX 2.3 `creationInfo.comment` phases clause, and SPDX 3 `software_sbomType` and its comment;
   - otherwise keep it, and set `EditReport.document_type_kept = true`, which the CLI prints.
 
@@ -79,8 +79,8 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 
 ## Phase 6: User Story 4 — misuse is refused clearly (P2)
 
-- [ ] T014 [US4] Write the refusal cases in `IT`, from contracts/cli.md's table. Each asserts a non-zero exit, the message naming the problem, and that no output file exists.
-- [ ] T015 [US4] In `CE`, implement R7:
+- [X] T014 [US4] Write the refusal cases in `IT`, from contracts/cli.md's table. Each asserts a non-zero exit, the message naming the problem, and that no output file exists.
+- [X] T015 [US4] In `CE`, implement R7: *As built: `TO` is parsed by `SbomType::parse_str`, but the refusal message is `--retier`'s own and names the six values; `--sbom-type`'s message would name the wrong flag.*
   - `parse_retier` refuses a missing `=`, an empty side and `FROM == TO`, and parses `TO` with `SbomType::parse`, which refuses anything outside the CISA six with `--sbom-type`'s message;
   - a post-parse check refuses one `FROM` with two targets.
 
@@ -88,13 +88,13 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 
 ## Phase 7: Measurement and mutations
 
-- [ ] T016 SC-001, with `MS/retier_consumer_model.py`. For npm-express, hpack-ogmios-no-generated-cabal and haskell-language-server:
+- [X] T016 SC-001, with `MS/retier_consumer_model.py`. For npm-express, hpack-ogmios-no-generated-cabal and haskell-language-server: *As built: the filtered `hpack-ogmios-no-generated-cabal` golden has dangling `compositions[]` and `sbom edit` rightly refuses it, so ogmios was measured on a full scan of the same pinned tree. `MS/sc001.md`.*
   - copy the committed CycloneDX golden into the session scratchpad;
   - run the built `waybill sbom edit --retier design=source`;
   - apply the modelled consumer rule (R9).
 
   `required` lost must be 0, 0 and 0, against 27, 95 and 325 unedited. Also record the components and edges, which must be identical to the input apart from tier, C243, C194 and the type (SC-002), and that C194's counts equal the number of components carrying C243 (SC-003). Write it all to `MS/sc001.md`.
-- [ ] T017 Mutations (SC-006), with `MS/mutate.py` copied from spec 1650's runner:
+- [X] T017 Mutations (SC-006), with `MS/mutate.py` copied from spec 1650's runner: *As built: 7 mutations, all killed. `MS/mutations.md`.*
   - Ma: the run-local set removed (sequential relabelling), killed by R2;
   - Mb: the marker not written, killed by R1 and the unit test;
   - Mc: `changed` miscounted, killed by R1 and R3;
@@ -107,17 +107,17 @@ Research decisions are R1–R9. Cases are contracts/cli.md's R1–R6, T1, T2, C1
 
 ## Phase 8: Polish
 
-- [ ] T018 [P] Docs:
+- [X] T018 [P] Docs:
   - `docs/user-guide/sbom-edit.md`: `--retier`, its testing purpose, the at-most-once rule, the marker, the document-type rule (including the indistinguishable-assertion case), and that completeness is untouched (FR-007's note);
   - `docs/user-guide/cli-reference.md`: the flag;
   - `docs/reference/sbom-format-mapping.md`, C194's row: the `retier` category with its `from`/`to`;
   - `docs/reference/sbom-types.md`: a pointer to the edit.
-- [ ] T019 [P] `CHANGELOG.md`: an Added entry citing #1683 and kusaridev/iac#3552, with T016's numbers.
-- [ ] T020 Run the full gate on the final commit and record it in `MS/gate-log.md`:
+- [X] T019 [P] `CHANGELOG.md`: an Added entry citing #1683 and kusaridev/iac#3552, with T016's numbers.
+- [X] T020 Run the full gate on the final commit and record it in `MS/gate-log.md`: *As built: one run, pass; plus a corpus verification dispatch at the final commit, since the corpus goldens are ignored locally.*
   - the per-target totals, `GATE_RESULT` and the expected line;
   - that `git diff f0c6706 -- Cargo.lock '*Cargo.toml'` is empty;
   - that no corpus golden changed (`git diff --stat f0c6706 -- waybill-cli/tests/fixtures/public_corpus` is empty).
-- [ ] T021 Close-out: check every task's claim against the tree and `MS/`, note as-built differences inline, and tick each task.
+- [X] T021 Close-out: check every task's claim against the tree and `MS/`, note as-built differences inline, and tick each task.
 
 ## Dependencies
 
