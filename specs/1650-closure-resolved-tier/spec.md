@@ -21,9 +21,9 @@ The committed goldens for the five `nix-closure-*` corpus targets, as produced b
 
 The last column models a consumer rule that drops `design` nodes and everything reachable only through them. It is a model, not any consumer's code, as in #1681.
 
-**The few `design` components are the graph's hubs.** With `--root-name`, the project's own package is the root's only direct dependency: two in moat (`moat`, `readme`), one in each of the others. It is labelled `design`, so everything hangs off a `design` node. shellcheck has no project manifest, and is unaffected.
+**The few `design` components are the graph's hubs.** With `--root-name`, the root's direct dependencies are the repository's own packages: the evaluated package in each target, plus moat's `readme`. All are `design`, so everything hangs off a `design` node. shellcheck has no project manifest, and is unaffected.
 
-**The `design` components fall into two groups:**
+**The `design` components fall into two groups, plus repository packages the closure does not evaluate (moat's `readme`, which correctly stays `design`):**
 
 | Target | Project's own package | Closure GHC's boot libraries, `design` | Same compiler's boot libraries, already `build` | Bootstrap compiler's boot libraries, `build` | Other `design` |
 |---|---|---|---|---|---|
@@ -58,7 +58,7 @@ A consumer reads a `--nix-closure` SBOM of a Haskell project. The package the cl
 **Acceptance Scenarios**:
 
 1. **Given** a closure scan whose evaluated package carries closure evidence, **When** it is scanned, **Then** that package's tier is `build` in all three formats, and the reason is recorded.
-2. **Given** the five corpus closure targets, **When** they are scanned, **Then** the components reachable from the root are the same whether or not `design` nodes are dropped.
+2. **Given** the five corpus closure targets, **When** they are scanned, **Then** the components reachable from the root are the same whether or not `design` nodes are dropped, except components with no closure evidence (moat's `readme` itself).
 3. **Given** a project package the closure did not evaluate (no closure evidence), **When** it is scanned, **Then** its tier is unchanged.
 
 ---
@@ -111,13 +111,14 @@ A scan without `--nix-closure`, or of a non-Haskell ecosystem, is byte-identical
 - **Two compilers in one closure.** The bootstrap compiler's boot libraries are already `build` (11–14 per target), and stay so. A `design` component versioned from any compiler the closure holds is supplied by a closure member, so FR-003 needs no distinction between compilers (research R4).
 - **A boot library that is both declared and versioned from a different compiler** (the manifest pins it outside the boot table) is not versioned from the closure, and stays as it is.
 - **Genuinely unresolved Haskell components** (no version from any source) stay `design`. Since #1687 there are none on the corpus; slacklinker's `hunit` was the last.
+- **`--tier`.** The filter runs twice, once before the closure passes and once after them (`scan_cmd.rs`, #1360), and the re-tier sits between the two. So under `--tier design-only` a closure scan no longer emits the re-tiered components, because they are no longer `design`. That is intended, and a fixture states it.
 - **The document's aggregated type.** CycloneDX `metadata.lifecycles` and SPDX 3 `software_sbomType` aggregate per-component tiers. When `design` disappears from a document, it disappears from the aggregate too. That is a consequence, and is traced, not avoided.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001 (measure the assignment first)**: Before choosing where the change is made, the work MUST establish, for every `design` component in the five closure goldens, which code path assigned its tier. That includes why the same compiler's boot libraries are `build` in some cases and `design` in others. The result is recorded with counts per path.
+- **FR-001 (measure the assignment first)**: Before the change is implemented, the work MUST establish, for every `design` component in the five closure goldens, which code path assigned its tier. That includes why the same compiler's boot libraries are `build` in some cases and `design` in others. The result is recorded with counts per path.
 - **FR-002 (the project's own package)**: Under `--nix-closure`, a project package that the closure evaluated (C203 = `exempt-evaluated-package`) MUST take tier `build`, whatever its C214 value. The Build definition is "observed during the build process (build-graph trace)", and the closure's derivation graph is that build graph. `source` was considered and rejected: the package is in the source tree, but the stronger claim, that the closure evaluated it into the build graph, is evidenced, and `build` is the tier that claim belongs to. The 143–242 Hackage closure members per target that are `source` take their version from the nixpkgs package set; this package does not (research R3).
 - **FR-003 (boot libraries of the closure's compiler)**: A boot library whose version comes from the compiler the closure holds MUST take tier `build`, regardless of which reader first declared it. It ships inside that compiler, a `build`-tier closure member, and this matches the tier the same libraries already get when no manifest declares them. This supersedes milestone 966's clarification of 2026-11-12, "it stays `design`", as #1681 asks (research R2).
 - **FR-004 (unchanged otherwise)**: A component without the evidence FR-002 or FR-003 requires keeps its tier. Specifically:
@@ -145,7 +146,8 @@ A scan without `--nix-closure`, or of a non-Haskell ecosystem, is byte-identical
 
 - **SC-001 (fixtures)**: Synthetic `waybill-fixture-*` closure fixtures cover:
   - each acceptance scenario of User Stories 1 and 2;
-  - the edge cases: an unreadable project package, the bootstrap compiler's boot libraries, a manifest pin outside the boot table, and a genuinely unresolved component;
+  - the edge cases: a project package whose outputs were not examined (C214 `absent`), a repository package the closure does not evaluate, the bootstrap compiler's boot libraries, a manifest pin outside the boot table, and a genuinely unresolved component;
+  - `--tier design-only` on a closure scan;
   - a manifest-only control.
 - **SC-002 (the corpus result)**: On the five closure targets, the only `design` components left are those with no closure evidence: expected moat's `readme`, and none elsewhere (research R7). Components reachable from the root without `design` nodes are expected to be 1,134 (moat, `readme` alone dropped), 1,362, 1,235, 2,441 and 2,085, against 0 in the four project targets today. A deviation is traced.
 - **SC-003 (the guard has teeth)**: The new invariant fails on `main`'s goldens for moat, openai, slack-web and slacklinker (positive control), and passes on all five closure goldens produced by the branch.

@@ -38,7 +38,7 @@ Research decisions are R1–R8; fixture cases are contracts/wire.md's P1–P3, B
 **Goal**: FR-002.
 **Independent test**: P1–P3 and R1.
 
-- [ ] T004 [US1] Write P1, P2, P3 and R1 in `IT`. P1, P2 and R1 are red; P3 passes (a guard).
+- [ ] T004 [US1] Write P1, P2, P3, R1 and T1 in `IT`. P1, P2, R1 and T1 are red; P3 passes (a guard).
 - [ ] T005 [US1] Create `RT` with `pub(crate) fn retier(components: &mut [ResolvedComponent]) -> RetierSummary` (data-model). For a `design` component carrying C203 = `exempt-evaluated-package`, set `build`. Unit tests `s1650_*`:
   - the evaluated package becomes `build`;
   - a component already `source` or `build` is untouched;
@@ -46,19 +46,19 @@ Research decisions are R1–R8; fixture cases are contracts/wire.md's P1–P3, B
   - C214 has no effect, checked with `read` and with `absent`.
 
   Register the module in `waybill-cli/src/resolve/mod.rs`.
-- [ ] T006 [US1] In `SC`, call `retier` straight after `closure_role_scope::withdraw_scope_runtime_evidence_contradicts` (both follow `assign_role_scope`, whose C203 it reads), and log the summary at INFO when non-zero. P1, P2, P3 and R1 pass.
+- [ ] T006 [US1] In `SC`, call `retier` straight after `closure_role_scope::withdraw_scope_runtime_evidence_contradicts`, which must stay above the second `apply_tier_filter` call (#1360's, after the closure passes) so `--tier` sees the final tiers (analyze U1), (both follow `assign_role_scope`, whose C203 it reads), and log the summary at INFO when non-zero. P1, P2, P3, R1 and T1 pass.
 
 ## Phase 4: User Story 2 — a boot library of the closure's compiler has one tier (P1)
 
 **Goal**: FR-003.
 **Independent test**: B1–B3.
 
-- [ ] T007 [US2] Write B1, B2 and B3 in `IT`. B1 is red; B2 and B3 pass (guards).
+- [ ] T007 [US2] Write B1–B5 in `IT`. B1 is red; B2–B5 pass (guards).
 - [ ] T008 [US2] In `RT`, add the C218 rule: a `design` component carrying `waybill:boot-library-compiler` becomes `build`. Unit tests:
   - a C218 component becomes `build`;
   - a `design` component with neither annotation is untouched.
 
-  In `HP`, rewrite `apply_compiler_version`'s doc comment: the tier is now decided by `closure_resolved_tier::retier`, which supersedes milestone 966's 2026-11-12 clarification as #1681 asks (research R2). B1, B2 and B3 pass.
+  In `HP`, rewrite `apply_compiler_version`'s doc comment: the tier is now decided by `closure_resolved_tier::retier`, which supersedes milestone 966's 2026-11-12 clarification as #1681 asks (research R2). B1–B5 pass.
 
 ## Phase 5: User Story 3 — a regression fails CI (P2)
 
@@ -72,7 +72,7 @@ Research decisions are R1–R8; fixture cases are contracts/wire.md's P1–P3, B
   - each violation names the component, or the root's direct dependencies with their tiers.
 
   Unit tests V1–V5. Register `pub mod closure_resolved_tier` in `INV/checks/mod.rs`, and an `Invariant { id: "I11", … }` entry in `INV/mod.rs`'s `REGISTRY`.
-- [ ] T010 [US3] Positive control, recorded in `MS/control.md`. With I11 registered and `GD` still holding `main`'s goldens, `golden_matrix_is_evaluable_and_gated` must fail with I11 undeclared failures on exactly moat, openai, slack-web and slacklinker, and must pass on shellcheck. Record the output verbatim.
+- [ ] T010 [US3] Positive control, recorded in `MS/control.md`. With I11 registered and `GD` still holding `main`'s goldens, `golden_matrix_is_evaluable_and_gated` must fail with I11 undeclared failures on exactly moat, openai, slack-web and slacklinker, and must pass on shellcheck. Record the output verbatim. From here until T014 installs the new goldens, the local gate is red on purpose. Do not declare these cells away, and open no PR before T015 (analyze L2).
 - [ ] T011 [P] [US3] Catalog I11 in `docs/reference/sbom-invariants.md`: what it catches, its boundary with I9 and I10 (they assert scope, I11 asserts tier), and what to do when it fires (R6).
 
 ## Phase 6: User Story 4 — nothing else changes (P2)
@@ -85,7 +85,8 @@ Research decisions are R1–R8; fixture cases are contracts/wire.md's P1–P3, B
   - Mb: FR-003's rule removed;
   - Mc: the `design` guard removed (re-tiers any tier);
   - Md: I11 clause (a) removed;
-  - Me: I11 clause (b) removed.
+  - Me: I11 clause (b) removed;
+  - Mf: the evidence check removed, so every `design` component is re-tiered (spec SC-006, "FR-004's unresolved exemption removed"), killed by P3 and B3.
 
   Every mutation must be killed. Restore with `cp`, rebuild, and record the results in `MS/mutations.md`.
 - [ ] T014 [US4] Corpus. Push, and dispatch `public-corpus.yml -f branch=1650-closure-resolved-tier -f regen_goldens=true`. Confirm the scanned commit and every job's conclusion.

@@ -18,6 +18,9 @@
 | B2 | A boot library the manifest does not declare, synthesised by the closure | `build`, as today |
 | B3 | The manifest declares a non-boot dependency the closure does not hold, with no version from any source | stays `design` |
 | R1 | `--root-name` over P1 | the root's direct dependency is `build`; everything below it is reachable without passing through a `design` node |
+| B4 | A boot library of the bootstrap `ghc-binary`, synthesised by the closure | `build`, untouched |
+| B5 | The manifest pins a boot-library name to a version outside the boot table (no C218) | tier unchanged |
+| T1 | P1 and B1's tree scanned with `--tier design-only` | the re-tiered project package and boot library are absent; P3's `readme` is present |
 | N1 | The same project scanned without `--nix-closure` | byte-identical to `main` (control) |
 
 Every case checks:

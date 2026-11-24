@@ -6,7 +6,7 @@ cargo test -p waybill --test closure_resolved_tier
 cargo test -p waybill --bin waybill closure_resolved_tier
 
 # I11's positive control against main's committed goldens (before regeneration)
-cargo test -p waybill --test public_corpus -- --ignored invariant   # see tasks.md for the exact filter
+cargo test -p waybill --test public_corpus golden_matrix_is_evaluable_and_gated
 
 # Tiers in a closure golden
 jq -r '[..|objects|select(has("bom-ref") and has("name"))
