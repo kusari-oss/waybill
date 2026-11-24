@@ -65,7 +65,7 @@
   - **Unit tests:** precedence over an already-typed edge; no effect without `artifact_presence`.
   - **Integration assertion,** in `tests/boot_library_edges.rs` or a new closure test: on the stub closure, SPDX 2.3 carries at least one `BUILD_DEPENDENCY_OF` whose target's CycloneDX `scope` is `excluded`. Unit tests alone build `artifact_presence` by hand and cannot catch a wrong call site.
   - **U2:** confirm that `is_absent_from_artifact()` covers milestone 1277's `unreferenced` members on purpose, and say in the comment and in research R4 that `BUILD_DEPENDENCY_OF` is the nearest SPDX type for a member nix keeps but the artifact does not reference.
-- [ ] T010 [P] [US3] Unit tests, then the E1 rule (R6) in `e1_cdx`, `e1_spdx23` and `e1_spdx3` (`waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`):
+- [X] T010 [P] [US3] **Done as revised in research R6:** the cause was the emitter (`has_complete_record` lacked milestone 1278's closure-read flag), not the extractors, so the fix is there and the extractors are unchanged. Original text: Unit tests, then the E1 rule (R6) in `e1_cdx`, `e1_spdx23` and `e1_spdx3` (`waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`):
   - CycloneDX is present iff a record has `aggregate == "complete"` and non-empty `assemblies`;
   - SPDX is present iff `complete_ecosystems` is non-empty.
 

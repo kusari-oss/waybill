@@ -11,7 +11,7 @@
 
 **The gaps those tests and the closure goldens show are fixed at their causes**, measured before any design (R3):
 - **The closure dependency edges (R4):** CycloneDX's extractor classifies an edge by its target, and SPDX types edges into artifact-absent closure members as build dependencies. Measured: the extractor change creates no new failure on any golden.
-- **The completeness claim (R6):** both formats' extractors mean "an ecosystem is claimed complete".
+- **The completeness claim (R6, revised at T010):** the SPDX annotation now withholds the root claim exactly as CycloneDX does when the closure read has a gap. The original plan, redefining the extractors, rested on a wrong diagnosis.
 - **The root's properties (R7):** CycloneDX's `metadata.component` keeps them.
 - **The binary tests' SPDX 2.3 root edge (R8):** traced first, then fixed.
 - **Closure A7:** traced per shape first, then fixed.

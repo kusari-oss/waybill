@@ -30,12 +30,11 @@ Each pass rewrites only edges still `DependsOn`, so the passes take precedence i
 
 Pass 3 only has an effect when the function runs after `closure_role_scope::assign_role_scope` has set `artifact_presence`, so it is called again there (research R4).
 
-## E1, an ecosystem completeness claim
+## E1, a complete-record claim (revised at T010, research R6)
 
-| format | present iff |
-|---|---|
-| CycloneDX | a `compositions[]` record with `aggregate == "complete"` and non-empty `assemblies` |
-| SPDX 2.3 and SPDX 3 | the `compositions` annotation's `complete_ecosystems` is non-empty |
+The extractors are unchanged. The SPDX `compositions` annotation is emitted iff `has_complete_record(…, closure_read_partial)` holds, which is exactly when CycloneDX emits an `aggregate: "complete"` record:
+
+`complete_ecosystems` is non-empty, **or** the root claim holds (clean trace, at least one component, and no closure read gap, per milestones 1278 and 1378).
 
 ## `tests/common/parity.rs::assert_parity(out_dir: &Path)`
 
