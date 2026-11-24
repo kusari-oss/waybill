@@ -737,9 +737,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1653-cmake-build-tree: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
 - 1652-root-only-haskell: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `serde_yaml` (`stack.yaml`), `globset` (the `cabal.project` forms, already used by #1032), `tracing`. **Zero new Cargo dependencies.**
 - 1651-edit-retier: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `clap` (the flag), `anyhow`. **Zero new Cargo dependencies.**
-- 1650-closure-resolved-tier: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (I11 reads documents), `tracing` (one INFO line). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

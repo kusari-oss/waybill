@@ -405,6 +405,7 @@ pub struct ScanDiagnostics {
     /// Spec 1538 (C231): the CMake reader's fetch-declaration counts, as
     /// their wire value. `None` when no fetch declaration was read.
     pub cmake_fetch_coverage: Option<String>,
+    pub cmake_build_tree_coverage: Option<String>,
     /// Spec 1614 (C237): the CMake reader's package-search counts, finished
     /// in `scan_fs` after the pairing pass. `None` when no search was read.
     pub(crate) cmake_find_coverage: Option<cmake::searches::FindCoverage>,
@@ -2501,6 +2502,8 @@ pub fn read_all(
         }
     }
     diagnostics.cmake_fetch_coverage = cmake_fetches.wire();
+    // Spec 1653 (C246): only when `--cmake-build-tree` named a tree.
+    diagnostics.cmake_build_tree_coverage = cmake_fetches.build_tree.as_ref().map(|c| c.wire());
     let finds = std::mem::take(&mut cmake_fetches.finds);
     diagnostics.cmake_find_coverage = (finds.read > 0).then_some(finds);
     diagnostics.cmake_links = std::mem::take(&mut cmake_fetches.links);
