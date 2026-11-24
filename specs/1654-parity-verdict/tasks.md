@@ -85,14 +85,14 @@
 
 **Independent test:** each of the eleven files fails when one format's value of a row it exercises is removed.
 
-- [ ] T015 [US2] Create `waybill-cli/tests/common/parity.rs` with `pub fn assert_parity(out_dir: &Path)`, per data-model.md, with all three assertions (no `fail`; `parity_gaps == 0`; `fail` count equals `parity_gaps`), and register it in `tests/common/mod.rs`. It panics listing each failing row's ID, label, kinds and counts. Put `#[allow(dead_code)]` on the module where test binaries that don't use it would otherwise warn, following `common`'s existing convention.
-- [ ] T016 [US2] Replace each file's own `parity` helper with `common::parity::assert_parity`, deleting the old helper:
+- [X] T015 [US2] Create `waybill-cli/tests/common/parity.rs` with `pub fn assert_parity(out_dir: &Path)`, per data-model.md, with all three assertions (no `fail`; `parity_gaps == 0`; `fail` count equals `parity_gaps`), and register it in `tests/common/mod.rs`. It panics listing each failing row's ID, label, kinds and counts. Put `#[allow(dead_code)]` on the module where test binaries that don't use it would otherwise warn, following `common`'s existing convention.
+- [X] T016 [US2] Replace each file's own `parity` helper with `common::parity::assert_parity`, deleting the old helper:
   - `binary_kind_technique`, `closure_resolved_tier`, `hpack_include_merge`, `library_identity`, `merged_binary_evidence`;
   - `project_discovery_haskell`, `sbom_edit_retier`, `version_string_anchored`, `version_string_boundary`, `version_string_static`;
   - `boot_library_edges`, removing `PRE_EXISTING_GAPS`.
 
   Keep each call site; only the helper changes.
-- [ ] T017 [US2] Run all eleven files, and every other parity suite (`holistic_parity`, `spdx_cdx_parity`, `spdx3_cdx_parity`, `sbom_format_mapping_coverage`, `cargo test -p waybill --lib`). Each must be green. A remaining failure returns to US3; it is never excluded.
+- [X] T017 [US2] Run all eleven files, and every other parity suite (`holistic_parity`, `spdx_cdx_parity`, `spdx3_cdx_parity`, `sbom_format_mapping_coverage`, `cargo test -p waybill --lib`). Each must be green. A remaining failure returns to US3; it is never excluded.
 
 ## Phase 5: User Story 4 and polish
 

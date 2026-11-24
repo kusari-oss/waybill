@@ -110,7 +110,7 @@ fn scan_with_log(dir: tempfile::TempDir, filter: &str) -> Scan {
         stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
         dir,
     };
-    parity(&out_dir, &s);
+    common::parity::assert_parity(out_dir.path());
     unique_bom_refs(&s.cdx);
     s
 }
@@ -148,29 +148,6 @@ fn curated(cdx: &Value, slug: &str) -> Vec<String> {
 
 fn has(s: &Scan, slug: &str, purl: &str) -> bool {
     curated(&s.cdx, slug).iter().any(|p| p == purl)
-}
-
-/// `waybill sbom parity-check` over the scan's three documents. A row is a
-/// gap only if some format carries a value: a row absent in two formats and
-/// `restricted` in the third (A5 on a document with no package author) is a
-/// gap to the tool on `main` too, for every document without that field, and
-/// says nothing about the formats disagreeing.
-fn parity(out_dir: &tempfile::TempDir, s: &Scan) {
-    let out = Command::new(common::bin())
-        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
-        .arg(out_dir.path())
-        .output()
-        .unwrap();
-    let report: Value = serde_json::from_slice(&out.stdout)
-        .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
-    let gaps: Vec<&Value> = report["rows"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|r| r["universal_parity"] == false)
-        .filter(|r| ["cdx", "spdx23", "spdx3"].iter().any(|f| r[*f]["kind"] == "present"))
-        .collect();
-    assert!(gaps.is_empty(), "parity gaps for {}: {gaps:#?}", s.dir.path().display());
 }
 
 fn unique_bom_refs(cdx: &Value) {

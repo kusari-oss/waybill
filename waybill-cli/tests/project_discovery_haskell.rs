@@ -88,7 +88,7 @@ fn scan(tree: &Path, mode: &str) -> Docs {
     );
     assert!(o.status.success(), "scan failed ({mode}): {log}");
     let read = |p: &Path| -> Value { serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap() };
-    parity(out.path());
+    common::parity::assert_parity(out.path());
     Docs {
         cdx: read(&cdx),
         spdx23: read(&spdx23),
@@ -96,26 +96,6 @@ fn scan(tree: &Path, mode: &str) -> Docs {
         log,
         _out: out,
     }
-}
-
-/// `waybill sbom parity-check` over the three documents; a row is a gap only
-/// if some format carries a value.
-fn parity(out_dir: &Path) {
-    let out = Command::new(common::bin())
-        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
-        .arg(out_dir)
-        .output()
-        .unwrap();
-    let report: Value = serde_json::from_slice(&out.stdout)
-        .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
-    let gaps: Vec<&Value> = report["rows"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|r| r["universal_parity"] == false)
-        .filter(|r| ["cdx", "spdx23", "spdx3"].iter().any(|f| r[*f]["kind"] == "present"))
-        .collect();
-    assert!(gaps.is_empty(), "parity gaps: {gaps:#?}");
 }
 
 fn walk_strings<'a>(v: &'a Value, key: Option<&str>, out: &mut Vec<(Option<String>, &'a str)>) {
