@@ -39,6 +39,11 @@ The model reproduces the rule as Pico's code states it (`collectCDXExcluded`, th
   - **Recomputed:** the aggregated document type (CycloneDX `metadata.lifecycles`, and SPDX 3's `software_sbomType` with its "Observed lifecycle phases" comment), because they are derived from the per-component tiers and would otherwise contradict them.
   - **Left unchanged:** `waybill:graph-completeness` and its reason, including milestone 177's `transitive-edges-unresolvable` clause. A relabel resolves nothing: what was unresolvable in the original is still unresolvable. The same reasoning milestone 1071 applied to cross-tier binding records applies here, and the documentation says so.
 
+### Session 2026-11-24 (`/speckit-clarify`)
+
+- Q: Should each relabelled component carry a per-component marker naming its original tier? → A: Yes (Option A). The marker plus the derivation record's counts, as FR-004 states; a new catalog row with its parity extractor, protected from later removal.
+- Q: What does a relabel do to the completeness verdict and its reason? → A: Nothing (Option A). Both stay unchanged, because a relabel resolves nothing. The documentation, and the derivation record's mapping, explain why a milestone-177 clause can name an ecosystem with no `design` components left (FR-007).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Exercise a consumer with the same graph under another tier (Priority: P1)
@@ -121,7 +126,7 @@ A consumer that reads the document-level type, rather than component tiers, sees
 - **FR-004 (per-component marker)**: Each relabelled component MUST carry a marker naming its original tier, identical across CycloneDX, SPDX 2.3 and SPDX 3. It is a new catalog row with its parity extractor in the same change, and joins the edit's protected set.
 - **FR-005 (derivation record)**: The edit's derivation record MUST list each mapping and the number of components it relabelled, including 0. `waybill sbom verify-chain` MUST verify the result against its original.
 - **FR-006 (document type)**: CycloneDX `metadata.lifecycles`, and SPDX 3's `software_sbomType` with its lifecycle-phases comment, MUST be recomputed from the relabelled tiers. Exception: when the original's document type was the operator's own assertion (`--sbom-type`), it is kept.
-- **FR-007 (completeness untouched)**: `waybill:graph-completeness` and its reason MUST be unchanged. A relabel resolves nothing. The documentation says so.
+- **FR-007 (completeness untouched)**: `waybill:graph-completeness` and its reason MUST be unchanged. A relabel resolves nothing. The documentation says so, including that a milestone-177 `transitive-edges-unresolvable` clause may name an ecosystem whose `design` components were relabelled; it still describes the data, not the labels.
 - **FR-008 (parity)**: Editing each of a scan's three documents with the same `--retier` MUST give documents that `waybill sbom parity-check` reports with no gap.
 - **FR-009 (no new dependencies)**: Zero new Cargo dependencies.
 
