@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-23
+Auto-generated from all feature plans. Last updated: 2026-11-24
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -504,6 +504,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-23
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (I11 reads documents), `tracing` (one INFO line). **Zero new Cargo dependencies.** (1650-closure-resolved-tier)
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `clap` (the flag), `anyhow`. **Zero new Cargo dependencies.** (1651-edit-retier)
 - N/A. One document in, one document out. (1651-edit-retier)
+- Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `serde_yaml` (`stack.yaml`), `globset` (the `cabal.project` forms, already used by #1032), `tracing`. **Zero new Cargo dependencies.** (1652-root-only-haskell)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -736,9 +737,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1652-root-only-haskell: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `serde_yaml` (`stack.yaml`), `globset` (the `cabal.project` forms, already used by #1032), `tracing`. **Zero new Cargo dependencies.**
 - 1651-edit-retier: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `clap` (the flag), `anyhow`. **Zero new Cargo dependencies.**
 - 1650-closure-resolved-tier: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (I11 reads documents), `tracing` (one INFO line). **Zero new Cargo dependencies.**
-- 1649-hpack-include-merge: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. `serde_yaml` 0.9.34 (already parses `package.yaml`), `serde_json` (C200), `tracing`. **Zero new Cargo dependencies.** Measurement only: hpack 0.38.3 through `nix run nixpkgs#hpack`, and Python 3 run with `-I -B`.
 
 
 <!-- MANUAL ADDITIONS START -->
