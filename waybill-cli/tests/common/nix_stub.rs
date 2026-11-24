@@ -113,6 +113,9 @@ pub struct NixStub<'a> {
     /// Hackage (Principle VII); a test that wants answers points it at a
     /// `wiremock` server.
     pub hackage_url: Option<String>,
+    /// Spec 1650 — the binary to run. `None` is the one under test; a control
+    /// points it at another build, such as `main`'s.
+    pub bin: Option<PathBuf>,
 }
 
 impl Default for NixStub<'_> {
@@ -138,6 +141,7 @@ impl Default for NixStub<'_> {
             closure_stderr: None,
             declarations: None,
             hackage_url: None,
+            bin: None,
         }
     }
 }
@@ -347,7 +351,10 @@ esac
         let cdx_path = out_dir.join(names[0]);
         let spdx23_path = out_dir.join(names[1]);
         let spdx3_path = out_dir.join(names[2]);
-        let mut cmd = Command::new(env!("CARGO_BIN_EXE_waybill"));
+        let mut cmd = match &self.bin {
+            Some(b) => Command::new(b),
+            None => Command::new(env!("CARGO_BIN_EXE_waybill")),
+        };
         if let Some(store) = &self.store_dir {
             cmd.env("NIX_STORE_DIR", store);
         }

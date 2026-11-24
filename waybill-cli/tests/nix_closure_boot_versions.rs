@@ -255,7 +255,10 @@ fn design_tier_base_takes_the_project_compilers_version() {
     let base = one(&s.cdx, &purl);
     assert_eq!(base["version"], version("9.10.3", "base"));
     assert_eq!(prop(base, C218).as_deref(), Some("ghc-9.10.3"));
-    assert_eq!(prop(base, TIER).as_deref(), Some("design"), "the tier says where it was declared");
+    // Spec 1650 (#1681) supersedes this milestone's clarification that the
+    // tier stays `design`: under `--nix-closure` that gave one library two
+    // tiers in one document, depending on which path emitted it first.
+    assert_eq!(prop(base, TIER).as_deref(), Some("build"), "the closure's compiler supplies it");
     for gone in [C170, C171, C151] {
         assert_eq!(prop(base, gone), None, "{gone} on a versioned boot library: {base}");
     }

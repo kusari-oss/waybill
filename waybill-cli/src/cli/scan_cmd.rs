@@ -5557,6 +5557,18 @@ pub async fn execute(
             &mut components,
             &mut relationships,
         );
+        // Spec 1650 (#1681) — a component the closure resolved is not
+        // `design`: the evaluated package (C203, written by the pass above)
+        // and a boot library its compiler supplies (C218). Above the second
+        // `--tier` filter, so that filter sees the final tiers (#1360).
+        let retier = crate::resolve::closure_resolved_tier::retier(&mut components);
+        if retier.evaluated_package + retier.compiler_supplied > 0 {
+            tracing::info!(
+                evaluated_package = retier.evaluated_package,
+                compiler_supplied = retier.compiler_supplied,
+                "closure: re-tiered closure-resolved components from design to build (#1681)",
+            );
+        }
         // #1455 — the members marked only because the runtime closure holds
         // them through documentation outputs alone, counted by the pass after
         // the exemptions and static linking had their say.

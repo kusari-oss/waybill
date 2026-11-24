@@ -14,6 +14,8 @@ All counts are from the committed corpus goldens at `main` `18691d8` (CI Linux).
 | Every closure member | `build` | `nix/closure/emit.rs` (line 661) |
 | The closure classifies the evaluated package | C203 `exempt-evaluated-package`; **the tier is not touched** | `resolve::closure_role_scope::assign_role_scope` |
 
+**As built (T001):** a third path also leaves boot libraries `design`, and it is the larger one, 12–15 per target. Milestone 985's transitive walk creates members with `new_closure_component` (`design`); a boot member is then versioned by `apply_compiler_version` and keeps that tier. See `measurements/census.md`. FR-003 keys on C218, not on origin, so the design is unchanged.
+
 **Why one compiler's boot libraries have two tiers.** A boot library the project's reader declared is already held, as the `design` component milestone 966 versions, so the closure links to it instead of synthesising its own `build` copy. A boot library nobody declared is synthesised as `build`. The tier is decided by which path emitted the PURL first:
 - shellcheck: no project manifest, so all 27 are `build`;
 - project targets: 4–6 `build` and 19–23 `design`.
