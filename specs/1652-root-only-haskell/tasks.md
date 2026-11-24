@@ -31,6 +31,8 @@
 - [ ] T004 Unit tests in `filter.rs`'s test module:
   - `dropped_set_excludes_main_modules_reached_through_edges`: a root depending on a nested main module, plus an independent one. Expect a drop of exactly 1 and `nested_projects_ignored == 1`. This is the R3 defect, which reported 2.
   - Invariants I2 and I3 from `contracts/scope-filter.md` over every existing filter test fixture.
+  - `cycle_between_nested_main_modules_terminates_and_keeps_both`: root → `a`, `a` ↔ `b`. Both are kept and the call returns.
+  - `nested_chain_unreached_from_root_drops_whole_chain`: `x` → `y`, with nothing reaching `x`. Both are dropped and both are in `dropped_main_modules`.
 
   Run `cargo test -p waybill --lib project_discovery` and confirm that `tests/project_discovery_scope.rs::us1_info_log_carries_mode_and_counts` still sees `nested_projects_ignored=2`, since its nested projects are unreached.
 
@@ -43,7 +45,10 @@
 - [ ] T005 [P] [US1] Write the failing integration tests in `waybill-cli/tests/project_discovery_haskell.rs`:
   - `us1_f2_root_only_keeps_chain_drops_independent`: no fallback; C140 = `root-only`; hackage PURLs are exactly {root, `a`, `c`, `base`}; edges root→`a` and `a`→`c` present; `d` absent.
   - `us1_f2_strict_keeps_chain`: the same under `strict`, with C140 = `strict`.
-  - `us1_f6_npm_nested_by_path_kept`: `pkg:npm/waybill-fixture-lib@0.2.0` and the root's edge to it are present under both modes.
+  - `us1_f6_npm_nested_by_path_kept`: `pkg:npm/waybill-fixture-lib@0.2.0` and the root's edge to it are present under both modes, and so is the versionless declared component `pkg:npm/waybill-fixture-lib` (research R2).
+  - `us1_unlisted_manifest_name_is_root_level`: a tempdir tree with a root `pubspec.yaml` (`name: waybill_fixture_root`, `version: 1.0.0`) and a nested `package.json` (`waybill-fixture-nested`). Under `root-only` it does not fall back, and the nested npm project is dropped. This is research R1's stated consequence for every ecosystem; if the dart reader's root main module turns out not to carry a manifest-file evidence path, pick another manifest from outside `is_manifest_basename` and say which in the test's comment.
+
+  Each test scans all three formats with `scan_all_formats`, asserts the same PURL set in each, and runs `parity_check` (SC-001).
 
   Confirm the f2 tests fail on the current binary, by falling back.
 - [ ] T006 [P] [US1] Write the failing unit tests for `root_dir` in `waybill-cli/src/generate/project_discovery/mod.rs`'s test module, using a tempdir:
@@ -72,6 +77,8 @@
   - `us2_f4_cabal_project_members_join_json_root`: root-only keeps the npm root, `a`, `b`, `base` and `text`, and drops `e`.
   - `us2_f5_stack_yaml_sets_scope`: like f3.
   - `us2_strict_ignores_declarations`: f3 and f5 under `strict` fall back; f4 under `strict` drops `a`, `b` and `e`.
+
+  Each test scans all three formats with `scan_all_formats`, asserts the same PURL set in each, and runs `parity_check` (SC-001).
 - [ ] T010 [P] [US2] Write the failing unit tests in `waybill-cli/src/scan_fs/package_db/haskell.rs`'s test module for `resolve_root_declared_members`, using tempdir trees of `waybill-fixture-*` `package.yaml` and `.cabal` files:
   - `cabal.project` with `packages: local-packages/*`; `./a ./b`; `code/*/*.cabal`; `*/*.cabal`; `.`; the leading-comma form `    api-types\n  , api\n  , sdk` (hs-opentelemetry); `optional-packages:`;
   - a `cabal.project` with no `packages:`, which gives empty;
@@ -126,7 +133,7 @@
   - On the empty-set path, return `partial` with the code instead of `trivially_complete()`, keeping `manifest_unread_code`'s `unknown` precedence when both fire.
   - On the classified path, push it after the `manifest_unread_code` push.
   - Update all four callers to pass the artifacts' drop: `cyclonedx/builder.rs`, `spdx/document.rs`, `spdx/v3_document.rs` and `orphan_reason.rs`. Update the existing unit tests to pass `None`.
-  - Unit tests: an empty set with a drop gives `partial` plus the code; a non-empty complete graph with a drop gives `partial`; no drop leaves results unchanged.
+  - Unit tests: an empty set with a drop gives `partial` plus the code; an empty set with a drop **and** an unread manifest gives `unknown` with both codes, `manifest-unread` first (contracts/wire.md); a non-empty complete graph with a drop gives `partial`; no drop leaves results unchanged.
 - [ ] T019 [US3] Add an explicit `ReasonCode::ProjectDiscoveryScope { ecosystems, .. }` arm to `degraded_ecosystems` in `waybill-cli/src/generate/cyclonedx/compositions.rs`, extending with `ecosystems`, plus a unit test beside `a_degraded_ecosystem_is_unknown_even_when_reachable`.
 - [ ] T020 [US3] Add `pub(crate) fn amend_scope_dropped(value: &mut serde_json::Value, dropped: &[String])` in `waybill-cli/src/scan_fs/package_db/haskell/hpack.rs`. It inserts a sorted `manifests-dropped-by-scope` only when non-empty; every entry must be present in `manifests-read`; nothing else is touched. Unit tests cover: empty is a no-op, giving a byte-identical `to_string()`; and a subset.
 
@@ -135,7 +142,7 @@
   - apply it to `haskell_parse_summary.hpack_read`.
 
   Update C200's row text in `docs/reference/sbom-format-mapping.md` with the key.
-- [ ] T021 [US3] Run T014 to T020's tests until green. Then run `cargo test -p waybill --test project_discovery_scope --test go_per_mainmod_scope --test sbom_format_mapping_parity` (or whichever test files exercise parity: grep `parity` under `waybill-cli/tests/`).
+- [ ] T021 [US3] Run T014 to T020's tests until green. Then run `cargo test -p waybill --test project_discovery_scope --test go_per_mainmod_scope --test sbom_format_mapping_coverage --test holistic_parity`, plus `cargo test -p waybill --lib parity`, because the catalog-and-extractor gate is in the lib target.
 
 ## Phase 6: User Story 4 — Nothing else changes (P2)
 
@@ -170,14 +177,18 @@
   Refs #1676, #1691.
 - [ ] T027 Run the mutations (research R9), each via a `cp` backup, rebuild, the targeted test (which must fail), then `cp` back and rebuild. Record each in `specs/1652-root-only-haskell/measurements/after.md` with the failing test's name:
   - `root_dir` returns `source_dir`;
+  - `split::project_for_root` skips nested main modules (never committed): `us1_f2_root_only_keeps_chain_drops_independent` and `us1_f2_strict_keeps_chain` must both fail, proving the tests watch reachability and not only root detection (SC-006);
   - declared roots not added (comment out the extend), then once with only `cabal.project` resolution removed, and once with only `stack.yaml` resolution removed;
   - declared roots applied under `strict`;
+  - `root_dir` special-cased to Haskell file names only (`package.yaml`, `*.cabal`): `us1_unlisted_manifest_name_is_root_level` must fail;
   - `dropped_main_modules` left empty;
   - the reason code not pushed on the empty path, and separately on the classified path;
   - the `compositions` arm removed;
   - the C200 key not inserted;
   - C244 not emitted in SPDX 3 only, which parity must catch.
 - [ ] T028 SC-005: rerun `measurements/run-corpus`-equivalent scans (the 12 targets in `measurements/baseline.md`, same pins, `--offline`) with the branch binary. Add the "after" table to `specs/1652-root-only-haskell/measurements/after.md`, with each target's C244 count, and compare against the R9 prediction (7 of 8 Haskell targets stop falling back; ogmios does not). Explain any mismatch from the code before going on.
+
+  FR-001 also asks for the targets with neither a root package nor a root declaration: copy `hpack-ogmios` to the scratchpad, add a root `package.json` (`{"name":"waybill-fixture-root-js","version":"1.0.0"}`), scan it under `root-only` and `strict` with the `main` and branch binaries, and record the components kept and the C244 count.
 - [ ] T029 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm `GATE_RESULT=pass`, the expected line, and every per-target `test result: ok. N passed; 0 failed` line. Enumerate any `---- … stdout ----` before calling it green.
 - [ ] T030 Dispatch a verification corpus run: `gh workflow run public-corpus.yml -R kusari-oss/waybill --ref main -f branch=1652-root-only-haskell`. Expect every golden byte-identical (no target uses `--project-discovery`). Enumerate every job's conclusion.
 - [ ] T031 Mark `specs/1652-root-only-haskell/checklists/requirements.md` and these tasks complete, verifying each task's claim against the diff. Open the PR with `Refs #1676` and the public footer.

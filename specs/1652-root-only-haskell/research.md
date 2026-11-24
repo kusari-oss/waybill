@@ -40,6 +40,10 @@ Code references are at `main` `317fbae`. Every figure is from `measurements/base
   - stamping a member's directory differently would change `all` output, which FR-007 forbids;
   - the directory follow-up does not walk edges from what it pulls in.
 - **Decision:** declared members become additional in-scope roots (R4), and each is projected like a root.
+- **The edge's target, for a versionless reference** (the spec's edge case), measured on the baseline outputs:
+  - **hackage (f2):** the root's `waybill-fixture-a` dependency is an edge to the nested main module itself, `pkg:hackage/waybill-fixture-a@0.1.0`. No separate declared component exists.
+  - **npm (f6):** the edge targets the main module, `pkg:npm/waybill-fixture-lib@0.2.0`. A separate versionless declared component, `pkg:npm/waybill-fixture-lib`, is also emitted. It carries `["."]` from the root `package.json`'s evidence, so the directory follow-up keeps it.
+  - Both shapes are covered by the projection and the follow-up as they stand. T005 asserts both.
 
 ## R3. The true drop set, and the count the log reports (FR-004)
 

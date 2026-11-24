@@ -55,7 +55,7 @@ pub struct ProjectDiscoveryDrop {
 **Renders:** `project-discovery-scope: <count> project(s) dropped from <ecosystems joined by ", ">`.
 
 **Pushed:**
-- on the empty-set path, giving a `partial` result instead of `trivially_complete()`;
+- on the empty-set path, giving a `partial` result instead of `trivially_complete()`. If `manifest-unread` also fires there, the result stays `unknown`, carrying both codes;
 - and on the classified path.
 
 **In CycloneDX `compositions`:** `degraded_ecosystems` adds `ecosystems`.

@@ -28,7 +28,7 @@ All three are emitted only on a scan that filtered: `--project-discovery` is `ro
 project-discovery-scope: <N> project(s) dropped from <ecosystem>[, <ecosystem>]*
 ```
 
-- **The value:** `waybill:graph-completeness` (C104) is `partial` whenever this code is present, including when nothing else remains in the document.
+- **The value:** `waybill:graph-completeness` (C104) is `partial` whenever this code is present, including when nothing else remains in the document. One exception: when nothing remains and `manifest-unread` (milestone 1273) also fires, the value stays `unknown`, and both codes are listed, `manifest-unread` first.
 - **CycloneDX `compositions[]`:** each named ecosystem is degraded, so its aggregate is not `complete`.
 - **Joining:** with other codes by `; `, in the existing order. The new code is appended after `manifest-unread` on each path.
 

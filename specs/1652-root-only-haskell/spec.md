@@ -30,6 +30,8 @@
 
 The plan establishes each reader's exact behaviour before relying on it.
 
+**Measured in the plan (research R1):** the projection is not the cause. A root Haskell package is never treated as root-level, because its manifest path (`package.yaml`, `*.cabal`) is kept as a file name. So every Haskell corpus target falls back to a full scan. The projection already follows edges across main modules.
+
 **What reaches the document today:** C140 `waybill:project-discovery-mode` records the mode. The count of dropped projects (`nested_projects_ignored`) appears only in a log line. Completeness is computed on what remains, so a document emptied of its Haskell side can read `complete`.
 
 **The corpus never exercises this.** Today the four hpack corpus repositories give identical output under `root-only`, because none has a root main module, so `root-only` falls back to full scope (`corpus_harness_195/manifest.rs`, #1677). No corpus target is scanned with `--project-discovery`.
@@ -124,7 +126,7 @@ A consumer reading a `root-only` SBOM can tell how many projects were left out a
 - **FR-003 (declared Haskell members)**: Under `root-only` only (not `strict`, which drops members), a package declared by the root's `cabal.project` `packages:`, or by the root's `stack.yaml` `packages:`, MUST be treated as a member of the root project, as a cargo workspace member is. The declaration forms are the ones the existing `cabal.project` reader parses (#1032). A root declaration sets the scope on its own: when there is no root main module, its declared packages are the in-scope roots, and a nested package it does not list is dropped and recorded (FR-004).
 - **FR-004 (record the drop)**: When `root-only` or `strict` drops one or more projects, the document MUST carry one document-level record stating how many, that project-discovery scope was the reason, and the sorted main-module PURLs of the dropped projects, identically in CycloneDX, SPDX 2.3 and SPDX 3. Use a standards-native construct first (Principle V); otherwise an existing row, extended compatibly; only failing both, a new row with its parity extractor.
 - **FR-005 (completeness)**: When `root-only` or `strict` drops projects whose manifests were read, `waybill:graph-completeness` MUST NOT be `complete`, and its reason MUST name the scope.
-- **FR-006 (C200 coherence)**: A manifest whose package was dropped by project-discovery scope MUST stay in C200's `manifests-read` and MUST also be listed, sorted, in a new C200 field, `manifests-dropped-by-scope`. The field is omitted when empty, so every existing C200 value is byte-identical. The C200 parity extractor and catalog row are extended in the same change.
+- **FR-006 (C200 coherence)**: A manifest whose package was dropped by project-discovery scope MUST stay in C200's `manifests-read` and MUST also be listed, sorted, in a new C200 field, `manifests-dropped-by-scope`. The field is omitted when empty, so every existing C200 value is byte-identical. The C200 parity extractor and catalog row are extended in the same change. C200 covers hpack manifests (`package.yaml`) only. A dropped package read from a `.cabal` file has no per-manifest record, and is named in the drop record (FR-004).
 - **FR-007 (unchanged otherwise)**: Default `all` scans MUST be byte-identical. `root-only`'s fall-back to full scope (#1045) MUST be kept for scans with neither a root main module nor a root declaration, and `--split` unchanged.
 - **FR-008 (no new dependencies)**: Zero new Cargo dependencies.
 
