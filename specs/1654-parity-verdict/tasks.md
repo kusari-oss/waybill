@@ -57,10 +57,10 @@
 
 ### Fixes
 
-- [ ] T008 [P] [US3] Unit tests, then the B1/B2 target rule (R4a) in `waybill-cli/src/parity/extractors/cdx.rs`: `cdx_dependency_edges` classifies an edge by its target's `scope` only, with a comment citing research R4's measurement.
+- [X] T008 [P] [US3] Unit tests, then the B1/B2 target rule (R4a) in `waybill-cli/src/parity/extractors/cdx.rs`: `cdx_dependency_edges` classifies an edge by its target's `scope` only, with a comment citing research R4's measurement.
   - **Tests:** an edge from an excluded source to a runtime target is runtime; an edge into an excluded target is dev.
   - **C1:** then run every test file that asserts on B1/B2 or calls these extractors. Grep `cdx_dependency_edges`, `runtime_deps`, `dev_deps`, `"B1"` and `"B2"` under `waybill-cli/tests/`, which includes `holistic_parity`, `spdx_cdx_parity`, `spdx3_cdx_parity` and every `transitive_parity_*`. Each stays green, or the failure is traced to R4 before going on.
-- [ ] T009 [P] [US3] Unit tests, then pass 3 (R4b) in `apply_lifecycle_scope_to_edges` (`waybill-cli/src/scan_fs/mod.rs`): a `DependsOn` into a component with `artifact_presence.is_absent_from_artifact()` becomes `BuildDependsOn`. Passes 1 and 2 keep precedence. One INFO line with the rewrite count.
+- [X] T009 [P] [US3] Unit tests, then pass 3 (R4b) in `apply_lifecycle_scope_to_edges` (`waybill-cli/src/scan_fs/mod.rs`): a `DependsOn` into a component with `artifact_presence.is_absent_from_artifact()` becomes `BuildDependsOn`. Passes 1 and 2 keep precedence. One INFO line with the rewrite count.
   - **Call site:** the function's last call in `waybill-cli/src/cli/scan_cmd.rs` (around line 5559) runs **before** `closure_role_scope::assign_role_scope` (around 5602) sets `artifact_presence`. Call `apply_lifecycle_scope_to_edges` once more after `withdraw_scope_runtime_evidence_contradicts` (around 5615), or pass 3 types nothing.
   - **Unit tests:** precedence over an already-typed edge; no effect without `artifact_presence`.
   - **Integration assertion,** in `tests/boot_library_edges.rs` or a new closure test: on the stub closure, SPDX 2.3 carries at least one `BUILD_DEPENDENCY_OF` whose target's CycloneDX `scope` is `excluded`. Unit tests alone build `artifact_presence` by hand and cannot catch a wrong call site.

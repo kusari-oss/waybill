@@ -344,3 +344,50 @@ fn incomplete_boot_library_edges_are_reported() {
     }
 }
 
+
+/// Spec 1654 (#1695, R4b) — the SPDX side of a member CycloneDX marks
+/// `scope: excluded`: every one receives a `BUILD_DEPENDENCY_OF` in SPDX 2.3,
+/// and none a plain `DEPENDS_ON`. Unit tests set `artifact_presence` by hand,
+/// so this is what fails if pass 3 runs before the closure role pass sets it.
+#[test]
+fn edges_into_excluded_members_are_build_dependencies_in_spdx23() {
+    let p = project_with_ghc_prim();
+    let run = scan_with(&p.path().join("project"), &closure_flags(), None);
+    let excluded: BTreeSet<String> = components(&run.scan.cdx)
+        .into_iter()
+        .filter(|c| c["scope"] == "excluded")
+        .filter_map(|c| c["purl"].as_str().map(str::to_string))
+        .collect();
+    assert!(!excluded.is_empty(), "positive control: the fixture must exclude a member");
+    let spdx = &run.scan.spdx23;
+    let purl_of: BTreeMap<&str, &str> = spdx["packages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|p| {
+            let purl = p["externalRefs"]
+                .as_array()?
+                .iter()
+                .find(|r| r["referenceType"] == "purl")?["referenceLocator"]
+                .as_str()?;
+            Some((p["SPDXID"].as_str()?, purl))
+        })
+        .collect();
+    let mut build_into: BTreeSet<String> = BTreeSet::new();
+    for r in spdx["relationships"].as_array().unwrap() {
+        let ty = r["relationshipType"].as_str().unwrap_or("");
+        // BUILD_DEPENDENCY_OF reads dependency -> dependent; DEPENDS_ON the reverse.
+        let (dependency, kind) = match ty {
+            "BUILD_DEPENDENCY_OF" => (r["spdxElementId"].as_str(), "build"),
+            "DEPENDS_ON" => (r["relatedSpdxElement"].as_str(), "runtime"),
+            _ => continue,
+        };
+        let Some(purl) = dependency.and_then(|id| purl_of.get(id)) else { continue };
+        if !excluded.contains(*purl) {
+            continue;
+        }
+        assert_eq!(kind, "build", "a plain DEPENDS_ON into the excluded member {purl}: {r}");
+        build_into.insert(purl.to_string());
+    }
+    assert!(!build_into.is_empty(), "no BUILD_DEPENDENCY_OF into any of {excluded:?}");
+}

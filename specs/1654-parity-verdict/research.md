@@ -79,6 +79,13 @@ A12 (CPE) and D1 (identity evidence) differ in counts on many goldens but **fail
   - The same fact makes CycloneDX mark the target `excluded`.
   - It runs after passes 1 and 2, so it never re-types an edge they typed.
 - **Prediction (not measured):** (a) and (b) bring the closure goldens' B1/B2 to 0. The T-task measures it.
+- **Implemented (T008, T009):**
+  - **(a)** `cdx_dependency_edges` classifies by the target only. Unit tests cover a source-excluded edge, which is now runtime, a target-excluded edge, and a plain edge. All 44 test targets that touch B1/B2 or the extractors pass (`holistic_parity`, `spdx_cdx_parity`, `spdx3_cdx_parity`, every `transitive_parity_*`, …).
+  - **(b)** Pass 3 is its own function, `scan_fs::type_artifact_absent_edges`, rather than a second call of the whole typing function. Called again in full, passes 1 and 2 would type edges by any lifecycle scope the closure set in between, which CycloneDX excludes only with `--include-dev`.
+    - It runs inside `apply_lifecycle_scope_to_edges`, where it is a no-op, and again in `scan_cmd.rs` after the boot-library edges (spec 1653), which also draws edges into closure members.
+    - Withdrawal (#1465) applies only to members with no `artifact_presence`, so it and pass 3 never touch the same edge.
+    - `is_absent_from_artifact()` is true only for `NotInArtifact`, which covers both build tooling and members the artifact doesn't reference (U2). It is the same predicate that makes CycloneDX emit `scope: excluded`.
+  - **Re-measured:** `closure_resolved_tier` and `boot_library_edges` keep only E1 (R6). The new integration test `edges_into_excluded_members_are_build_dependencies_in_spdx23` fails when the late call is removed (a `DEPENDS_ON` into `waybill-fixture-boottool`).
 
 **Alternative:** SPDX typing by either endpoint. Rejected: an SPDX dependency type describes the target, so typing an edge into a runtime library as a build dependency, because its consumer is build-only, would be false.
 

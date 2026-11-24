@@ -5650,6 +5650,12 @@ pub async fn execute(
                 "closure: GHC boot-library dependency edges drawn (#1688)",
             );
         }
+        // Spec 1654 (#1695, R4b) — pass 3 of the edge typing, now that the
+        // role pass has set `artifact_presence` and the boot-library edges
+        // exist: edges into members absent from the artifact become build
+        // dependencies, as CycloneDX marks those members `scope: excluded`.
+        // The reader-side call above ran before presence was known.
+        crate::scan_fs::type_artifact_absent_edges(&components, &mut relationships);
         // #1455 — the members marked only because the runtime closure holds
         // them through documentation outputs alone, counted by the pass after
         // the exemptions and static linking had their say.
