@@ -1,0 +1,5 @@
+{
+  "name": "waybill-fixture-locked",
+  "version": "1.0.0",
+  "dependencies": { "waybill-fixture-locked-dep": "1.2.3" }
+}

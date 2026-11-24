@@ -34,7 +34,18 @@ use self::select::{ComponentView, Scope, Selector};
 /// Annotations no edit can remove. `waybill:generation-context` is C21:
 /// the constitution's Operating Modes require every document to state which
 /// mode produced it. `waybill:derivation` is C194, the edit's own record.
-pub const PROTECTED_ANNOTATIONS: &[&str] = &["waybill:generation-context", "waybill:derivation"];
+///
+/// `waybill:retiered-from` is C243 (spec 1651): what a component's tier was
+/// before `--retier` changed it. Removable, it would let a later edit erase
+/// the only per-component trace that a tier is not the scan's own.
+pub const PROTECTED_ANNOTATIONS: &[&str] =
+    &["waybill:generation-context", "waybill:derivation", RETIERED_FROM];
+
+/// C5, the per-component tier `--retier` relabels.
+pub(crate) const SBOM_TIER: &str = "waybill:sbom-tier";
+
+/// C243: a relabelled component's tier before its first relabel.
+pub(crate) const RETIERED_FROM: &str = "waybill:retiered-from";
 
 pub(crate) fn is_protected(field: &str) -> bool {
     PROTECTED_ANNOTATIONS.contains(&field)
@@ -55,6 +66,9 @@ pub enum EditOp {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pattern: Option<String>,
     },
+    /// Spec 1651: relabel `waybill:sbom-tier` from `from` to `to`. `from` is
+    /// matched exactly and may be any value; `to` is one of the CISA six.
+    Retier { from: String, to: crate::generate::lifecycle_phases::SbomType },
 }
 
 impl EditOp {
@@ -64,6 +78,7 @@ impl EditOp {
             Self::DropComponents { .. } => "drop-components",
             Self::DropAnnotations { .. } => "drop-annotations",
             Self::Redact { class, .. } => class.category(),
+            Self::Retier { .. } => "retier",
         }
     }
 }
@@ -76,11 +91,23 @@ pub struct OpReport {
     pub category: String,
     pub matched: usize,
     pub changed: usize,
+    /// Spec 1651, for `retier` only: the mapping. Absent for every other
+    /// category, so their records are byte-identical to before. Tier names
+    /// are a closed technical vocabulary, not a value from the original, so
+    /// recording them keeps C194's "never the values" rule.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct EditReport {
     pub ops: Vec<OpReport>,
+    /// Spec 1651 (FR-006): a retier changed components, but the document's
+    /// type did not match what its own tiers gave, so it was kept as an
+    /// assertion (`--sbom-type`, or another tool's).
+    pub document_type_kept: bool,
     /// Components whose dependency list changed (bridging or removal).
     pub dependency_lists_changed: usize,
     /// Vulnerability statements removed because every component they
@@ -160,6 +187,16 @@ pub trait SbomAdapter {
     /// longer known complete, and `partial` needs a reason code the closed
     /// vocabulary doesn't have.
     fn downgrade_graph_completeness(&mut self);
+    /// Spec 1651: set a component's `waybill:sbom-tier` to `to`, returning
+    /// the tier it had. Writes C243 with that tier unless the component
+    /// already carries C243, whose first value is kept.
+    fn set_tier(&mut self, id: &str, to: &str) -> Option<String>;
+    /// Spec 1651 (FR-006): whether the document's type, in this format's
+    /// carrier, equals the given aggregate (CycloneDX phases, SPDX 3 types).
+    fn document_type_is(&self, phases: &[&str], spdx3_types: &[&str]) -> bool;
+    /// Spec 1651 (FR-006): replace the document's type in this format's
+    /// carriers.
+    fn set_document_type(&mut self, phases: &[&str], spdx3_types: &[&str]);
     /// References that point at nothing, as `location -> target` strings.
     fn dangling_references(&self) -> Vec<String>;
     /// The raw values of a `waybill`-convention annotation (property or
@@ -304,6 +341,11 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
     let mut redactor = Redactor::new(opts.redact_key.clone());
     let mut changed_lists: BTreeSet<String> = BTreeSet::new();
     let mut renamed_components = false;
+    // Spec 1651 (R2, R5): the input's tiers, before any operation, and the
+    // components a `--retier` has already relabelled in this edit.
+    let input_tiers: Vec<String> = adapter.components().into_iter().filter_map(|c| c.tier).collect();
+    let mut relabelled: BTreeSet<String> = BTreeSet::new();
+    let mut retiered = 0usize;
 
     for op in ops {
         let op_report = match op {
@@ -328,6 +370,8 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
                     category: op.category().to_string(),
                     matched: selected.len(),
                     changed: outcome.removed,
+                    from: None,
+                    to: None,
                 }
             }
             EditOp::DropAnnotations { namespace } => {
@@ -336,6 +380,8 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
                     category: op.category().to_string(),
                     matched: removed,
                     changed: removed,
+                    from: None,
+                    to: None,
                 }
             }
             EditOp::Redact { class, mode, pattern } => {
@@ -350,6 +396,37 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
                     category: op.category().to_string(),
                     matched,
                     changed,
+                    from: None,
+                    to: None,
+                }
+            }
+            // Spec 1651 (FR-001): each component at most once, from its tier
+            // in the input, so `design=source` then `source=build` does not
+            // carry an original `design` on to `build`.
+            EditOp::Retier { from, to } => {
+                let matching: Vec<String> = adapter
+                    .components()
+                    .into_iter()
+                    .filter(|c| c.tier.as_deref() == Some(from.as_str()))
+                    .map(|c| c.id)
+                    .collect();
+                let mut changed = 0usize;
+                for id in &matching {
+                    if relabelled.contains(id) {
+                        continue;
+                    }
+                    if adapter.set_tier(id, to.as_str()).is_some() {
+                        relabelled.insert(id.clone());
+                        changed += 1;
+                    }
+                }
+                retiered += changed;
+                OpReport {
+                    category: op.category().to_string(),
+                    matched: matching.len(),
+                    changed,
+                    from: Some(from.clone()),
+                    to: Some(to.as_str().to_string()),
                 }
             }
         };
@@ -365,6 +442,24 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
     // statements from the document.
     if !dropped.is_empty() || renamed_components {
         report.openvex_references_removed = adapter.remove_openvex_references();
+    }
+
+    // Spec 1651 (FR-006): recompute the document's type from the output's
+    // tiers, only when it equals what the input's own tiers give, which is
+    // the only evidence that it was derived rather than asserted. A retier
+    // never touches completeness (FR-007): it resolves nothing.
+    if retiered > 0 {
+        use crate::generate::lifecycle_phases::{aggregate_phases_from_tiers, aggregate_spdx3_sbom_types_from_tiers};
+        let before_phases = aggregate_phases_from_tiers(input_tiers.iter().map(String::as_str), None);
+        let before_types = aggregate_spdx3_sbom_types_from_tiers(input_tiers.iter().map(String::as_str), None);
+        if adapter.document_type_is(&before_phases, &before_types) {
+            let output_tiers: Vec<String> = adapter.components().into_iter().filter_map(|c| c.tier).collect();
+            let phases = aggregate_phases_from_tiers(output_tiers.iter().map(String::as_str), None);
+            let types = aggregate_spdx3_sbom_types_from_tiers(output_tiers.iter().map(String::as_str), None);
+            adapter.set_document_type(&phases, &types);
+        } else {
+            report.document_type_kept = true;
+        }
     }
 
     // Dropped ids are gone from bridged lists already; any list that changed
@@ -501,6 +596,32 @@ pub(crate) fn envelope_value(s: &str) -> Option<Value> {
     v.get("value").cloned()
 }
 
+/// Spec 1651: the phases clause of waybill's document comment, as the
+/// emitter writes it (`generate/spdx/document.rs`).
+const PHASES_KEY: &str = "Observed lifecycle phases: ";
+
+pub(crate) fn phases_text(phases: &[&str]) -> String {
+    if phases.is_empty() {
+        "no lifecycle phases observed".to_string()
+    } else {
+        phases.join(", ")
+    }
+}
+
+/// The phases clause's text in a document comment, if it has one.
+pub(crate) fn comment_phases(comment: &str) -> Option<&str> {
+    let start = comment.find(PHASES_KEY)? + PHASES_KEY.len();
+    let len = comment[start..].find('.')?;
+    Some(&comment[start..start + len])
+}
+
+/// The comment with its phases clause replaced, if it has one.
+pub(crate) fn with_comment_phases(comment: &str, phases: &[&str]) -> Option<String> {
+    let start = comment.find(PHASES_KEY)? + PHASES_KEY.len();
+    let len = comment[start..].find('.')?;
+    Some(format!("{}{}{}", &comment[..start], phases_text(phases), &comment[start + len..]))
+}
+
 pub(crate) fn envelope(field: &str, value: Value) -> String {
     let mut m = serde_json::Map::new();
     m.insert("field".into(), Value::String(field.into()));
@@ -532,6 +653,46 @@ mod tests {
         list.iter()
             .map(|(f, ts)| (f.to_string(), ts.iter().map(|(t, s)| (t.to_string(), *s)).collect()))
             .collect()
+    }
+
+    /// Spec 1651 (R3): every existing category serialises exactly as before.
+    #[test]
+    fn s1651_op_report_without_a_mapping_is_unchanged() {
+        let r = OpReport { category: "drop-components".into(), matched: 2, changed: 1, from: None, to: None };
+        assert_eq!(serde_json::to_value(&r).unwrap(), json!({"category": "drop-components", "matched": 2, "changed": 1}));
+    }
+
+    /// Spec 1651 (R4): `set_tier` writes C243 once, with the first tier, in
+    /// every format.
+    #[test]
+    fn s1651_set_tier_keeps_the_first_marker_in_every_format() {
+        let env = |f: &str, v: &str| envelope(f, json!(v));
+        let docs = [
+            (Format::CycloneDx16, json!({"bomFormat": "CycloneDX", "specVersion": "1.6", "components": [
+                {"bom-ref": "c", "name": "c", "properties": [{"name": SBOM_TIER, "value": "design"}]}]})),
+            (Format::Spdx23, json!({"spdxVersion": "SPDX-2.3", "packages": [
+                {"SPDXID": "c", "name": "c", "annotations": [{"annotationType": "OTHER", "comment": env(SBOM_TIER, "design")}]}]})),
+            (Format::Spdx301, json!({"@graph": [
+                {"type": "software_Package", "spdxId": "c", "name": "c"},
+                {"type": "Annotation", "spdxId": "c/anno-tier", "subject": "c", "statement": env(SBOM_TIER, "design")}]})),
+        ];
+        for (format, doc) in docs {
+            let mut a = adapter_for(format, doc);
+            assert_eq!(a.set_tier("c", "source").as_deref(), Some("design"), "{format:?}");
+            assert_eq!(a.set_tier("c", "build").as_deref(), Some("source"), "{format:?}");
+            assert_eq!(a.annotation_values(Some("c"), SBOM_TIER), vec![json!("build")], "{format:?}");
+            assert_eq!(a.annotation_values(Some("c"), RETIERED_FROM), vec![json!("design")], "{format:?}");
+            assert_eq!(a.set_tier("missing", "build"), None, "{format:?}");
+        }
+    }
+
+    #[test]
+    fn s1651_comment_phases_round_trip() {
+        let c = "Scope: manifest (declared transitives included). Observed lifecycle phases: design, pre-build. Per-component scope detail.";
+        assert_eq!(comment_phases(c), Some("design, pre-build"));
+        assert_eq!(comment_phases(&with_comment_phases(c, &["pre-build"]).unwrap()), Some("pre-build"));
+        assert_eq!(comment_phases(&with_comment_phases(c, &[]).unwrap()), Some("no lifecycle phases observed"));
+        assert_eq!(comment_phases("no phases clause"), None);
     }
 
     #[test]

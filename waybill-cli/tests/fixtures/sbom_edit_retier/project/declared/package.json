@@ -1,0 +1,6 @@
+{
+  "name": "waybill-fixture-declared",
+  "version": "2.0.0",
+  "dependencies": { "waybill-fixture-declared-dep": "^3.0.0" },
+  "devDependencies": { "waybill-fixture-dev-dep": "^4.0.0" }
+}
