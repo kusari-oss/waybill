@@ -73,8 +73,8 @@
   - **C2:** after the change, run T004's `golden_parity.sh` on all goldens. E1 still passes on the 23 non-closure goldens, and passes on the five closures.
 - [X] T011 [US3] Implement R7 at the site T006 found: CycloneDX `metadata.component` carries the same `waybill:*` properties the root carries elsewhere. A unit test pins `source-type`, `evidence-kind`, the closure role and the scope source.
 - [X] T012 [US3] Implement R8 at the site T005 found, with a unit test.
-- [ ] T013 [US3] Implement each closure A7 decision from T007, with unit tests. Where a shape is format-restricted, record the reason in that row's `docs/reference/sbom-format-mapping.md` entry, and keep the catalog classification consistent: the lib-target gate.
-- [ ] T014 [US3] Verify, without the helper:
+- [X] T013 [US3] **Decided at T007 with the maintainer: A7 is its own spec (spec Clarifications, research R11). No change here; the issue is filed in T024.** Original text: Implement each closure A7 decision from T007, with unit tests. Where a shape is format-restricted, record the reason in that row's `docs/reference/sbom-format-mapping.md` entry, and keep the catalog classification consistent: the lib-target gate.
+- [X] T014 [US3] Verify, without the helper:
   - Run `parity-check` on a `--nix-closure` scan of `tests/fixtures/nix_closure_boot_versions`, through a temporary uncommitted test using `NixStub`, as spec 1653's T014 did.
   - Confirm 0 `fail` rows, and record it in `measurements/after.md`.
   - **The five closure goldens are not checked here.** They are Linux-only (a Darwin closure differs), so the CI regeneration in T021 and T022 is their check.

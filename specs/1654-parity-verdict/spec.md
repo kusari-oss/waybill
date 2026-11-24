@@ -40,6 +40,7 @@ Spec 1653 found it: removing one row from SPDX 3 alone left the row `universal_p
 ### Session 2026-11-24
 
 - Q: What is in scope once the shared helper can fail? → A: Fix every gap that the eleven test files' own fixtures show, plus the closure gaps and anything sharing their cause. Gaps seen only in corpus goldens are measured and filed. There is no per-test exclusion.
+- Q (at T007): A7, the declared licence, fails on the five closure goldens through five licence-representation shapes it shares with 11 non-closure goldens (research R11). Fix it here? → A: No. It is its own spec. A7 is the one closure-golden row this spec leaves failing. It is filed as an issue carrying R11's measurement, and SC-003 is scoped accordingly. No test file's fixture fails A7, so the eleven files are unaffected.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -120,6 +121,8 @@ A `--nix-closure` document says the same thing in CycloneDX, SPDX 2.3 and SPDX 3
   - every fixture the eleven test files scan.
 
   Fixes are to emitters or extractors, whichever FR-001 shows is wrong. Gaps seen only in other corpus goldens are measured, and filed as issues with the per-row measurement.
+
+  **Exception, A7 (clarified at T007):** the closure goldens' declared-licence gap is not closure-specific (research R11). It is filed as its own issue and left failing here.
 - **FR-006 (corpus before and after)**: The per-target, per-row gap list MUST be recorded for every corpus golden before and after, and every changed golden traced. Goldens are regenerated only by the CI corpus dispatch.
 - **FR-007 (unchanged otherwise)**: Existing `parity-check` consumers and documents MUST be unchanged, except where FR-005 fixes a gap, and every such change is traced.
 - **FR-008 (no new dependencies)**: Zero new Cargo dependencies.
@@ -136,7 +139,7 @@ A `--nix-closure` document says the same thing in CycloneDX, SPDX 2.3 and SPDX 3
 
 - **SC-001 (verdict consistency)**: On every corpus golden and every test fixture scanned in the suite, the number of rows whose verdict is a failure equals `summary.parity_gaps`.
 - **SC-002 (helpers can fail)**: Eleven of eleven files adopt the shared helper. Eleven of eleven mutations, one per file, are killed.
-- **SC-003 (parity where it is tested)**: The stub closure fixture, the five closure goldens, and every fixture the eleven test files scan report 0 parity gaps. Any row that would otherwise fail is format-restricted in the catalog with a stated reason. Every remaining gap in other corpus goldens is in a filed issue.
+- **SC-003 (parity where it is tested)**: The stub closure fixture and every fixture the eleven test files scan report 0 parity gaps. The five closure goldens report 0 apart from A7 (FR-005 exception; masking makes G1 a measurement artefact, R9). Any row that would otherwise fail is format-restricted in the catalog with a stated reason. Every remaining gap in other corpus goldens is in a filed issue.
 - **SC-004 (the counts)**: The table of gaps per golden and per row is recorded before (80 in total today) and after, and every golden whose documents change is traced.
 - **SC-005 (nothing else)**: Existing JSON fields and the table output are unchanged. Every document that changes does so because of an FR-005 fix, traced.
 
