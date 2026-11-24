@@ -353,6 +353,13 @@ now fails CI if that shape returns.
 `--tier design-only` on a closure scan therefore no longer emits these
 components: the filter runs again after the closure passes (#1360).
 
+### Relabelling a tier after the scan
+
+To test how a consumer treats a tier, `waybill sbom edit --retier FROM=TO`
+relabels `waybill:sbom-tier` in an emitted document, records each
+component's original tier in `waybill:retiered-from`, and says so in the
+derivation record. See [Editing an SBOM](../user-guide/sbom-edit.md).
+
 ---
 
 ## Discoverability + cross-references

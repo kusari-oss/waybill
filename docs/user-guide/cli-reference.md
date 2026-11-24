@@ -2111,6 +2111,7 @@ reference resolves. See the [SBOM editing guide](sbom-edit.md).
 | `--drop <SELECTOR>` | string, repeatable | — | Drop matching components; bridge their dependents to their dependencies. |
 | `--drop-annotations <NAMESPACE>` | string, repeatable | — | Remove annotations whose field starts with the namespace. |
 | `--redact <CLASS>[:<MODE>][=<PATTERN>]` | string, repeatable | — | Redact `paths`, `hosts` or `names`. |
+| `--retier <FROM>=<TO>` | string, repeatable | — | Relabel `waybill:sbom-tier` from `FROM` to `TO` (one of design, source, build, analyzed, deployed, runtime), each component at most once; records `waybill:retiered-from`. For testing tier-aware consumers. |
 | `--redact-key-file <PATH>` | path | (none) | Pseudonymisation key. Required when any redaction pseudonymises. |
 | `--original-signature <PATH>` | path | (found next to the input) | The original's signature sidecar. |
 | `--sign-key <PATH>` | path | (none) | Sign the output with a static key, as `sbom scan` does. |
@@ -2120,7 +2121,7 @@ reference resolves. See the [SBOM editing guide](sbom-edit.md).
 | `--rekor-url <URL>` | string | `https://rekor.sigstore.dev` | Rekor endpoint for `--sign`. |
 | `--rekor-timeout-secs <SECS>` | integer | `30` | Rekor timeout for `--sign`. |
 
-Operations (`--drop`, `--drop-annotations`, `--redact`) apply in command-line
+Operations (`--drop`, `--drop-annotations`, `--redact`, `--retier`) apply in command-line
 order, across flags. An operation that matches nothing is reported on stderr
 and is not an error. Exit status is non-zero, with nothing written, for:
 

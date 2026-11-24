@@ -223,7 +223,26 @@ This removes annotations whose field starts with the namespace (`waybill:`,
 `waybill:graph-`, …). Two are never removed:
 
 - `waybill:generation-context`: every document states which mode produced it (constitution, Operating Modes);
-- `waybill:derivation`: the record this command adds.
+- `waybill:derivation`: the record this command adds;
+- `waybill:retiered-from`: what a relabelled component's tier was (below).
+
+### Relabelling tiers: `--retier <FROM>=<TO>`
+
+This changes `waybill:sbom-tier` on every component whose tier is `FROM` to `TO`, and changes nothing else: the component, its PURL, version, scope and edges stay as they are. It exists to test consumers that act on the tier. For example, a pipeline that drops `design` components as if they were dev-only can be fed the same graph with those components reading `source`:
+
+```sh
+waybill sbom edit out.cdx.json -o relabelled.cdx.json --retier design=source
+```
+
+`design` means the dependency was declared and nothing pinned its version. It is not a statement about runtime versus development; scope carries that (CycloneDX `scope: excluded`). A relabel does not resolve anything, so treat the output as a test input, not as evidence about the build.
+
+- **`TO`** is one of `design`, `source`, `build`, `analyzed`, `deployed`, `runtime`, the same set `--sbom-type` accepts. **`FROM`** is matched exactly and may be any value, so the non-CISA `image` and `declared` can be relabelled too.
+- **Each component is relabelled at most once, from its tier in the input.** So `--retier design=source --retier source=build` turns original `design` into `source` and original `source` into `build`; nothing moves twice. The same mapping given twice is accepted, and the second records `changed: 0`. One `FROM` mapped to two targets is refused.
+- **Each relabelled component carries `waybill:retiered-from`** (catalogue row C243), naming its tier before its first relabel. A second edit keeps that first value, and the derivation chain records every hop. No `--drop-annotations` removes it.
+- **The derivation record** gets one entry per mapping: `{"category": "retier", "matched": …, "changed": …, "from": "design", "to": "source"}`.
+- **The document type is recomputed** wherever it appears (CycloneDX `metadata.lifecycles`, the SPDX 2.3 `creationInfo.comment` phases, SPDX 3 `software_sbomType` and its comment), but only when the input's type equals what the input's own component tiers give. Otherwise it was asserted with `--sbom-type`, or written by another tool, and it is kept: the edit says `document type kept` on stderr. An emitted document does not record `--sbom-type`, so an assertion that happens to equal the derived type cannot be told apart, and is recomputed.
+- **`waybill:graph-completeness` and its reason are never changed.** A relabel resolves nothing. A `transitive-edges-unresolvable: <ecosystem>` reason can therefore name an ecosystem whose `design` components were all relabelled: it describes what was resolved, not the labels.
+- **Apply it to each of a scan's documents** for format agreement: `waybill sbom parity-check` reports no gap across the three edited documents.
 
 ### Redacting: `--redact <class>[:<mode>][=<pattern>]`
 
@@ -291,7 +310,8 @@ row C194):
   },
   "operations": [
     { "category": "drop-components", "matched": 2, "changed": 2 },
-    { "category": "redact-hosts", "matched": 1, "changed": 1 }
+    { "category": "redact-hosts", "matched": 1, "changed": 1 },
+    { "category": "retier", "matched": 2, "changed": 2, "from": "design", "to": "source" }
   ],
   "ancestors": [],
   "tool": "waybill 0.11.0",
