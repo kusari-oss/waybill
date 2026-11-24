@@ -61,6 +61,7 @@ pub fn apply_scope_filter(
     relationships: Vec<Relationship>,
     mode: ProjectDiscoveryMode,
     scan_root: &Path,
+    declared_member_dirs: &[String],
 ) -> (Vec<ResolvedComponent>, Vec<Relationship>, ProjectDiscoveryReport) {
     // Step 0: fast-path for default mode. Zero-cost — no allocation,
     // no BFS, no annotation walk. SC-005 byte-identity gate.
@@ -80,6 +81,28 @@ pub fn apply_scope_filter(
         .filter(|r| mode.is_root_in_scope(r, scan_root))
         .cloned()
         .collect();
+
+    // Step 1a (spec 1652, FR-003): under `RootOnly`, a package a root
+    // declaration names (`cabal.project` / `stack.yaml` `packages:`, resolved
+    // by the reader into directories) is a member of the root project, and is
+    // projected like a root. With no root package, the declared ones ARE the
+    // roots, so a declaration alone sets the scope (Clarification 1).
+    // `Strict` drops members, so it ignores declarations (Clarification 2).
+    let mut declared_roots_added = false;
+    if mode.follows_workspace_members() && !declared_member_dirs.is_empty() {
+        let declared: BTreeSet<&str> = declared_member_dirs.iter().map(String::as_str).collect();
+        let already: BTreeSet<String> =
+            in_scope_roots.iter().map(|r| r.purl_string.clone()).collect();
+        for r in &all_roots {
+            if already.contains(&r.purl_string) {
+                continue;
+            }
+            if declared.contains(dir_key(&super::root_dir(r, scan_root)).as_str()) {
+                in_scope_roots.push(r.clone());
+                declared_roots_added = true;
+            }
+        }
+    }
 
     // Step 1b (FR-007, Strict only): separate the workspace ROOT from
     // its workspace MEMBERS.
@@ -145,12 +168,11 @@ pub fn apply_scope_filter(
                 root_main_modules: 0,
                 workspace_members_followed: 0,
                 nested_projects_ignored: 0,
+                dropped_main_modules: Vec::new(),
+                dropped_evidence_paths: Vec::new(),
             },
         );
     }
-
-    let nested_projects_ignored =
-        all_roots.len().saturating_sub(in_scope_roots.len());
 
     // Step 2: BFS-project each in-scope root. Reuses m215's
     // `project_for_root` verbatim (correctness inherits from that:
@@ -199,8 +221,21 @@ pub fn apply_scope_filter(
             .filter(|c| root_purls.contains(c.purl.as_str()))
             .flat_map(member_dirs)
             .collect();
-        in_scope_dirs
-            .extend(in_scope_roots.iter().map(|r| dir_key(&r.source_dir)));
+        // Spec 1652: by directory, not `source_dir`, which is a manifest file
+        // for an ecosystem `split::is_manifest_basename` does not list.
+        in_scope_dirs.extend(
+            in_scope_roots
+                .iter()
+                .map(|r| dir_key(&super::root_dir(r, scan_root))),
+        );
+        // Spec 1652 (T032): a root declaration is a manifest at the scan
+        // root, so the root directory is the root project's even when no
+        // package lives there. Without this, a declaration-only repository
+        // lost its root-level components — haskell-security-advisories all
+        // three `flake.lock` inputs, hs-opentelemetry its devenv inputs.
+        if declared_roots_added {
+            in_scope_dirs.insert(".".to_string());
+        }
 
         let follows_members = mode.follows_workspace_members();
         annotation_follow_up(
@@ -248,7 +283,52 @@ pub fn apply_scope_filter(
         }
     }
 
-    // Step 4: filter component + relationship slices (order-preserving).
+    // Step 3b (spec 1652, T033): a component that is not a main module, has
+    // no directory provenance (`waybill:workspace-member` absent) and touches
+    // no relationship cannot be attributed to any project, so the scope has
+    // no evidence to drop it. On the corpus these are exactly the Haskell
+    // reader's Stack snapshot and compiler components (`stackage-lts-*`,
+    // `ghc-*`, `snapshot.yaml`), which the root `stack.yaml` names; dropping
+    // them made `root-only` lose the root project's toolchain silently.
+    {
+        let touched: BTreeSet<&str> = relationships
+            .iter()
+            .flat_map(|r| [r.from.as_str(), r.to.as_str()])
+            .collect();
+        for c in &components {
+            let key = c.purl.as_str();
+            if !reachable.contains(key)
+                && !is_main_module(c)
+                && !c.extra_annotations.contains_key(WORKSPACE_MEMBER_KEY)
+                && !touched.contains(key)
+            {
+                reachable.insert(key.to_string());
+            }
+        }
+    }
+
+    // Step 4 (spec 1652, FR-004): what was actually dropped. Decided after
+    // the projection and follow-up, because the projection keeps a nested
+    // main module the root reaches through an edge, so "out of scope" and
+    // "dropped" differ. Taken before Step 5 consumes the components, because
+    // C200 (FR-006) needs each dropped main module's manifest path.
+    let mut dropped_main_modules: Vec<String> = all_roots
+        .iter()
+        .filter(|r| !reachable.contains(r.purl.as_str()))
+        .map(|r| r.purl_string.clone())
+        .collect();
+    dropped_main_modules.sort();
+    dropped_main_modules.dedup();
+    let dropped_set: BTreeSet<&str> = dropped_main_modules.iter().map(String::as_str).collect();
+    let mut dropped_evidence_paths: Vec<String> = components
+        .iter()
+        .filter(|c| is_main_module(c) && dropped_set.contains(c.purl.as_str()))
+        .flat_map(|c| c.evidence.source_file_paths.iter().cloned())
+        .collect();
+    dropped_evidence_paths.sort();
+    dropped_evidence_paths.dedup();
+
+    // Step 5: filter component + relationship slices (order-preserving).
     let filtered_components: Vec<ResolvedComponent> = components
         .into_iter()
         .filter(|c| reachable.contains(c.purl.as_str()))
@@ -258,12 +338,14 @@ pub fn apply_scope_filter(
         .filter(|r| reachable.contains(&r.from) && reachable.contains(&r.to))
         .collect();
 
-    // Step 5: build report.
+    // Step 6: build report.
     let report = ProjectDiscoveryReport {
         mode,
         root_main_modules: in_scope_roots.len(),
         workspace_members_followed,
-        nested_projects_ignored,
+        nested_projects_ignored: dropped_main_modules.len(),
+        dropped_main_modules,
+        dropped_evidence_paths,
     };
     (filtered_components, filtered_relationships, report)
 }
@@ -449,7 +531,7 @@ mod tests {
         let rel: Vec<Relationship> = vec![];
         let scan_root = PathBuf::from(".");
         let (out_c, out_r, report) =
-            apply_scope_filter(comp.clone(), rel, ProjectDiscoveryMode::All, &scan_root);
+            apply_scope_filter(comp.clone(), rel, ProjectDiscoveryMode::All, &scan_root, &[]);
         assert_eq!(out_c.len(), comp.len());
         assert!(out_r.is_empty());
         assert_eq!(report.mode, ProjectDiscoveryMode::All);
@@ -477,6 +559,7 @@ mod tests {
             vec![],
             ProjectDiscoveryMode::RootOnly,
             &scan_root,
+            &[],
         );
         // CONTROL: this is the zero-root path, not a path where a root was
         // found and everything happened to survive.
@@ -507,6 +590,7 @@ mod tests {
             rel,
             ProjectDiscoveryMode::RootOnly,
             &scan_root,
+            &[],
         );
         let purls: Vec<String> =
             out_c.iter().map(|c| c.purl.as_str().to_string()).collect();
@@ -534,6 +618,7 @@ mod tests {
             rel,
             ProjectDiscoveryMode::RootOnly,
             &scan_root,
+            &[],
         );
         let purls: Vec<String> =
             out_c.iter().map(|c| c.purl.as_str().to_string()).collect();
@@ -573,6 +658,7 @@ mod tests {
             rel,
             ProjectDiscoveryMode::Strict,
             &scan_root,
+            &[],
         );
         let purls: Vec<String> =
             out_c.iter().map(|c| c.purl.as_str().to_string()).collect();
@@ -605,6 +691,7 @@ mod tests {
             vec![],
             ProjectDiscoveryMode::RootOnly,
             &scan_root,
+            &[],
         );
         assert_eq!(report.mode, ProjectDiscoveryMode::RootOnly);
         assert_eq!(report.root_main_modules, 1);
@@ -628,6 +715,7 @@ mod tests {
             vec![],
             ProjectDiscoveryMode::RootOnly,
             &scan_root,
+            &[],
         );
         assert_eq!(out_c.len(), 2, "orphan member should be retained via annotation pass");
     }
@@ -676,6 +764,7 @@ mod tests {
             vec![edge],
             ProjectDiscoveryMode::RootOnly,
             &scan_root,
+            &[],
         );
         let purls: Vec<String> =
             out_c.iter().map(|c| c.purl.as_str().to_string()).collect();
@@ -688,5 +777,257 @@ mod tests {
         // Only the inner member arrives via the annotation pass; the
         // inner root itself came in through BFS.
         assert_eq!(report.workspace_members_followed, 1);
+    }
+
+    // ---------------- spec 1652: the drop set (FR-004, research R3) ----------------
+
+    fn dep(from: &str, to: &str) -> Relationship {
+        Relationship {
+            from: from.to_string(),
+            to: to.to_string(),
+            relationship_type: waybill_common::resolution::RelationshipType::DependsOn,
+            provenance: waybill_common::resolution::EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "test".to_string(),
+            },
+        }
+    }
+
+    fn nested(purl: &str, dir: &str) -> ResolvedComponent {
+        with_source_dir(mk_component(purl, Some("main-module")), dir)
+    }
+
+    fn purls_of(cs: &[ResolvedComponent]) -> BTreeSet<String> {
+        cs.iter().map(|c| c.purl.as_str().to_string()).collect()
+    }
+
+    /// Invariants I2 and I3 (`contracts/scope-filter.md`): every dropped PURL
+    /// was an input main module and is absent from the output; every input
+    /// main module is in exactly one of the two.
+    fn assert_partition(
+        input: &[ResolvedComponent],
+        out: &[ResolvedComponent],
+        report: &ProjectDiscoveryReport,
+    ) {
+        let kept = purls_of(out);
+        let dropped: BTreeSet<String> = report.dropped_main_modules.iter().cloned().collect();
+        assert_eq!(dropped.len(), report.dropped_main_modules.len(), "no duplicates");
+        assert_eq!(report.nested_projects_ignored, dropped.len());
+        let mains: BTreeSet<String> = input
+            .iter()
+            .filter(|c| is_main_module(c))
+            .map(|c| c.purl.as_str().to_string())
+            .collect();
+        for d in &dropped {
+            assert!(mains.contains(d), "I2: {d} was not an input main module");
+            assert!(!kept.contains(d), "I2: {d} is both dropped and kept");
+        }
+        for m in &mains {
+            assert!(
+                kept.contains(m) ^ dropped.contains(m),
+                "I3: {m} must be kept or dropped, exactly one"
+            );
+        }
+        let mut sorted = report.dropped_main_modules.clone();
+        sorted.sort();
+        assert_eq!(sorted, report.dropped_main_modules, "sorted");
+    }
+
+    /// R3: the old count was "roots out of scope", which counted a nested
+    /// main module the root reaches through an edge. It reported 2 here.
+    #[test]
+    fn dropped_set_excludes_main_modules_reached_through_edges() {
+        let root = mk_component("pkg:cargo/root@0.1.0", Some("main-module"));
+        let reached = nested("pkg:cargo/reached@0.1.0", "crates/reached");
+        let alone = nested("pkg:npm/alone@0.1.0", "services/alone");
+        let input = vec![root, reached, alone];
+        let (out, _r, report) = apply_scope_filter(
+            input.clone(),
+            vec![dep("pkg:cargo/root@0.1.0", "pkg:cargo/reached@0.1.0")],
+            ProjectDiscoveryMode::RootOnly,
+            &std::env::current_dir().unwrap(),
+            &[],
+        );
+        assert_eq!(report.dropped_main_modules, vec!["pkg:npm/alone@0.1.0".to_string()]);
+        assert_eq!(report.nested_projects_ignored, 1);
+        assert!(purls_of(&out).contains("pkg:cargo/reached@0.1.0"));
+        assert_partition(&input, &out, &report);
+    }
+
+    #[test]
+    fn cycle_between_nested_main_modules_terminates_and_keeps_both() {
+        let root = mk_component("pkg:cargo/root@0.1.0", Some("main-module"));
+        let a = nested("pkg:cargo/a@0.1.0", "crates/a");
+        let b = nested("pkg:cargo/b@0.1.0", "crates/b");
+        let input = vec![root, a, b];
+        let rels = vec![
+            dep("pkg:cargo/root@0.1.0", "pkg:cargo/a@0.1.0"),
+            dep("pkg:cargo/a@0.1.0", "pkg:cargo/b@0.1.0"),
+            dep("pkg:cargo/b@0.1.0", "pkg:cargo/a@0.1.0"),
+        ];
+        for mode in [ProjectDiscoveryMode::RootOnly, ProjectDiscoveryMode::Strict] {
+            let (out, out_r, report) = apply_scope_filter(
+                input.clone(),
+                rels.clone(),
+                mode,
+                &std::env::current_dir().unwrap(),
+            &[],
+            );
+            let kept = purls_of(&out);
+            assert!(kept.contains("pkg:cargo/a@0.1.0") && kept.contains("pkg:cargo/b@0.1.0"));
+            assert_eq!(out_r.len(), 3, "{mode}: the cycle's edges are kept");
+            assert!(report.dropped_main_modules.is_empty());
+            assert_partition(&input, &out, &report);
+        }
+    }
+
+    #[test]
+    fn nested_chain_unreached_from_root_drops_whole_chain() {
+        let root = mk_component("pkg:cargo/root@0.1.0", Some("main-module"));
+        let x = nested("pkg:npm/x@0.1.0", "services/x");
+        let y = nested("pkg:npm/y@0.1.0", "services/y");
+        let input = vec![root, x, y];
+        let (out, out_r, report) = apply_scope_filter(
+            input.clone(),
+            vec![dep("pkg:npm/x@0.1.0", "pkg:npm/y@0.1.0")],
+            ProjectDiscoveryMode::RootOnly,
+            &std::env::current_dir().unwrap(),
+            &[],
+        );
+        assert_eq!(
+            report.dropped_main_modules,
+            vec!["pkg:npm/x@0.1.0".to_string(), "pkg:npm/y@0.1.0".to_string()]
+        );
+        assert!(out_r.is_empty());
+        assert_partition(&input, &out, &report);
+    }
+
+    /// I2 and I3 over the shapes the milestone-220 tests above build.
+    #[test]
+    fn partition_holds_over_the_existing_shapes() {
+        let cwd = std::env::current_dir().unwrap();
+        let shapes: Vec<(Vec<ResolvedComponent>, Vec<Relationship>)> = vec![
+            (
+                vec![
+                    mk_component("pkg:cargo/root@0.1.0", Some("main-module")),
+                    nested("pkg:npm/nested@0.1.0", "services/api"),
+                ],
+                vec![],
+            ),
+            (
+                vec![
+                    with_member_dirs(mk_component("pkg:cargo/wsroot@0.1.0", Some("main-module")), &["."]),
+                    with_member_dirs(mk_component("pkg:cargo/api@0.1.0", Some("main-module")), &["."]),
+                    nested("pkg:gem/bench@0.1.0", "bench"),
+                ],
+                vec![],
+            ),
+        ];
+        for (input, rels) in shapes {
+            for mode in [ProjectDiscoveryMode::RootOnly, ProjectDiscoveryMode::Strict] {
+                let (out, _r, report) =
+                    apply_scope_filter(input.clone(), rels.clone(), mode, &cwd, &[]);
+                assert_partition(&input, &out, &report);
+            }
+        }
+    }
+
+    // ---------------- spec 1652: declared members (FR-003) ----------------
+
+    /// A main module whose evidence names a directory, so `root_dir` is it.
+    fn in_dir(purl: &str, dir: &str) -> ResolvedComponent {
+        let mut c = mk_component(purl, Some("main-module"));
+        c.evidence.source_file_paths = vec![dir.to_string()];
+        c
+    }
+
+    fn declared_shape() -> Vec<ResolvedComponent> {
+        vec![
+            in_dir("pkg:hackage/waybill-fixture-a@0.1.0", "local-packages/a"),
+            in_dir("pkg:hackage/waybill-fixture-b@0.1.0", "local-packages/b"),
+            in_dir("pkg:hackage/waybill-fixture-e@0.1.0", "tools/e"),
+        ]
+    }
+
+    #[test]
+    fn declared_members_are_roots_under_root_only() {
+        let cwd = std::env::current_dir().unwrap();
+        let input = declared_shape();
+        let decl = vec!["local-packages/a".to_string(), "local-packages/b".to_string()];
+        let (out, _r, report) =
+            apply_scope_filter(input.clone(), vec![], ProjectDiscoveryMode::RootOnly, &cwd, &decl);
+        assert_eq!(report.root_main_modules, 2, "no root package: the declared ones are the roots");
+        assert_eq!(
+            purls_of(&out),
+            ["pkg:hackage/waybill-fixture-a@0.1.0", "pkg:hackage/waybill-fixture-b@0.1.0"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect()
+        );
+        assert_eq!(report.dropped_main_modules, vec!["pkg:hackage/waybill-fixture-e@0.1.0".to_string()]);
+        assert_partition(&input, &out, &report);
+    }
+
+    /// I4: `strict` ignores declarations — the same output as with none.
+    #[test]
+    fn strict_ignores_declared_members() {
+        let cwd = std::env::current_dir().unwrap();
+        let mut input = declared_shape();
+        input.insert(0, mk_component("pkg:npm/waybill-fixture-root-js@1.0.0", Some("main-module")));
+        let decl = vec!["local-packages/a".to_string()];
+        let with = apply_scope_filter(input.clone(), vec![], ProjectDiscoveryMode::Strict, &cwd, &decl);
+        let without = apply_scope_filter(input, vec![], ProjectDiscoveryMode::Strict, &cwd, &[]);
+        assert_eq!(purls_of(&with.0), purls_of(&without.0));
+        assert_eq!(with.2.dropped_main_modules, without.2.dropped_main_modules);
+        assert_eq!(with.2.dropped_main_modules.len(), 3);
+    }
+
+    /// I5: directories that name no main module change nothing — with no root
+    /// package, that is the #1045 fall-back.
+    #[test]
+    fn unmatched_declared_dirs_are_a_no_op() {
+        let cwd = std::env::current_dir().unwrap();
+        let input = declared_shape();
+        let decl = vec!["nowhere".to_string()];
+        let (out, _r, report) =
+            apply_scope_filter(input.clone(), vec![], ProjectDiscoveryMode::RootOnly, &cwd, &decl);
+        assert_eq!(report.root_main_modules, 0);
+        assert_eq!(out.len(), input.len(), "fell back to the full scan");
+        assert!(report.dropped_main_modules.is_empty());
+    }
+
+    /// T032: a declaration-only scope keeps root-level (`["."]`) components.
+    #[test]
+    fn declaration_only_scope_keeps_root_directory_components() {
+        let cwd = std::env::current_dir().unwrap();
+        let mut input = declared_shape();
+        input.push(with_member_dirs(
+            mk_component("pkg:github/waybill-fixture-org/waybill-fixture-input@0123456", None),
+            &["."],
+        ));
+        let decl = vec!["local-packages/a".to_string(), "local-packages/b".to_string()];
+        let (out, _r, _report) =
+            apply_scope_filter(input, vec![], ProjectDiscoveryMode::RootOnly, &cwd, &decl);
+        assert!(purls_of(&out).contains("pkg:github/waybill-fixture-org/waybill-fixture-input@0123456"));
+    }
+
+    /// T033: no provenance and no relationship: kept, under both modes. With
+    /// a relationship to a dropped project, it is attributable, and dropped.
+    #[test]
+    fn unattributable_components_are_kept_attributable_ones_are_not() {
+        let cwd = std::env::current_dir().unwrap();
+        let root = mk_component("pkg:cargo/root@0.1.0", Some("main-module"));
+        let nested_p = nested("pkg:npm/alone@0.1.0", "services/alone");
+        let loose = mk_component("pkg:generic/stackage-lts-22.0@unspecified", None);
+        let owned = mk_component("pkg:npm/owned-dep@1.0.0", None);
+        let input = vec![root, nested_p, loose, owned];
+        let rels = vec![dep("pkg:npm/alone@0.1.0", "pkg:npm/owned-dep@1.0.0")];
+        for mode in [ProjectDiscoveryMode::RootOnly, ProjectDiscoveryMode::Strict] {
+            let (out, _r, report) = apply_scope_filter(input.clone(), rels.clone(), mode, &cwd, &[]);
+            let kept = purls_of(&out);
+            assert!(kept.contains("pkg:generic/stackage-lts-22.0@unspecified"), "{mode}: {kept:?}");
+            assert!(!kept.contains("pkg:npm/owned-dep@1.0.0"), "{mode}: {kept:?}");
+            assert_partition(&input, &out, &report);
+        }
     }
 }

@@ -167,6 +167,9 @@ pub struct MetadataExtras<'a> {
     // scan ran under default `All` mode (annotation absent — SC-005
     // byte-identity gate). `Some(mode)` for `RootOnly` / `Strict`.
     pub project_discovery_mode: Option<crate::generate::project_discovery::ProjectDiscoveryMode>,
+    // Spec 1652 (FR-004) — what that mode dropped. Drives C244
+    // `waybill:project-discovery-dropped`; `None` emits nothing.
+    pub project_discovery_dropped: Option<&'a crate::generate::project_discovery::ProjectDiscoveryDrop>,
     // Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
     // FR-013) — operator-supplied SBOM document version from
     // `--sbom-version <N>`. Drives the C142 `waybill:sbom-version`
@@ -303,6 +306,7 @@ pub fn build_metadata(
         scan_target_kind,
         compiler_pipeline,
         project_discovery_mode,
+        project_discovery_dropped,
         sbom_version,
         enrichment_degraded,
         resolve_identity,
@@ -1069,6 +1073,16 @@ pub fn build_metadata(
         properties.push(json!({
             "name": "waybill:project-discovery-mode",
             "value": mode.to_string(),
+        }));
+    }
+
+    // Spec 1652 (FR-004) — C244 `waybill:project-discovery-dropped`: how many
+    // main modules the scope dropped, why, and which. Present only when the
+    // scan filtered and dropped something.
+    if let Some(drop) = project_discovery_dropped {
+        properties.push(json!({
+            "name": "waybill:project-discovery-dropped",
+            "value": drop.to_document_value(),
         }));
     }
 

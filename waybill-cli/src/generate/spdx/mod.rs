@@ -467,6 +467,7 @@ mod tests {
             collisions_summary: None,
             compiler_pipeline: None,
             project_discovery_mode: None,
+            project_discovery_dropped: None,
         }
     }
 

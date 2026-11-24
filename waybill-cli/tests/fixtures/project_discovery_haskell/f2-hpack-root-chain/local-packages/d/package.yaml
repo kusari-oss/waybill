@@ -1,0 +1,5 @@
+name: waybill-fixture-d
+version: 0.1.0
+library:
+  source-dirs: src
+  dependencies: [base]

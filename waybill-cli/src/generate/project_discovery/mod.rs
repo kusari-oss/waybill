@@ -18,7 +18,7 @@
 //! See `specs/220-project-discovery-scope/` for spec / plan /
 //! contracts.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::split::SubprojectRoot;
 
@@ -93,20 +93,42 @@ impl std::fmt::Display for ProjectDiscoveryMode {
     }
 }
 
-/// A main-module is "root-level" iff its source-dir is either empty
-/// (subproject IS scan root) OR canonicalizes to `scan_root`.
+/// Spec 1652 (research R1): the main module's directory, relative to the
+/// scan root.
+///
+/// Milestone 215's `split::source_dir_for` strips the manifest's file name
+/// only when `is_manifest_basename` knows it. That list has no `package.yaml`
+/// and no `*.cabal`, so a root Haskell package's `source_dir` is the file
+/// `package.yaml` — never the scan root — and every Haskell repository fell
+/// back to a full scan under `root-only` and `strict` (8 of 8 corpus targets).
+///
+/// The directory is decided here, from the filesystem, rather than by adding
+/// names to that list: the list also drives `--split`'s file names and
+/// `--split=directory` grouping, which spec 1652 holds fixed (FR-007, #1691),
+/// and a file test covers every ecosystem's manifest name, not only the ones
+/// someone remembered.
+pub(crate) fn root_dir(root: &SubprojectRoot, scan_root: &Path) -> PathBuf {
+    if scan_root.join(&root.source_dir).is_file() {
+        root.source_dir.parent().map(Path::to_path_buf).unwrap_or_default()
+    } else {
+        root.source_dir.clone()
+    }
+}
+
+/// A main-module is "root-level" iff its directory ([`root_dir`]) is either
+/// empty (subproject IS scan root) OR canonicalizes to `scan_root`.
 /// `canonicalize` failure on either side degrades to `false`
 /// (conservative — fewer false-positives on broken paths). Matches
 /// the permissive posture of milestone-114 `safe_walk`.
 fn is_root_level(root: &SubprojectRoot, scan_root: &Path) -> bool {
-    let source_dir_str = root.source_dir.to_string_lossy();
-    if source_dir_str.is_empty() {
+    let dir = root_dir(root, scan_root);
+    if dir.as_os_str().is_empty() {
         return true;
     }
     // The stored source_dir is scan-root-relative; join back with the
     // scan_root before canonicalizing so we can compare filesystem
     // identity (m215 `source_dir_for` at split.rs:214 relativizes).
-    let joined = scan_root.join(&root.source_dir);
+    let joined = scan_root.join(&dir);
     let source_canon = std::fs::canonicalize(&joined).ok();
     let scan_canon = std::fs::canonicalize(scan_root).ok();
     matches!((source_canon, scan_canon), (Some(a), Some(b)) if a == b)
@@ -114,7 +136,7 @@ fn is_root_level(root: &SubprojectRoot, scan_root: &Path) -> bool {
 
 /// Scan-scoped aggregate populated by [`filter::apply_scope_filter`].
 /// Feeds the FR-011 doc-scope C140 annotation + the FR-012 INFO log.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct ProjectDiscoveryReport {
     /// The mode the scan actually ran under.
     pub mode: ProjectDiscoveryMode,
@@ -128,7 +150,62 @@ pub struct ProjectDiscoveryReport {
     /// `All` mode but were dropped under the current mode. This is
     /// the operator-visible signal of "how much did the scope cap
     /// actually change." 0 under `All`.
+    ///
+    /// Spec 1652 (R3): always `dropped_main_modules.len()`. It used to be
+    /// the count of roots out of scope, which also counted nested main
+    /// modules the projection then kept through an edge (go-opentelemetry:
+    /// 28 reported, 25 dropped).
     pub nested_projects_ignored: usize,
+    /// Spec 1652 (FR-004): the PURLs of the main modules that were dropped,
+    /// sorted. Computed after filtering, so a nested main module the root
+    /// reaches is never in it. Empty under `All` and on the #1045 fall-back.
+    pub dropped_main_modules: Vec<String>,
+    /// Spec 1652 (FR-006): the evidence paths of those main modules — their
+    /// manifests, as each reader recorded them — sorted and unique. The scan
+    /// matches them against C200's `manifests-read`.
+    pub dropped_evidence_paths: Vec<String>,
+}
+
+/// Spec 1652 (FR-004, FR-005): what `root-only` / `strict` dropped, carried
+/// from the scan to every emitter. Built only on the filtered branch and only
+/// when something was dropped, so `All`, the #1045 fall-back and a scan that
+/// dropped nothing carry `None` and emit nothing new.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProjectDiscoveryDrop {
+    /// The dropped main modules' PURLs, sorted. Never empty.
+    pub main_modules: Vec<String>,
+    /// Their PURL types, sorted and unique: the ecosystems the completeness
+    /// reason names and CycloneDX `compositions[]` marks incomplete.
+    pub ecosystems: Vec<String>,
+}
+
+impl ProjectDiscoveryDrop {
+    pub fn from_report(report: &ProjectDiscoveryReport) -> Option<Self> {
+        if report.dropped_main_modules.is_empty() {
+            return None;
+        }
+        let ecosystems: std::collections::BTreeSet<String> = report
+            .dropped_main_modules
+            .iter()
+            .filter_map(|p| waybill_common::types::purl::Purl::new(p).ok())
+            .map(|p| p.ecosystem().to_string())
+            .collect();
+        Some(Self {
+            main_modules: report.dropped_main_modules.clone(),
+            ecosystems: ecosystems.into_iter().collect(),
+        })
+    }
+
+    /// C244 `waybill:project-discovery-dropped`: a canonical JSON string.
+    /// `serde_json`'s map is ordered here, so the keys sort.
+    pub fn to_document_value(&self) -> String {
+        serde_json::json!({
+            "count": self.main_modules.len(),
+            "main-modules": self.main_modules,
+            "reason": "project-discovery-scope",
+        })
+        .to_string()
+    }
 }
 
 impl ProjectDiscoveryReport {
@@ -141,6 +218,75 @@ impl ProjectDiscoveryReport {
             root_main_modules: 0,
             workspace_members_followed: 0,
             nested_projects_ignored: 0,
+            dropped_main_modules: Vec::new(),
+            dropped_evidence_paths: Vec::new(),
         }
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+    use waybill_common::types::purl::Purl;
+
+    fn root_at(source_dir: &str) -> SubprojectRoot {
+        let purl = Purl::new("pkg:hackage/waybill-fixture-root@0.1.0").unwrap();
+        SubprojectRoot {
+            purl_string: purl.to_string(),
+            purl,
+            source_dir: PathBuf::from(source_dir),
+            ecosystem: "hackage".to_string(),
+        }
+    }
+
+    fn tree() -> tempfile::TempDir {
+        let t = tempfile::tempdir().unwrap();
+        std::fs::write(t.path().join("package.yaml"), "name: waybill-fixture-root\n").unwrap();
+        std::fs::create_dir_all(t.path().join("local-packages/a")).unwrap();
+        std::fs::write(t.path().join("local-packages/a/a.cabal"), "name: a\n").unwrap();
+        std::fs::create_dir_all(t.path().join("crates/api")).unwrap();
+        t
+    }
+
+    #[test]
+    fn root_dir_of_empty_is_empty() {
+        let t = tree();
+        assert_eq!(root_dir(&root_at(""), t.path()), PathBuf::new());
+    }
+
+    #[test]
+    fn root_dir_strips_a_root_manifest_file() {
+        let t = tree();
+        assert_eq!(root_dir(&root_at("package.yaml"), t.path()), PathBuf::new());
+    }
+
+    #[test]
+    fn root_dir_strips_a_nested_manifest_file() {
+        let t = tree();
+        assert_eq!(
+            root_dir(&root_at("local-packages/a/a.cabal"), t.path()),
+            PathBuf::from("local-packages/a")
+        );
+    }
+
+    #[test]
+    fn root_dir_keeps_a_directory() {
+        let t = tree();
+        assert_eq!(root_dir(&root_at("crates/api"), t.path()), PathBuf::from("crates/api"));
+    }
+
+    #[test]
+    fn root_dir_keeps_a_path_that_does_not_exist() {
+        let t = tree();
+        assert_eq!(root_dir(&root_at("gone/x"), t.path()), PathBuf::from("gone/x"));
+    }
+
+    /// The #1676 defect: a root `package.yaml` was never root-level.
+    #[test]
+    fn a_root_package_yaml_is_root_level() {
+        let t = tree();
+        assert!(is_root_level(&root_at("package.yaml"), t.path()));
+        assert!(!is_root_level(&root_at("local-packages/a/a.cabal"), t.path()));
     }
 }

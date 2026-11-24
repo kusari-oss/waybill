@@ -107,6 +107,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`--project-discovery=root-only` and `strict` work on Haskell repositories, keep what the root builds, and say what they dropped (#1676).**
+  - **Root-level is now decided by directory.** A root `package.yaml`, `*.cabal` or `pubspec.yaml` was never root-level, because only some manifest names were stripped to their directory. Every Haskell repository fell back to a full scan (8 of 8 corpus targets), and a tree whose root was another ecosystem's dropped all its Haskell packages and read `complete`. `--split` is unchanged (#1691 tracks its own copy of the gap).
+  - **A root `cabal.project` or `stack.yaml` `packages:` list sets the scope under `root-only`.** Its packages are in-scope roots, including when there is no root package, and an unlisted nested package is dropped. `strict` ignores declarations, as it ignores workspace members.
+  - **A nested main module the root depends on is kept** under both modes, as before. It is now never reported as dropped.
+  - **Root-level components stay in scope** when a declaration sets it with no root package (a root `flake.lock`'s inputs, for example). So does a component with no directory provenance and no edges, such as a Stack snapshot or compiler, which nothing attributes to a nested project. Measured on the corpus: haskell-language-server, haskell-security-advisories, hpack-hs-opentelemetry and lootbox now give exactly what `all` gives under `root-only`.
+  - **New row C244 `waybill:project-discovery-dropped`:** the count, the reason and the sorted PURLs of the main modules dropped. It is present only when something was dropped.
+  - **New graph-completeness reason `project-discovery-scope`:** the document is `partial` whenever projects were dropped, and CycloneDX `compositions[]` claims none of their ecosystems complete. This is an addition to the closed vocabulary. C105's row now lists all 11 codes, including m1273's `manifest-unread`, which it had omitted.
+  - **C200 `waybill:hpack-read-outcome` gains `manifests-dropped-by-scope`:** manifests read whose package was dropped. They stay under `manifests-read`.
+  - **The INFO line's `nested_projects_ignored` now counts what was dropped.** It counted every main module outside the root, including ones kept through an edge: go-opentelemetry reported 28, and 25 were dropped.
+  - **Unchanged:** scans without `--project-discovery`, which are byte-identical, and the fall-back to a full scan when there is no root package and no root declaration (#1045).
+
 - **Under `--nix-closure`, Haskell components the closure resolved are no longer labelled `design` (#1681).**
   The evaluated project package and the boot libraries of the closure's GHC kept the manifest reader's `waybill:sbom-tier=design`. With `--root-name` the project package is the root's only direct dependency, so a consumer that drops `design` components, and what hangs below them, kept nothing of four of the five corpus closure documents.
   - **Now:** both are `build`. That covers the package the closure evaluated (C203 `exempt-evaluated-package`) whatever its outputs' state, and a boot library a closure compiler supplies (C218), which is the tier the same library already had when no manifest declared it. This reverses milestone 966's rule that such a library keeps the reader's `design`: under the closure, that rule gave one library two tiers in one document.

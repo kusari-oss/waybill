@@ -803,6 +803,9 @@ pub fn classify_orphans_pre_emit(
             target_kind,
         },
         &[],
+        // Spec 1652: a scope drop changes reason codes, never the reachable
+        // set, so per-component orphan status does not depend on it.
+        None,
     )
     .completeness;
 
