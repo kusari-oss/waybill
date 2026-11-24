@@ -611,9 +611,12 @@ fn m1273_us1_unread_manifest_defeats_completeness() {
 // T017 / C9 / FR-001b / SC-010 — an unmodelled construct is announced
 // ───────────────────────────────────────────────────────────────────────
 
+/// Spec 1649 (#1673) made a resolvable `!include` modelled, so the `include`
+/// arm announces an include that cannot be resolved: FR-001b's contract, a
+/// partial answer that says so, holds for exactly those.
 #[test]
 fn m1273_us1_unmodelled_construct_is_announced() {
-    for (dir, construct) in [("defaults", "defaults"), ("include", "include")] {
+    for (dir, construct) in [("defaults", "defaults"), ("include-unresolved", "include")] {
         let s = scan(&fixture(dir));
         // Structured, NOT a substring of the whole document. The fixture
         // directories are named after the constructs, so a substring
@@ -639,6 +642,18 @@ fn m1273_us1_unmodelled_construct_is_announced() {
             "and must name the file; got {files:?}"
         );
     }
+}
+
+/// Spec 1649 (#1673): the include this milestone announced as unmodelled is
+/// now resolved, so the manifest reads in full, with the included list.
+#[test]
+fn s1649_m1273_include_fixture_now_reads_fully() {
+    let s = scan(&fixture("include"));
+    assert!(unmodelled_constructs(&s.doc).is_empty(), "{:?}", unmodelled_constructs(&s.doc));
+    assert_eq!(
+        hackage_names(&s.doc),
+        vec!["waybill-fixture-base".to_string(), "waybill-fixture-text".to_string()]
+    );
 }
 
 // ───────────────────────────────────────────────────────────────────────
