@@ -93,6 +93,25 @@ For the per-annotation wire shapes these invariants read, see
 | I8 | A component with no version carries an annotation explaining why it has none | at least one component has an absent or empty version | `versionless-and-unexplained` | Active |
 | I9 | A component the compiler supplies carries no non-runtime scope | at least one component is marked compiler-supplied | `compiler-supplied-non-runtime` | Active |
 | I10 | A closure member's non-runtime marker agrees with the evidence that decided it, or the member says it was exempted | at least one component carries a closure role | `closure-tooling-without-non-runtime-marker`, `closure-statically-linked-but-marked`, `closure-runtime-member-but-marked` | Active |
+| I11 | A component the closure resolved is not `design`, and the root does not depend only on `design` components | at least one component is a closure member (carries C214) | `closure-resolved-but-design`, `root-direct-dependencies-all-design` | Active |
+
+### I11
+
+**Catches**: in a `--nix-closure` document, a component labelled `design` although the closure resolved it, and a root whose direct dependencies are all `design`. Spec 1650 (#1681).
+
+**Why it matters.** `design` reads as "declared, not resolved". At `main` `18691d8`, the evaluated package and the closure compiler's boot libraries kept the manifest reader's `design` in four of the five corpus closure documents. With `--root-name` the evaluated package is the root's only direct dependency, so a consumer that drops `design` components, and what hangs below them, kept **0** components of 1,135 / 1,362 / 1,235 / 2,441.
+
+**The two clauses:**
+- **(a) `closure-resolved-but-design`:** a `design` component carrying C203 `exempt-evaluated-package` (the closure evaluated it) or C218 `waybill:boot-library-compiler` (a compiler the closure holds supplies it). Both annotations are written only by the closure tier.
+- **(b) `root-direct-dependencies-all-design`:** the root has direct dependencies and every one is `design`. A repository package the closure does not evaluate (moat's `readme`) may be `design`; it is the *all* that this clause rejects.
+
+**Boundary with I9 and I10:** those rows assert *scope*, and read C203 and C218 to decide which scope a member may carry. I11 asserts *tier*, and reads the same two annotations as evidence of resolution. They share inputs, not claims.
+
+**Not applicable** to a document with no closure member, meaning no component carrying C214 `waybill:closure-contents`. In a manifest-only scan, `design` is correct by definition, because nothing resolved the versions.
+
+**When it fires:**
+- **For (a),** check that `resolve::closure_resolved_tier::retier` still runs after `closure_role_scope::assign_role_scope` (which records C203) and before emission, and that it still reads C203's typed source (`ArtifactPresence::ExemptEvaluatedPackage`) and C218.
+- **For (b)** without (a), a root dependency is `design` with no closure evidence. Find out whether the closure stopped evaluating the project's package, or the root selector started choosing an unevaluated repository package as the only direct dependency.
 
 ### I10
 

@@ -13,6 +13,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 
 pub use super::super::harness::EmittedSboms;
 
+pub mod closure_resolved_tier;
 pub mod closure_role_scope;
 pub mod compiler_supplied_scope;
 pub mod completeness_honesty;

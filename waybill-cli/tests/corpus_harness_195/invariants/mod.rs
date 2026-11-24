@@ -197,6 +197,16 @@ pub static REGISTRY: &[Invariant] = &[
         kinds: checks::closure_role_scope::KINDS,
         checker: checks::closure_role_scope::check,
     },
+    Invariant {
+        id: "I11",
+        statement: "A component the closure resolved is not `design`, and the root does not \
+                    depend only on `design` components",
+        // n/a, not a vacuous pass, on every document without a closure
+        // member: there `design` is correct by definition.
+        precondition: "at least one component is a closure member (carries C214)",
+        kinds: checks::closure_resolved_tier::KINDS,
+        checker: checks::closure_resolved_tier::check,
+    },
 ];
 
 pub fn invariant(id: &str) -> Option<&'static Invariant> {

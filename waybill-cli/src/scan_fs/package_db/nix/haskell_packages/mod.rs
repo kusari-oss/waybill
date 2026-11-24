@@ -1775,8 +1775,13 @@ fn apply_resolved(
 /// Not [`apply_resolved`]: that records a nixpkgs resolution (C176, the
 /// source hash and license of a package-set entry, and the `source` tier),
 /// and none of that is true here. The version comes from the compiler
-/// release, which C218 names; the tier stays what the reader said, because
-/// it records where the dependency was declared (clarified 2026-11-12).
+/// release, which C218 names.
+///
+/// The tier is not set here. Milestone 966 kept the reader's tier on purpose
+/// (clarified 2026-11-12), but under `--nix-closure` that gave one library
+/// two tiers in one document. `resolve::closure_resolved_tier::retier` now
+/// re-tiers every C218 component to `build` once the closure has run
+/// (spec 1650, #1681).
 ///
 /// C170 and C171 are never written on this path, and the reader's C151
 /// ("no freeze file") is withdrawn because the version it was missing is now

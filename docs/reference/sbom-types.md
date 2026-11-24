@@ -326,6 +326,33 @@ override) BUT per-component tiers preserve their auto-detected
 classification CLAIM; the per-component data is the actual
 lineage record.
 
+### Closure scans: what the closure resolved is `build` (spec 1650)
+
+Under `--nix-closure`, two kinds of Haskell component that a manifest
+reader first emits as `design` become `build` once the closure has run
+(#1681):
+
+- **the evaluated package** (C203 `exempt-evaluated-package`): the
+  closure evaluated it into the build graph;
+- **a boot library a compiler in the closure supplies** (C218
+  `waybill:boot-library-compiler`): it ships inside that compiler, a
+  `build` member, which is the tier the same library already has when no
+  manifest declares it.
+
+What stays `design` is what nothing resolved: a repository package the
+closure does not evaluate, or a dependency with no version from any
+source. Scans without `--nix-closure` are unchanged, and there `design`
+is correct by definition.
+
+**Why it matters:** with `--root-name`, the evaluated package is the
+root's only direct dependency. While it was `design`, a consumer that
+drops `design` components, and what hangs below them, kept nothing of
+the document. Corpus invariant I11 (`docs/reference/sbom-invariants.md`)
+now fails CI if that shape returns.
+
+`--tier design-only` on a closure scan therefore no longer emits these
+components: the filter runs again after the closure passes (#1360).
+
 ---
 
 ## Discoverability + cross-references
