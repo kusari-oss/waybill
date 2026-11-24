@@ -1048,6 +1048,8 @@ cdx_anno!(c241_cdx, "waybill:vendored-signals", component);
 cdx_anno!(c242_cdx, "waybill:fingerprint-also-matched", component);
 // Spec 1651: C243 — a relabelled component's tier before `sbom edit --retier`.
 cdx_anno!(c243_cdx, "waybill:retiered-from", component);
+// Spec 1652: C244 — what `--project-discovery` dropped.
+cdx_anno!(c244_cdx, "waybill:project-discovery-dropped", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

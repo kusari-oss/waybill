@@ -237,7 +237,9 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // mode signal from ScanArtifacts into the builder for the
             // C140 `waybill:project-discovery-mode` metadata property.
             // `None` under default `All` mode (SC-005 byte-identity).
-            .with_project_discovery_mode(scan.project_discovery_mode);
+            .with_project_discovery_mode(scan.project_discovery_mode)
+            // Spec 1652 — what that mode dropped (C244, completeness).
+            .with_project_discovery_dropped(scan.project_discovery_dropped.cloned());
         let bom = builder.build(
             scan.components,
             scan.relationships,

@@ -58,6 +58,7 @@ pub fn for_document(
     relationships: &[Relationship],
     subject: &DocumentSubject<'_>,
     unread_manifests: UnreadManifests<'_>,
+    scope_drop: Option<&crate::generate::project_discovery::ProjectDiscoveryDrop>,
 ) -> DocumentGraph {
     let root_override = subject.root_override;
     let drop_result = apply_main_module_drop_or_demote(components, root_override);
@@ -105,12 +106,15 @@ pub fn for_document(
     .chain(workspace_peer_edges.iter().cloned())
     .collect();
 
-    let completeness = compute_graph_completeness(
-        effective_components,
-        &relationships,
-        &selection,
-        &target_ref,
-        unread_manifests,
+    let completeness = super::apply_scope_drop(
+        compute_graph_completeness(
+            effective_components,
+            &relationships,
+            &selection,
+            &target_ref,
+            unread_manifests,
+        ),
+        scope_drop,
     );
 
     DocumentGraph {

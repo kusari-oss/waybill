@@ -14,8 +14,8 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Commit the six trees from `specs/1652-root-only-haskell/measurements/make-fixtures.sh` (f1–f6) as static fixtures under `waybill-cli/tests/fixtures/project_discovery_haskell/{f1-json-root,f2-hpack-root-chain,f3-cabal-project,f4-cabal-project-json,f5-stack,f6-npm-path}/`, byte-identical to the script's output. Verify with `diff -r` against a fresh `make-fixtures.sh` run.
-- [ ] T002 Create `waybill-cli/tests/project_discovery_haskell.rs`, with `#![cfg(unix)]` at file scope and a module doc naming spec 1652 and the contracts. Add helpers, following `tests/project_discovery_scope.rs`:
+- [X] T001 Commit the six trees from `specs/1652-root-only-haskell/measurements/make-fixtures.sh` (f1–f6) as static fixtures under `waybill-cli/tests/fixtures/project_discovery_haskell/{f1-json-root,f2-hpack-root-chain,f3-cabal-project,f4-cabal-project-json,f5-stack,f6-npm-path}/`, byte-identical to the script's output. Verify with `diff -r` against a fresh `make-fixtures.sh` run.
+- [X] T002 Create `waybill-cli/tests/project_discovery_haskell.rs`, with `#![cfg(unix)]` at file scope and a module doc naming spec 1652 and the contracts. Add helpers, following `tests/project_discovery_scope.rs`:
   - `scan(tree, mode, format) -> (Value, String)`: `--offline`, isolated `HOME`, `NO_COLOR=1`, with the combined log.
   - `scan_all_formats(tree, mode)`: CycloneDX, SPDX 2.3 and SPDX 3 written to a tempdir.
   - `parity_check(dir)`: runs `waybill sbom parity-check` and asserts no gap.
@@ -23,12 +23,12 @@
 
 ## Phase 2: Foundational
 
-- [ ] T003 Add `ProjectDiscoveryReport.dropped_main_modules: Vec<String>` in `waybill-cli/src/generate/project_discovery/mod.rs`. Remove `Copy` from its derives, and update `all_default()` and the #1045 early return to an empty `Vec`. In `waybill-cli/src/generate/project_discovery/filter.rs`, after Step 4:
+- [X] T003 Add `ProjectDiscoveryReport.dropped_main_modules: Vec<String>` in `waybill-cli/src/generate/project_discovery/mod.rs`. Remove `Copy` from its derives, and update `all_default()` and the #1045 early return to an empty `Vec`. In `waybill-cli/src/generate/project_discovery/filter.rs`, after Step 4:
   - compute the sorted PURLs of `all_roots` absent from `reachable`;
   - set `nested_projects_ignored = dropped_main_modules.len()` (research R3).
 
   Fix any compile fallout in `waybill-cli/src/cli/scan_cmd.rs`. This blocks US3, and it changes no emitted byte.
-- [ ] T004 Unit tests in `filter.rs`'s test module:
+- [X] T004 Unit tests in `filter.rs`'s test module:
   - `dropped_set_excludes_main_modules_reached_through_edges`: a root depending on a nested main module, plus an independent one. Expect a drop of exactly 1 and `nested_projects_ignored == 1`. This is the R3 defect, which reported 2.
   - Invariants I2 and I3 from `contracts/scope-filter.md` over every existing filter test fixture.
   - `cycle_between_nested_main_modules_terminates_and_keeps_both`: root → `a`, `a` ↔ `b`. Both are kept and the call returns.
@@ -42,7 +42,7 @@
 
 **Independent test:** f2 under `root-only` keeps root, `a`, `c` and `base`, and drops `d`. It does not fall back.
 
-- [ ] T005 [P] [US1] Write the failing integration tests in `waybill-cli/tests/project_discovery_haskell.rs`:
+- [X] T005 [P] [US1] Write the failing integration tests in `waybill-cli/tests/project_discovery_haskell.rs`:
   - `us1_f2_root_only_keeps_chain_drops_independent`: no fallback; C140 = `root-only`; hackage PURLs are exactly {root, `a`, `c`, `base`}; edges root→`a` and `a`→`c` present; `d` absent.
   - `us1_f2_strict_keeps_chain`: the same under `strict`, with C140 = `strict`.
   - `us1_f6_npm_nested_by_path_kept`: `pkg:npm/waybill-fixture-lib@0.2.0` and the root's edge to it are present under both modes, and so is the versionless declared component `pkg:npm/waybill-fixture-lib` (research R2).
@@ -51,7 +51,7 @@
   Each test scans all three formats with `scan_all_formats`, asserts the same PURL set in each, and runs `parity_check` (SC-001).
 
   Confirm the f2 tests fail on the current binary, by falling back.
-- [ ] T006 [P] [US1] Write the failing unit tests for `root_dir` in `waybill-cli/src/generate/project_discovery/mod.rs`'s test module, using a tempdir:
+- [X] T006 [P] [US1] Write the failing unit tests for `root_dir` in `waybill-cli/src/generate/project_discovery/mod.rs`'s test module, using a tempdir:
   - `source_dir` empty gives empty;
   - `source_dir` `package.yaml` (a file) gives empty;
   - `local-packages/a/a.cabal` (a file) gives `local-packages/a`;
@@ -59,12 +59,12 @@
   - a non-existent path gives itself.
 
   Also `is_root_level` is true for a root whose `source_dir` is `package.yaml` at the scan root.
-- [ ] T007 [US1] Implement `pub(crate) fn root_dir(root: &SubprojectRoot, scan_root: &Path) -> PathBuf` in `waybill-cli/src/generate/project_discovery/mod.rs`: the parent when `scan_root.join(&root.source_dir).is_file()`, else `source_dir`.
+- [X] T007 [US1] Implement `pub(crate) fn root_dir(root: &SubprojectRoot, scan_root: &Path) -> PathBuf` in `waybill-cli/src/generate/project_discovery/mod.rs`: the parent when `scan_root.join(&root.source_dir).is_file()`, else `source_dir`.
   - Use it in `is_root_level`.
   - In `filter.rs`, seed `in_scope_dirs` from `dir_key(&root_dir(r, scan_root))` instead of `dir_key(&r.source_dir)`.
   - Do **not** edit `waybill-cli/src/generate/split.rs` (FR-007, #1691).
   - Doc comment: why the directory is decided here and not in `is_manifest_basename`.
-- [ ] T008 [US1] Run T005 and T006 until green, then `cargo test -p waybill --test project_discovery_scope --test go_per_mainmod_scope` to confirm nothing regressed.
+- [X] T008 [US1] Run T005 and T006 until green, then `cargo test -p waybill --test project_discovery_scope --test go_per_mainmod_scope` to confirm nothing regressed.
 
 ## Phase 4: User Story 2 — A package the root project declares is part of it (P1)
 
@@ -72,21 +72,21 @@
 
 **Independent test:** f3 under `root-only` keeps `a`, `b`, `base` and `text`, and drops `tools/e`, without falling back.
 
-- [ ] T009 [P] [US2] Write the failing integration tests in `waybill-cli/tests/project_discovery_haskell.rs`:
+- [X] T009 [P] [US2] Write the failing integration tests in `waybill-cli/tests/project_discovery_haskell.rs`:
   - `us2_f3_cabal_project_sets_scope_without_root_package`: no fallback; hackage = {`a`, `b`, `base`, `text`}; `e` absent.
   - `us2_f4_cabal_project_members_join_json_root`: root-only keeps the npm root, `a`, `b`, `base` and `text`, and drops `e`.
   - `us2_f5_stack_yaml_sets_scope`: like f3.
   - `us2_strict_ignores_declarations`: f3 and f5 under `strict` fall back; f4 under `strict` drops `a`, `b` and `e`.
 
   Each test scans all three formats with `scan_all_formats`, asserts the same PURL set in each, and runs `parity_check` (SC-001).
-- [ ] T010 [P] [US2] Write the failing unit tests in `waybill-cli/src/scan_fs/package_db/haskell.rs`'s test module for `resolve_root_declared_members`, using tempdir trees of `waybill-fixture-*` `package.yaml` and `.cabal` files:
+- [X] T010 [P] [US2] Write the failing unit tests in `waybill-cli/src/scan_fs/package_db/haskell.rs`'s test module for `resolve_root_declared_members`, using tempdir trees of `waybill-fixture-*` `package.yaml` and `.cabal` files:
   - `cabal.project` with `packages: local-packages/*`; `./a ./b`; `code/*/*.cabal`; `*/*.cabal`; `.`; the leading-comma form `    api-types\n  , api\n  , sdk` (hs-opentelemetry); `optional-packages:`;
   - a `cabal.project` with no `packages:`, which gives empty;
   - entries matching nothing, which give empty;
   - a nested `cabal.project`, which is ignored (root only);
   - `stack.yaml` with `packages: [a, ./b/]`; with no `packages:`, which gives `["."]` and so no nested member; with both files, the union;
   - output sorted, unique, `/`-separated.
-- [ ] T011 [US2] In `waybill-cli/src/scan_fs/package_db/haskell.rs`:
+- [X] T011 [US2] In `waybill-cli/src/scan_fs/package_db/haskell.rs`:
   - add `packages: Option<Vec<String>>` to `StackYaml`;
   - add `fn resolve_root_declared_members(rootfs: &Path, cabal_project_paths: &[PathBuf], stack_yaml_paths: &[PathBuf], package_dirs: &[PathBuf]) -> Vec<String>`, per data-model.md. It uses only the files whose parent is `rootfs`, and globset with `literal_separator(true)`. Commas are separators. Normalise entries with a small helper; leave `parse_cabal_project_packages` and `cabal_files_declared_by` and their tests unmodified;
   - add `pub root_declared_member_dirs: Vec<String>` to `HaskellParseSummary`, filled in `finalize` from the directories of the discovered `package.yaml` and `*.cabal` paths.
@@ -94,7 +94,8 @@
   The field is **never rendered**: check every emitter that reads `HaskellParseSummary`.
 
   If `finalize` can return `None` while the resolver is non-empty, carry the directories without turning a `None` summary into `Some`. A `None`→`Some` change would alter `all` output (milestone 895's note). Record which case holds in a code comment, and pin it with a unit test.
-- [ ] T012 [US2] Add the parameter `declared_member_dirs: &[String]` to `apply_scope_filter` in `waybill-cli/src/generate/project_discovery/filter.rs`:
+  - **As built:** `stack.yaml` is read as an untyped `serde_yaml::Value` inside the resolver, and `StackYaml` is not changed. A typed `packages` field could fail to deserialise an older `- location:` layout, and take the existing resolver read down with it. `stack_yaml_mapping_entries_are_skipped` pins this. The summary is `Some` whenever a root declaration resolves (`summary_is_some_whenever_a_root_declaration_resolves`).
+- [X] T012 [US2] Add the parameter `declared_member_dirs: &[String]` to `apply_scope_filter` in `waybill-cli/src/generate/project_discovery/filter.rs`:
   - when `mode.follows_workspace_members()`, extend `in_scope_roots` with every root whose `dir_key(&root_dir(..))` is in the set, deduplicated by PURL;
   - leave Step 1b and the #1045 early return unchanged.
 
@@ -102,7 +103,7 @@
   - pass the summary's directories from `waybill-cli/src/cli/scan_cmd.rs` (empty when no summary);
   - update every existing call site and unit test to pass `&[]`;
   - add unit tests for I4 (`strict` ignores the set) and I5 (unmatched directories are a no-op).
-- [ ] T013 [US2] Run T009 and T010 until green.
+- [X] T013 [US2] Run T009 and T010 until green.
 
 ## Phase 5: User Story 3 — The document says what `root-only` dropped (P1)
 
@@ -110,46 +111,48 @@
 
 **Independent test (the positive control, SC-003):** f1 under `root-only` carries C244 with count 2 and both hackage PURLs, C104 `partial` with the new reason, and C200's key listing both manifests.
 
-- [ ] T014 [P] [US3] Write the failing integration tests in `waybill-cli/tests/project_discovery_haskell.rs`:
+- [X] T014 [P] [US3] Write the failing integration tests in `waybill-cli/tests/project_discovery_haskell.rs`:
   - `us3_f1_positive_control_records_drop`: in all three formats, C244 equals exactly `{"count":2,"main-modules":["pkg:hackage/waybill-fixture-a@0.1.0","pkg:hackage/waybill-fixture-b@0.1.0"],"reason":"project-discovery-scope"}`; C104 is `partial`; C105 contains `project-discovery-scope: 2 project(s) dropped from hackage`; C200 `manifests-dropped-by-scope` has the two nested `package.yaml` entries, each also in `manifests-read`; and `parity_check` passes.
   - `us3_cdx_compositions_not_complete_for_dropped_ecosystem`: on f1, no `compositions[]` record claims hackage `complete`.
   - `us3_f6_no_drop_no_record`: no C244; no `project-discovery-scope` in C105.
   - `us3_f2_drop_one`: C244 count 1 naming `d`.
   - `us3_symlinked_root_c200_matches`: scan f1 through a symlink to the fixture in a tempdir; C200's key still lists both manifests (research R7).
   - `us3_all_mode_has_none_of_it`: f1 under `all` has no C140, no C244, no `project-discovery-scope`, and no `manifests-dropped-by-scope`.
-- [ ] T015 [US3] Add `pub struct ProjectDiscoveryDrop { pub main_modules: Vec<String>, pub ecosystems: Vec<String> }` in `waybill-cli/src/generate/project_discovery/mod.rs`, with a constructor from the report that returns `None` when there is no drop. Ecosystems come from `Purl::ecosystem()`, sorted and unique.
+- [X] T015 [US3] Add `pub struct ProjectDiscoveryDrop { pub main_modules: Vec<String>, pub ecosystems: Vec<String> }` in `waybill-cli/src/generate/project_discovery/mod.rs`, with a constructor from the report that returns `None` when there is no drop. Ecosystems come from `Purl::ecosystem()`, sorted and unique.
   - Add `pub project_discovery_dropped: Option<ProjectDiscoveryDrop>` to `ScanArtifacts` in `waybill-cli/src/generate/mod.rs`.
   - Set `None` at every other `ScanArtifacts` construction site: grep `project_discovery_mode: None`.
   - Build it in `waybill-cli/src/cli/scan_cmd.rs` on the filtered branch only, and thread it to the CycloneDX builder as C140 is threaded (`with_project_discovery_mode`).
-- [ ] T016 [US3] Emit C244 in `waybill-cli/src/generate/cyclonedx/metadata.rs`, `waybill-cli/src/generate/spdx/annotations.rs` and `waybill-cli/src/generate/spdx/v3_annotations.rs`, beside C140. The value is the canonical JSON string per contracts/wire.md, built with `serde_json::json!`, whose map sorts keys. In the same change:
+- [X] T016 [US3] Emit C244 in `waybill-cli/src/generate/cyclonedx/metadata.rs`, `waybill-cli/src/generate/spdx/annotations.rs` and `waybill-cli/src/generate/spdx/v3_annotations.rs`, beside C140. The value is the canonical JSON string per contracts/wire.md, built with `serde_json::json!`, whose map sorts keys. In the same change:
   - add extractors `c244_cdx`, `c244_spdx23` and `c244_spdx3` in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`, with the document-scope annotation macros C140 uses;
   - register them in `waybill-cli/src/parity/extractors/mod.rs` as `SymmetricEqual`, `order_sensitive: false`;
   - add the C244 row to `docs/reference/sbom-format-mapping.md`, with its Principle V audit from research R5.
 
   The row and its extractor land together, because the gate is in the lib target.
-- [ ] T017 [US3] Add `ReasonCode::ProjectDiscoveryScope { count: usize, ecosystems: Vec<String> }` in `waybill-cli/src/generate/graph_completeness/reason_codes.rs`. Its rendering is `project-discovery-scope: {count} project(s) dropped from {ecosystems joined ", "}`, with a unit test, and a test that the detail contains no `;`.
-- [ ] T018 [US3] Thread the drop into completeness:
+- [X] T017 [US3] Add `ReasonCode::ProjectDiscoveryScope { count: usize, ecosystems: Vec<String> }` in `waybill-cli/src/generate/graph_completeness/reason_codes.rs`. Its rendering is `project-discovery-scope: {count} project(s) dropped from {ecosystems joined ", "}`, with a unit test, and a test that the detail contains no `;`.
+- [X] T018 [US3] Thread the drop into completeness:
   - Add a parameter `scope_drop: Option<&ProjectDiscoveryDrop>` to `compute_graph_completeness` (`waybill-cli/src/generate/graph_completeness/mod.rs`) and to `for_document` (`document.rs`).
   - On the empty-set path, return `partial` with the code instead of `trivially_complete()`, keeping `manifest_unread_code`'s `unknown` precedence when both fire.
   - On the classified path, push it after the `manifest_unread_code` push.
   - Update all four callers to pass the artifacts' drop: `cyclonedx/builder.rs`, `spdx/document.rs`, `spdx/v3_document.rs` and `orphan_reason.rs`. Update the existing unit tests to pass `None`.
   - Unit tests: an empty set with a drop gives `partial` plus the code; an empty set with a drop **and** an unread manifest gives `unknown` with both codes, `manifest-unread` first (contracts/wire.md); a non-empty complete graph with a drop gives `partial`; no drop leaves results unchanged.
-- [ ] T019 [US3] Add an explicit `ReasonCode::ProjectDiscoveryScope { ecosystems, .. }` arm to `degraded_ecosystems` in `waybill-cli/src/generate/cyclonedx/compositions.rs`, extending with `ecosystems`, plus a unit test beside `a_degraded_ecosystem_is_unknown_even_when_reachable`.
-- [ ] T020 [US3] Add `pub(crate) fn amend_scope_dropped(value: &mut serde_json::Value, dropped: &[String])` in `waybill-cli/src/scan_fs/package_db/haskell/hpack.rs`. It inserts a sorted `manifests-dropped-by-scope` only when non-empty; every entry must be present in `manifests-read`; nothing else is touched. Unit tests cover: empty is a no-op, giving a byte-identical `to_string()`; and a subset.
+  - **As built:** the drop is applied as one post-step, `graph_completeness::apply_scope_drop`, inside `for_document` (the only signature changed), not threaded through `compute_graph_completeness`'s 10 call sites. It changes only the verdict and the reasons, never the reachable set, and gives the same results on both paths as contracts/wire.md: the empty-set case, the unread-manifest exception, and the classified case.
+- [X] T019 [US3] Add an explicit `ReasonCode::ProjectDiscoveryScope { ecosystems, .. }` arm to `degraded_ecosystems` in `waybill-cli/src/generate/cyclonedx/compositions.rs`, extending with `ecosystems`, plus a unit test beside `a_degraded_ecosystem_is_unknown_even_when_reachable`.
+- [X] T020 [US3] Add `pub(crate) fn amend_scope_dropped(value: &mut serde_json::Value, dropped: &[String])` in `waybill-cli/src/scan_fs/package_db/haskell/hpack.rs`. It inserts a sorted `manifests-dropped-by-scope` only when non-empty; every entry must be present in `manifests-read`; nothing else is touched. Unit tests cover: empty is a no-op, giving a byte-identical `to_string()`; and a subset.
 
   In `waybill-cli/src/cli/scan_cmd.rs`, on the filtered branch:
   - map each dropped `pkg:hackage` main module's evidence paths to the `manifests-read` entry equal to the reader root joined with the path, trying both the canonical and the raw root;
   - apply it to `haskell_parse_summary.hpack_read`.
 
   Update C200's row text in `docs/reference/sbom-format-mapping.md` with the key.
-- [ ] T021 [US3] Run T014 to T020's tests until green. Then run `cargo test -p waybill --test project_discovery_scope --test go_per_mainmod_scope --test sbom_format_mapping_coverage --test holistic_parity`, plus `cargo test -p waybill --lib parity`, because the catalog-and-extractor gate is in the lib target.
+  - **As built:** `amend_scope_dropped` is a method on `HaskellParseSummary` in `haskell.rs`, because `haskell/hpack.rs` is a private module that `scan_cmd` cannot reach. The filter's report carries `dropped_evidence_paths`, the dropped main modules' manifests, because the filter consumes the components. `scan_cmd` joins them to both spellings of the root.
+- [X] T021 [US3] Run T014 to T020's tests until green. Then run `cargo test -p waybill --test project_discovery_scope --test go_per_mainmod_scope --test sbom_format_mapping_coverage --test holistic_parity`, plus `cargo test -p waybill --lib parity`, because the catalog-and-extractor gate is in the lib target.
 
 ## Phase 6: User Story 4 — Nothing else changes (P2)
 
 **Goal:** `all` is byte-identical, `--split` is unchanged, and #1045's fall-back holds (FR-007, SC-004).
 
-- [ ] T022 [P] [US4] Integration test `us4_no_root_and_no_declaration_falls_back` in `waybill-cli/tests/project_discovery_haskell.rs`: a tempdir tree with only `nested/x/package.yaml` (`waybill-fixture-x`). Under `root-only`, it falls back, with no C140, no C244 and output equal in components to `all`.
-- [ ] T023 [US4] Byte-identity measurement, recorded in `specs/1652-root-only-haskell/measurements/after.md`:
+- [X] T022 [P] [US4] Integration test `us4_no_root_and_no_declaration_falls_back` in `waybill-cli/tests/project_discovery_haskell.rs`: a tempdir tree with only `nested/x/package.yaml` (`waybill-fixture-x`). Under `root-only`, it falls back, with no C140, no C244 and output equal in components to `all`.
+- [X] T023 [US4] Byte-identity measurement, recorded in `specs/1652-root-only-haskell/measurements/after.md`:
   - build `main` (`git worktree` at `main` into the scratchpad) and the branch;
   - scan f1–f6 with `all`, and with `--split=workspace` and `--split=directory` (with `--output-dir`);
   - mask the serial, timestamps and `waybill_version`/`generated_at`, then `diff -r`.
@@ -158,15 +161,15 @@
 
 ## Phase 7: Polish & cross-cutting
 
-- [ ] T024 [P] Update `docs/reference/project-discovery.md`:
+- [X] T024 [P] Update `docs/reference/project-discovery.md`:
   - root detection by directory (Haskell roots now count);
   - a Haskell row in the per-ecosystem table (root `cabal.project`/`stack.yaml` `packages:` makes packages in-scope roots under `root-only`; not under `strict`);
   - edges across nested main modules, under both modes;
   - C244 and the reason code, with jq recipes;
   - the corrected meaning of `nested_projects_ignored`;
   - the fall-back condition.
-- [ ] T025 [P] Update C105's row in `docs/reference/sbom-format-mapping.md`: list all 11 codes, including `manifest-unread` (m1273, previously missing) and `project-discovery-scope`, with its detail template.
-- [ ] T026 [P] Add a CHANGELOG entry under Unreleased in `CHANGELOG.md`:
+- [X] T025 [P] Update C105's row in `docs/reference/sbom-format-mapping.md`: list all 11 codes, including `manifest-unread` (m1273, previously missing) and `project-discovery-scope`, with its detail template.
+- [X] T026 [P] Add a CHANGELOG entry under Unreleased in `CHANGELOG.md`:
   - root-level detection for every manifest name;
   - Haskell root declarations;
   - C244;

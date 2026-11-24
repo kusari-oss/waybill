@@ -271,6 +271,9 @@ pub struct CycloneDxBuilder {
     /// scan time when the `--project-discovery` flag was non-default.
     project_discovery_mode:
         Option<crate::generate::project_discovery::ProjectDiscoveryMode>,
+    /// Spec 1652 (FR-004, FR-005): what that mode dropped. Feeds C244 and the
+    /// `project-discovery-scope` completeness reason. `None` emits nothing.
+    project_discovery_dropped: Option<crate::generate::project_discovery::ProjectDiscoveryDrop>,
 }
 
 impl CycloneDxBuilder {
@@ -335,6 +338,7 @@ impl CycloneDxBuilder {
             collisions_summary: None,
             compiler_pipeline: None,
             project_discovery_mode: None,
+            project_discovery_dropped: None,
         }
     }
 
@@ -359,6 +363,16 @@ impl CycloneDxBuilder {
         mode: Option<crate::generate::project_discovery::ProjectDiscoveryMode>,
     ) -> Self {
         self.project_discovery_mode = mode;
+        self
+    }
+
+    /// Spec 1652 — record what `--project-discovery` dropped (C244, and the
+    /// `project-discovery-scope` completeness reason).
+    pub fn with_project_discovery_dropped(
+        mut self,
+        dropped: Option<crate::generate::project_discovery::ProjectDiscoveryDrop>,
+    ) -> Self {
+        self.project_discovery_dropped = dropped;
         self
     }
 
@@ -902,6 +916,7 @@ impl CycloneDxBuilder {
                 target_kind: self.config.scan_target_kind,
             },
             &m1273_unread,
+            self.project_discovery_dropped.as_ref(),
         );
         let effective_components: &[ResolvedComponent] = document_graph.effective(components);
         let retained_main_module_purls: Vec<String> = document_graph.retained_main_module_purls.clone();
@@ -981,6 +996,7 @@ impl CycloneDxBuilder {
                 image_source: self.image_source.as_ref(),
                 compiler_pipeline: self.compiler_pipeline.as_ref(),
                 project_discovery_mode: self.project_discovery_mode,
+                project_discovery_dropped: self.project_discovery_dropped.as_ref(),
                 sbom_version: // Milestone 221 US4 — thread operator-supplied SBOM
             // document version into the metadata block for the
             // C142 `waybill:sbom-version` property.

@@ -568,6 +568,11 @@ pub struct ScanArtifacts<'a> {
     /// the m217 C136 precedent.
     pub project_discovery_mode:
         Option<project_discovery::ProjectDiscoveryMode>,
+    /// Spec 1652 (FR-004, FR-005): what that mode dropped. `None` under
+    /// `All`, on the #1045 fall-back, and when nothing was dropped — so C244,
+    /// the `project-discovery-scope` reason and C200's
+    /// `manifests-dropped-by-scope` are all absent there.
+    pub project_discovery_dropped: Option<&'a project_discovery::ProjectDiscoveryDrop>,
 }
 
 impl<'a> ScanArtifacts<'a> {

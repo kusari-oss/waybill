@@ -726,6 +726,50 @@ pub struct HaskellParseSummary {
     /// from the rendered value because the completeness pass needs the fact
     /// rather than the prose.
     pub hpack_unread: usize,
+    /// Spec 1652 (FR-003): the package directories a scan-root `cabal.project`
+    /// or `stack.yaml` declares in `packages:` — scan-root-relative,
+    /// `/`-separated, `.` for the root, sorted and unique. `--project-discovery
+    /// =root-only` makes their main modules in-scope roots.
+    ///
+    /// **Never rendered.** No emitter reads it, so `all` output is unchanged.
+    /// It cannot turn a `None` summary into `Some` either: it is non-empty
+    /// only when a root `cabal.project` or `stack.yaml` was found, and either
+    /// one already makes this summary `Some` (the early return in `finalize`).
+    pub root_declared_member_dirs: Vec<String>,
+}
+
+impl HaskellParseSummary {
+    /// Spec 1652 (FR-006, contracts/wire.md) — C200 names the hpack manifests
+    /// whose package `--project-discovery` dropped.
+    ///
+    /// `candidates` are those packages' manifest paths, each spelled every way
+    /// the scan root can be spelled (raw and canonical): C200's entries are the
+    /// reader's joined paths, and a scan through a symlink makes the two
+    /// differ. An entry of `manifests-read` equal to a candidate is listed,
+    /// sorted, under `manifests-dropped-by-scope`. `manifests-read` itself is
+    /// untouched — the manifest WAS read. Nothing matched inserts nothing, so
+    /// every other C200 value is byte-identical.
+    pub fn amend_scope_dropped(&mut self, candidates: &[PathBuf]) {
+        let Some(serde_json::Value::Object(c200)) = self.hpack_read.as_mut() else {
+            return;
+        };
+        let wanted: BTreeSet<String> = candidates.iter().map(|p| p.display().to_string()).collect();
+        let mut dropped: Vec<String> = c200
+            .get("manifests-read")
+            .and_then(serde_json::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(serde_json::Value::as_str)
+            .filter(|e| wanted.contains(*e))
+            .map(str::to_string)
+            .collect();
+        if dropped.is_empty() {
+            return;
+        }
+        dropped.sort();
+        dropped.dedup();
+        c200.insert("manifests-dropped-by-scope".to_string(), dropped.into());
+    }
 }
 
 pub(crate) fn finalize(
@@ -763,6 +807,18 @@ pub(crate) fn finalize(
     stack_lock_paths.sort();
     stack_yaml_paths.sort();
     package_yaml_paths.sort();
+
+    // Spec 1652 (FR-003): what a root declaration names, resolved against
+    // every package this walk found — before #1032's filter below, which
+    // only removes `.cabal` files a declaration does NOT list.
+    let root_declared_member_dirs = {
+        let package_dirs: Vec<PathBuf> = cabal_paths
+            .iter()
+            .chain(package_yaml_paths.iter())
+            .filter_map(|p| p.parent().map(Path::to_path_buf))
+            .collect();
+        resolve_root_declared_members(rootfs, &cabal_project_paths, &stack_yaml_paths, &package_dirs)
+    };
 
     // Issue #1032 — drop `.cabal` files the governing `cabal.project` does not
     // declare.
@@ -1230,8 +1286,122 @@ pub(crate) fn finalize(
                 Some(hpack_outcome.to_document_value())
             },
             hpack_unread: hpack_outcome.unreadable.len(),
+            root_declared_member_dirs,
         }),
     )
+}
+
+/// Spec 1652 (FR-003, research R4) — the package directories a scan-root
+/// `cabal.project` or `stack.yaml` declares, as `dir_key`s: scan-root-relative,
+/// `/`-separated, `.` for the root. Sorted and unique.
+///
+/// Resolved here, against the package directories this walk discovered, so
+/// the scope filter matches directories exactly and never globs.
+///
+/// - **`cabal.project`** (`packages:` and `optional-packages:`): an entry is a
+///   directory, a directory glob, or a `.cabal` path or glob, which names its
+///   parent directory. Entries are separated by whitespace or commas
+///   (hs-opentelemetry writes `, api` per line). Globs use
+///   `literal_separator(true)`, as #1032 requires.
+/// - **`stack.yaml`** `packages:`: a list of directories. Stack does not glob
+///   them. Absent means Stack's default `[.]`. Read as an untyped value, so a
+///   `stack.yaml` in an older layout cannot break the resolver read that
+///   `StackYaml` serves.
+///
+/// Only files whose parent is `rootfs` count. Both kinds are unioned. Nothing
+/// matched means nothing is returned, so a shape this parser does not
+/// understand leaves `root-only` to fall back rather than empty the document —
+/// #1032's rule.
+fn resolve_root_declared_members(
+    rootfs: &Path,
+    cabal_project_paths: &[PathBuf],
+    stack_yaml_paths: &[PathBuf],
+    package_dirs: &[PathBuf],
+) -> Vec<String> {
+    use globset::GlobBuilder;
+
+    let dir_key = |d: &Path| -> Option<String> {
+        let rel = d.strip_prefix(rootfs).ok()?;
+        let s = rel
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy())
+            .collect::<Vec<_>>()
+            .join("/");
+        Some(if s.is_empty() { ".".to_string() } else { s })
+    };
+    let candidates: BTreeSet<String> = package_dirs.iter().filter_map(|d| dir_key(d)).collect();
+    let at_root = |p: &PathBuf| p.parent() == Some(rootfs);
+    // `./foo/` -> `foo`; `.` / `./` / `` -> `.`.
+    let normalise = |e: &str| -> String {
+        let e = e.trim().trim_end_matches('/');
+        let e = e.strip_prefix("./").unwrap_or(e);
+        if e.is_empty() || e == "." { ".".to_string() } else { e.to_string() }
+    };
+
+    let mut out: BTreeSet<String> = BTreeSet::new();
+
+    for project in cabal_project_paths.iter().filter(|p| at_root(p)) {
+        let Ok(text) = std::fs::read_to_string(project) else {
+            continue;
+        };
+        let Some(entries) = parse_cabal_project_packages(&text) else {
+            continue;
+        };
+        for token in entries.iter().flat_map(|e| e.split(',')) {
+            if token.trim().is_empty() {
+                continue;
+            }
+            let entry = normalise(token);
+            // A `.cabal` entry names the package in its directory.
+            let dir_pattern = if entry.ends_with(".cabal") {
+                match entry.rsplit_once('/') {
+                    Some((dir, _)) => normalise(dir),
+                    None => ".".to_string(),
+                }
+            } else {
+                entry
+            };
+            if dir_pattern == "." {
+                if candidates.contains(".") {
+                    out.insert(".".to_string());
+                }
+                continue;
+            }
+            match GlobBuilder::new(&dir_pattern).literal_separator(true).build() {
+                Ok(g) => {
+                    let m = g.compile_matcher();
+                    out.extend(candidates.iter().filter(|c| m.is_match(c.as_str())).cloned());
+                }
+                Err(_) => {
+                    tracing::debug!(entry = %token, "haskell: unparseable cabal.project packages entry; ignored");
+                }
+            }
+        }
+    }
+
+    for stack in stack_yaml_paths.iter().filter(|p| at_root(p)) {
+        let Ok(text) = std::fs::read_to_string(stack) else {
+            continue;
+        };
+        let Ok(v) = serde_yaml::from_str::<serde_yaml::Value>(&text) else {
+            continue;
+        };
+        let entries: Vec<String> = match v.get("packages") {
+            Some(serde_yaml::Value::Sequence(seq)) => {
+                seq.iter().filter_map(|e| e.as_str().map(str::to_string)).collect()
+            }
+            Some(_) => continue,
+            None => vec![".".to_string()],
+        };
+        for e in entries {
+            let d = normalise(&e);
+            if candidates.contains(&d) {
+                out.insert(d);
+            }
+        }
+    }
+
+    out.into_iter().collect()
 }
 
 // -----------------------------------------------------------------------
@@ -3503,5 +3673,215 @@ tests: True
             &[PathBuf::from("/repo/top.cabal")],
         );
         assert!(got.is_empty());
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod root_declared_members_tests {
+    //! Spec 1652 (FR-003, research R4).
+    use super::*;
+
+    /// A tempdir tree: every `dirs` entry gets a `package.yaml`, `cabal` and
+    /// `stack` (when given) are written at the root, and each `nested` pair is
+    /// written as `(path, text)`.
+    struct Tree {
+        t: tempfile::TempDir,
+        package_dirs: Vec<PathBuf>,
+        cabal_projects: Vec<PathBuf>,
+        stack_yamls: Vec<PathBuf>,
+    }
+
+    fn tree(dirs: &[&str], cabal: Option<&str>, stack: Option<&str>, nested: &[(&str, &str)]) -> Tree {
+        let t = tempfile::tempdir().unwrap();
+        let root = t.path().to_path_buf();
+        let mut package_dirs = Vec::new();
+        for d in dirs {
+            let dir = if *d == "." { root.clone() } else { root.join(d) };
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(dir.join("package.yaml"), "name: waybill-fixture-x\n").unwrap();
+            package_dirs.push(dir);
+        }
+        let mut cabal_projects = Vec::new();
+        let mut stack_yamls = Vec::new();
+        if let Some(c) = cabal {
+            std::fs::write(root.join("cabal.project"), c).unwrap();
+            cabal_projects.push(root.join("cabal.project"));
+        }
+        if let Some(s) = stack {
+            std::fs::write(root.join("stack.yaml"), s).unwrap();
+            stack_yamls.push(root.join("stack.yaml"));
+        }
+        for (p, text) in nested {
+            let path = root.join(p);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, text).unwrap();
+            if p.ends_with("cabal.project") {
+                cabal_projects.push(path);
+            } else {
+                stack_yamls.push(path);
+            }
+        }
+        Tree { t, package_dirs, cabal_projects, stack_yamls }
+    }
+
+    fn resolve(tr: &Tree) -> Vec<String> {
+        resolve_root_declared_members(tr.t.path(), &tr.cabal_projects, &tr.stack_yamls, &tr.package_dirs)
+    }
+
+    fn v(items: &[&str]) -> Vec<String> {
+        items.iter().map(|s| s.to_string()).collect()
+    }
+
+    const PKGS: &[&str] = &["local-packages/a", "local-packages/b", "tools/e"];
+
+    #[test]
+    fn a_directory_glob() {
+        let tr = tree(PKGS, Some("packages: local-packages/*\n"), None, &[]);
+        assert_eq!(resolve(&tr), v(&["local-packages/a", "local-packages/b"]));
+    }
+
+    #[test]
+    fn plain_directories_with_dot_slash() {
+        let tr = tree(PKGS, Some("packages: ./local-packages/a ./tools/e/\n"), None, &[]);
+        assert_eq!(resolve(&tr), v(&["local-packages/a", "tools/e"]));
+    }
+
+    #[test]
+    fn cabal_file_globs_name_their_directory() {
+        let tr = tree(&["code/x", "code/y", "other/z"], Some("packages: code/*/*.cabal\n"), None, &[]);
+        assert_eq!(resolve(&tr), v(&["code/x", "code/y"]));
+        let tr = tree(&["a", "b", "deep/c"], Some("packages: */*.cabal\n"), None, &[]);
+        assert_eq!(resolve(&tr), v(&["a", "b"]), "`*` does not span `/`");
+    }
+
+    #[test]
+    fn dot_is_the_root_package() {
+        let tr = tree(&[".", "sub"], Some("packages: .\n"), None, &[]);
+        assert_eq!(resolve(&tr), v(&["."]));
+    }
+
+    /// hs-opentelemetry's layout.
+    #[test]
+    fn leading_comma_list() {
+        let tr = tree(
+            &["api-types", "api", "sdk", "exporters/otlp"],
+            Some("packages:\n    api-types\n  , api\n  , sdk\n  , exporters/otlp\n"),
+            None,
+            &[],
+        );
+        assert_eq!(resolve(&tr), v(&["api", "api-types", "exporters/otlp", "sdk"]));
+        let tr = tree(&["a", "b"], Some("packages: a, b\n"), None, &[]);
+        assert_eq!(resolve(&tr), v(&["a", "b"]));
+    }
+
+    #[test]
+    fn optional_packages_count() {
+        let tr = tree(PKGS, Some("packages: local-packages/a\noptional-packages: tools/e\n"), None, &[]);
+        assert_eq!(resolve(&tr), v(&["local-packages/a", "tools/e"]));
+    }
+
+    #[test]
+    fn no_packages_field_declares_nothing() {
+        let tr = tree(PKGS, Some("index-state: 2024-01-01T00:00:00Z\n"), None, &[]);
+        assert!(resolve(&tr).is_empty());
+    }
+
+    #[test]
+    fn entries_matching_nothing_give_nothing() {
+        let tr = tree(PKGS, Some("packages: nowhere/*\n"), None, &[]);
+        assert!(resolve(&tr).is_empty());
+    }
+
+    #[test]
+    fn a_nested_declaration_is_not_a_root_declaration() {
+        let tr = tree(PKGS, None, None, &[("tools/cabal.project", "packages: e\n"), ("tools/stack.yaml", "packages: [e]\n")]);
+        assert!(resolve(&tr).is_empty());
+    }
+
+    #[test]
+    fn stack_yaml_directories() {
+        let tr = tree(PKGS, None, Some("resolver: lts-22.0\npackages:\n- local-packages/a\n- ./local-packages/b/\n- missing\n"), &[]);
+        assert_eq!(resolve(&tr), v(&["local-packages/a", "local-packages/b"]));
+    }
+
+    /// Stack's default is `[.]`: the root package only, nothing nested.
+    #[test]
+    fn stack_yaml_without_packages_is_the_root() {
+        let tr = tree(PKGS, None, Some("resolver: lts-22.0\n"), &[]);
+        assert!(resolve(&tr).is_empty(), "no root package to name");
+        let tr = tree(&[".", "local-packages/a"], None, Some("resolver: lts-22.0\n"), &[]);
+        assert_eq!(resolve(&tr), v(&["."]));
+    }
+
+    /// An older layout (`- location: …`) is not a string list; it is skipped,
+    /// and does not disturb anything else.
+    #[test]
+    fn stack_yaml_mapping_entries_are_skipped() {
+        let tr = tree(PKGS, None, Some("packages:\n- location: local-packages/a\n- local-packages/b\n"), &[]);
+        assert_eq!(resolve(&tr), v(&["local-packages/b"]));
+    }
+
+    #[test]
+    fn both_files_union() {
+        let tr = tree(PKGS, Some("packages: local-packages/a\n"), Some("packages: [tools/e]\n"), &[]);
+        assert_eq!(resolve(&tr), v(&["local-packages/a", "tools/e"]));
+    }
+
+    /// The summary carries the directories only when a root declaration
+    /// exists, and a root declaration always makes the summary `Some`, so the
+    /// field never turns a `None` summary into `Some` (T011).
+    #[test]
+    fn summary_is_some_whenever_a_root_declaration_resolves() {
+        let tr = tree(&["local-packages/a"], Some("packages: local-packages/*\n"), None, &[]);
+        let paths = HaskellDiscoveredPaths {
+            cabal_project_paths: tr.cabal_projects.clone(),
+            package_yaml_paths: vec![tr.package_dirs[0].join("package.yaml")],
+            ..Default::default()
+        };
+        let (_, summary) = finalize(tr.t.path(), paths, false, &ExclusionSet::new_empty());
+        let summary = summary.expect("a root cabal.project makes the summary Some");
+        assert_eq!(summary.root_declared_member_dirs, v(&["local-packages/a"]));
+    }
+
+    // ---------------- spec 1652: C200 `manifests-dropped-by-scope` (FR-006) ----------------
+
+    fn summary_with_read(read: &[&str]) -> HaskellParseSummary {
+        HaskellParseSummary {
+            hpack_read: Some(serde_json::json!({
+                "manifests-read": read,
+                "manifests-seen": read,
+            })),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn amend_with_nothing_matched_is_byte_identical() {
+        let mut s = summary_with_read(&["/r/a/package.yaml"]);
+        let before = s.hpack_read.as_ref().unwrap().to_string();
+        s.amend_scope_dropped(&[]);
+        s.amend_scope_dropped(&[PathBuf::from("/r/zzz/package.yaml")]);
+        assert_eq!(s.hpack_read.as_ref().unwrap().to_string(), before);
+    }
+
+    #[test]
+    fn amend_lists_the_dropped_subset_sorted_and_keeps_read() {
+        let mut s = summary_with_read(&["/r/a/package.yaml", "/r/b/package.yaml", "/r/c/package.yaml"]);
+        s.amend_scope_dropped(&[
+            PathBuf::from("/r/c/package.yaml"),
+            PathBuf::from("/private/r/c/package.yaml"),
+            PathBuf::from("/r/a/package.yaml"),
+        ]);
+        let v = s.hpack_read.as_ref().unwrap();
+        assert_eq!(v["manifests-dropped-by-scope"], serde_json::json!(["/r/a/package.yaml", "/r/c/package.yaml"]));
+        assert_eq!(v["manifests-read"].as_array().unwrap().len(), 3, "read is untouched");
+    }
+
+    #[test]
+    fn amend_without_c200_is_a_no_op() {
+        let mut s = HaskellParseSummary::default();
+        s.amend_scope_dropped(&[PathBuf::from("/r/a/package.yaml")]);
+        assert!(s.hpack_read.is_none());
     }
 }

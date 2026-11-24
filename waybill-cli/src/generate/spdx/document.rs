@@ -713,6 +713,7 @@ pub fn build_document(
             target_kind: artifacts.scan_target_kind,
         },
         &m1273_unread,
+        artifacts.project_discovery_dropped,
     )
     .completeness;
 
@@ -1238,6 +1239,7 @@ mod tests {
             collisions_summary: None,
             compiler_pipeline: None,
             project_discovery_mode: None,
+            project_discovery_dropped: None,
             resolve_identity: None,
         }
     }

@@ -65,6 +65,7 @@ directory.
 | **pyproject** (poetry/hatch/setuptools) | Varies per tool                                    | ✅ per-manifest directory | Directory-scoped, same rule                  |
 | **Gemfile**                        | No workspace concept in Ruby                            | ✅ per-`Gemfile.lock` directory | Root-directory gems retained; nested Gemfiles dropped |
 | **Composer / dart / etc.**         | Varies                                                  | ✅ per-manifest directory | Directory-scoped, same rule                  |
+| **Haskell** (cabal, hpack, Stack)  | `packages:` in a root `cabal.project` or root `stack.yaml` | ✅ per-package directory (each package its own) | Declared packages are in-scope roots under `root-only` (spec 1652); not under `strict` |
 
 Ruby has no workspace concept, so `root-only` and `strict` produce
 identical component sets on a Gemfile-only scan.
@@ -77,6 +78,34 @@ are indistinguishable by directory (they share one `Cargo.lock`),
 flag. When no in-scope root carries that flag — single-crate projects,
 virtual manifests, every non-cargo ecosystem — `strict` deliberately
 degrades to `root-only` behaviour rather than inventing a new heuristic.
+
+## Which main modules are in scope (spec 1652)
+
+**Root-level is decided by directory.** A main module is root-level when the directory of its manifest is the scan root, whatever the manifest is called. Before spec 1652 a root `package.yaml`, `*.cabal` or `pubspec.yaml` was never root-level, because only some manifest names were stripped to their directory. Every Haskell repository fell back to a full scan under both modes; on the corpus, 8 targets of 8.
+
+**A nested main module the root depends on is kept**, with its own dependencies and the edges between them, under `root-only` and `strict`. That is what the root builds. One that nothing in scope reaches is dropped, along with everything only it reaches.
+
+**A Haskell root declaration sets the scope under `root-only`.** A root `cabal.project` `packages:` (or `optional-packages:`), or a root `stack.yaml` `packages:`, names the project's packages:
+- `cabal.project` accepts directories, directory globs, and `.cabal` paths or globs, separated by whitespace or commas;
+- `stack.yaml` accepts a list of directories, and its default is `[.]`.
+
+The declared packages are in-scope roots. With no root package of any ecosystem, they are the only roots, so the scan does not fall back. A nested package the declaration does not list, and nothing in scope reaches, is dropped. A declaration that matches no package is treated as no declaration. `strict` ignores declarations: it drops workspace members, and a declared package is one.
+
+## What a scoped document says it dropped
+
+When `root-only` or `strict` drops at least one main module, the document says so in three places, identically in all three formats:
+
+| Where | What |
+|---|---|
+| C244 `waybill:project-discovery-dropped` | `{"count":N,"main-modules":[sorted PURLs],"reason":"project-discovery-scope"}` |
+| C104 / C105 `waybill:graph-completeness` / `-reason` | `partial`, with `project-discovery-scope: N project(s) dropped from <ecosystems>`. The graph that remains may be complete; the project is not. In CycloneDX, `compositions[]` claims none of those ecosystems complete. |
+| C200 `waybill:hpack-read-outcome` | `manifests-dropped-by-scope`: the hpack manifests that were read and whose package was dropped. They stay in `manifests-read`. |
+
+None of these appear under `all`, on the fall-back, or when nothing was dropped.
+
+```sh
+jq -r '.metadata.properties[] | select(.name=="waybill:project-discovery-dropped") | .value | fromjson' scan.cdx.json
+```
 
 ## Worked examples
 
@@ -194,13 +223,16 @@ INFO waybill::scan_fs: scan: project-discovery mode complete mode=root-only root
 - `nested_projects_ignored`: count of main-modules that WOULD have been in the
   SBOM under `all` mode but were dropped. This is the operator-visible signal
   of "how much did the scope cap actually change" — non-zero means the mode
-  had a real effect.
+  had a real effect. Since spec 1652 it is the length of C244's list. It used
+  to count every main module outside the root, including ones kept through an
+  edge (go-opentelemetry: 28 reported, 25 dropped).
 
 ## FR-008 fallback: zero root-level manifests
 
 If `--project-discovery=root-only` (or `strict`) runs on a scan root
 that contains ZERO root-level manifests (every project is nested under
-`services/*/{package.json, go.mod, ...}`), waybill emits a WARN log
+`services/*/{package.json, go.mod, ...}`) — and, under `root-only`, no root
+`cabal.project`/`stack.yaml` declaration that names a package — waybill emits a WARN log
 naming the mode and falls back to full-scope emission — the SBOM is
 still produced with the same components it would have under `all`. The
 C140 annotation is NOT emitted on the fallback branch, so consumers can

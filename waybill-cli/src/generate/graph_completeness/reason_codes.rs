@@ -106,6 +106,17 @@ pub enum ReasonCode {
         ecosystem: String,
         count: usize,
     },
+    /// Spec 1652 (FR-005) — `--project-discovery=root-only` or `strict`
+    /// dropped main modules whose manifests were read. The graph that remains
+    /// may be internally complete; the project is not, and saying `complete`
+    /// over a document emptied of a whole ecosystem was #1676.
+    ///
+    /// Detail: the count and the dropped main modules' PURL types, sorted and
+    /// unique. The PURLs themselves are C244 `waybill:project-discovery-dropped`.
+    ProjectDiscoveryScope {
+        count: usize,
+        ecosystems: Vec<String>,
+    },
 }
 
 impl ReasonCode {
@@ -145,6 +156,10 @@ impl ReasonCode {
             ),
             Self::ManifestUnread { ecosystem, count } => format!(
                 "manifest-unread: {count} {ecosystem} manifest(s) found but not read"
+            ),
+            Self::ProjectDiscoveryScope { count, ecosystems } => format!(
+                "project-discovery-scope: {count} project(s) dropped from {}",
+                ecosystems.join(", ")
             ),
         }
     }
@@ -331,5 +346,19 @@ mod tests {
             join_reason_codes(&codes),
             "orphaned-components-detected: 3 component(s) not reachable from root; transitive-edges-unresolvable: pypi"
         );
+    }
+
+    /// Spec 1652 (FR-005).
+    #[test]
+    fn project_discovery_scope_renders() {
+        let c = ReasonCode::ProjectDiscoveryScope {
+            count: 2,
+            ecosystems: vec!["golang".into(), "hackage".into()],
+        };
+        assert_eq!(
+            c.to_reason_string(),
+            "project-discovery-scope: 2 project(s) dropped from golang, hackage"
+        );
+        assert!(!c.to_reason_string().contains(';'), "the detail must not break join_reason_codes");
     }
 }

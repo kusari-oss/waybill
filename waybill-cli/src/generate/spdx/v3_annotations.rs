@@ -1050,6 +1050,11 @@ fn push_document_fields(
         push(out, "waybill:project-discovery-mode", json!(mode.to_string()));
     }
 
+    // Spec 1652 (FR-004): C244, the same canonical string as CycloneDX.
+    if let Some(drop) = scan.project_discovery_dropped {
+        push(out, "waybill:project-discovery-dropped", json!(drop.to_document_value()));
+    }
+
     // Milestone 204 (#554): C123 doc-scope helm image-extraction
     // completeness annotation (SPDX 3). Same emission semantics as
     // the CDX + SPDX 2.3 emitters. Byte-identity preserved for

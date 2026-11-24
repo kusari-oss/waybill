@@ -4558,11 +4558,17 @@ pub async fn execute(
     // `pkg:generic/` root path fires cleanly; C140 is NOT emitted on
     // the fallback branch (`project_discovery_mode_for_artifacts`
     // stays `None`).
-    let project_discovery_mode_for_artifacts:
-        Option<crate::generate::project_discovery::ProjectDiscoveryMode> = {
+    //
+    // Spec 1652: the filtered branch also yields what was dropped (FR-004),
+    // which only that branch can know.
+    let (project_discovery_mode_for_artifacts, project_discovery_dropped, dropped_manifest_candidates): (
+        Option<crate::generate::project_discovery::ProjectDiscoveryMode>,
+        Option<crate::generate::project_discovery::ProjectDiscoveryDrop>,
+        Vec<PathBuf>,
+    ) = {
         let mode = args.project_discovery;
         if mode == crate::generate::project_discovery::ProjectDiscoveryMode::All {
-            None
+            (None, None, Vec::new())
         } else {
             let canonical_root = std::fs::canonicalize(&root_path)
                 .unwrap_or_else(|_| root_path.clone());
@@ -4577,6 +4583,12 @@ pub async fn execute(
                     rels_owned,
                     mode,
                     &canonical_root,
+                    // Spec 1652 (FR-003): a root `cabal.project` /
+                    // `stack.yaml` `packages:` list, as directories.
+                    haskell_parse_summary
+                        .as_ref()
+                        .map(|s| s.root_declared_member_dirs.as_slice())
+                        .unwrap_or(&[]),
                 );
             if report.root_main_modules == 0 {
                 // FR-008 fallback — zero root-level manifests found.
@@ -4596,7 +4608,7 @@ pub async fn execute(
                 );
                 components = out_c;
                 relationships = out_r;
-                None
+                (None, None, Vec::new())
             } else {
                 tracing::info!(
                     mode = %report.mode,
@@ -4607,10 +4619,27 @@ pub async fn execute(
                 );
                 components = out_c;
                 relationships = out_r;
-                Some(mode)
+                // Spec 1652 (FR-006): each dropped main module's manifest,
+                // joined to both spellings of the root (research R7).
+                let candidates: Vec<PathBuf> = report
+                    .dropped_evidence_paths
+                    .iter()
+                    .flat_map(|p| [root_path.join(p), canonical_root.join(p)])
+                    .collect();
+                (
+                    Some(mode),
+                    crate::generate::project_discovery::ProjectDiscoveryDrop::from_report(&report),
+                    candidates,
+                )
             }
         }
     };
+    // Spec 1652 (FR-006): C200 says which manifests it read belong to a
+    // dropped package. A no-op unless something was dropped.
+    let mut haskell_parse_summary = haskell_parse_summary;
+    if let Some(summary) = haskell_parse_summary.as_mut() {
+        summary.amend_scope_dropped(&dropped_manifest_candidates);
+    }
 
     // Issue #363 — operator-asserted license-concluded promotion. Runs
     // AFTER every external enricher (ClearlyDefined, deps.dev) so the
@@ -6330,6 +6359,7 @@ pub async fn execute(
         // `None` under default `All` mode OR under the FR-008 empty-
         // root fallback branch (SC-005 byte-identity gate).
         project_discovery_mode: project_discovery_mode_for_artifacts,
+        project_discovery_dropped: project_discovery_dropped.as_ref(),
     };
     let output_cfg = OutputConfig {
         mikebom_version: crate::version::VERSION,

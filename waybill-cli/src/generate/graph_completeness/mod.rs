@@ -435,6 +435,34 @@ pub fn compute_graph_completeness(
 }
 
 /// Milestone 866 (FR-003) — did Go transitive resolution actually
+/// Spec 1652 (FR-005, contracts/wire.md) — what `--project-discovery`
+/// dropped makes the document's verdict not `complete`.
+///
+/// Applied after classification rather than threaded through it, because it
+/// changes only the verdict and its reasons, never the reachable set, and so
+/// cannot disturb the classifier's invariants. The code is appended after any
+/// `manifest-unread`, and the value follows the classifier's own rule —
+/// reason codes present means `partial` — with one exception: an empty set
+/// that is already `unknown` because a manifest went unread stays `unknown`.
+pub fn apply_scope_drop(
+    mut result: GraphCompletenessResult,
+    scope_drop: Option<&crate::generate::project_discovery::ProjectDiscoveryDrop>,
+) -> GraphCompletenessResult {
+    let Some(drop) = scope_drop else {
+        return result;
+    };
+    result.reason_codes.push(ReasonCode::ProjectDiscoveryScope {
+        count: drop.main_modules.len(),
+        ecosystems: drop.ecosystems.clone(),
+    });
+    let empty_and_unread = result.total_count == 0
+        && result.value == GraphCompletenessValue::Unknown;
+    if !empty_and_unread {
+        result.value = GraphCompletenessValue::Partial;
+    }
+    result
+}
+
 /// Milestone 1273 FR-005 — one reason code for every unread manifest.
 ///
 /// Counts are summed per call rather than per ecosystem pair, and the
@@ -1331,5 +1359,61 @@ mod s1541_containment_tests {
         assert!(only.contains(&node_key(&nested(LIB, BIN))));
         assert!(!only.contains(&node_key(&nested(LIB, LOOSE))), "an unreachable container's copy stays unreachable");
         assert!(!only.contains(&node_key(&nested(LIB, GONE))), "a copy whose container is gone stays unreachable");
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1652_scope_drop_tests {
+    //! Spec 1652: `apply_scope_drop` (FR-005, contracts/wire.md).
+    use super::*;
+
+    fn drop_of(n: usize) -> crate::generate::project_discovery::ProjectDiscoveryDrop {
+        crate::generate::project_discovery::ProjectDiscoveryDrop {
+            main_modules: (0..n).map(|i| format!("pkg:hackage/waybill-fixture-{i}@0.1.0")).collect(),
+            ecosystems: vec!["hackage".to_string()],
+        }
+    }
+
+    #[test]
+    fn scope_drop_none_changes_nothing() {
+        let r = apply_scope_drop(GraphCompletenessResult::trivially_complete(), None);
+        assert_eq!(r.value, GraphCompletenessValue::Complete);
+        assert!(r.reason_codes.is_empty());
+    }
+
+    /// #1676: a document emptied of its Haskell side read `complete`.
+    #[test]
+    fn scope_drop_on_an_empty_set_is_partial() {
+        let r = apply_scope_drop(GraphCompletenessResult::trivially_complete(), Some(&drop_of(2)));
+        assert_eq!(r.value, GraphCompletenessValue::Partial);
+        assert_eq!(
+            join_reason_codes(&r.reason_codes),
+            "project-discovery-scope: 2 project(s) dropped from hackage"
+        );
+    }
+
+    /// contracts/wire.md: an empty set already `unknown` because a manifest
+    /// went unread stays `unknown`, listing both, `manifest-unread` first.
+    #[test]
+    fn scope_drop_with_an_unread_manifest_on_an_empty_set_stays_unknown() {
+        let unread = GraphCompletenessResult::unknown(
+            0,
+            vec![ReasonCode::ManifestUnread { ecosystem: "haskell".into(), count: 1 }],
+        );
+        let r = apply_scope_drop(unread, Some(&drop_of(1)));
+        assert_eq!(r.value, GraphCompletenessValue::Unknown);
+        assert!(matches!(r.reason_codes[0], ReasonCode::ManifestUnread { .. }));
+        assert!(matches!(r.reason_codes[1], ReasonCode::ProjectDiscoveryScope { .. }));
+    }
+
+    #[test]
+    fn scope_drop_on_a_complete_non_empty_graph_is_partial() {
+        let mut complete = GraphCompletenessResult::trivially_complete();
+        complete.total_count = 3;
+        complete.reachable_count = 3;
+        let r = apply_scope_drop(complete, Some(&drop_of(1)));
+        assert_eq!(r.value, GraphCompletenessValue::Partial);
+        assert_eq!(r.reason_codes.len(), 1);
     }
 }

@@ -691,6 +691,7 @@ pub fn build_document(
             target_kind: scan.scan_target_kind,
         },
         &m1273_unread,
+        scan.project_discovery_dropped,
     )
     .completeness;
     let m1069_claims = crate::generate::cyclonedx::compositions::dependency_claims(

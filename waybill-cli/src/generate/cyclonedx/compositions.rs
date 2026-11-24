@@ -147,6 +147,13 @@ pub(crate) fn degraded_ecosystems(
             ReasonCode::ManifestUnread { ecosystem, .. } => {
                 degraded.extend(ecosystem.split(", ").map(str::to_string));
             }
+            // Spec 1652 (FR-005) — an ecosystem `--project-discovery` dropped
+            // projects from is not complete in this document, however the
+            // graph that remains reads. Explicit for the same reason as the
+            // arm above: the `_` arm would drop it silently (#892).
+            ReasonCode::ProjectDiscoveryScope { ecosystems, .. } => {
+                degraded.extend(ecosystems.iter().cloned());
+            }
             _ => {}
         }
     }
@@ -436,6 +443,19 @@ mod tests {
         let c = dependency_claims(&cs, &["golang".into()], Some(&reach), &degraded, &clean_integrity(), false);
         assert!(c.complete.is_empty());
         assert_eq!(c.unknown.len(), 1);
+    }
+
+    /// Spec 1652 (FR-005): an ecosystem `--project-discovery` dropped
+    /// projects from is degraded, so no record claims it complete.
+    #[test]
+    fn a_scope_dropped_ecosystem_is_degraded() {
+        use crate::generate::graph_completeness::{GraphCompletenessResult, ReasonCode};
+        let mut gc = GraphCompletenessResult::trivially_complete();
+        gc.reason_codes.push(ReasonCode::ProjectDiscoveryScope {
+            count: 3,
+            ecosystems: vec!["golang".into(), "hackage".into()],
+        });
+        assert_eq!(degraded_ecosystems(&gc), set(&["golang", "hackage"]));
     }
 
     #[test]
