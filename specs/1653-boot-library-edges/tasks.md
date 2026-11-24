@@ -121,7 +121,7 @@
   - **The `ghc` library:** its edges before are a subset of its edges after, and no `dependsOn` entry is duplicated.
 
   Record per target the boot libraries with edges and the edge counts, before and after (SC-001), against research R2's prediction, in `measurements/after.md`.
-- [ ] T020 Dispatch a verification run without regeneration, and confirm every golden passes. File the follow-up issue for emitting each compiler's full boot-library set (research R3), with the public footer. Mark the tasks and checklist complete, verifying each claim against the diff. Open the PR with `Refs #1688` and the footer.
+- [X] T020 Dispatch a verification run without regeneration, and confirm every golden passes. File the follow-up issue for emitting each compiler's full boot-library set (research R3), with the public footer. Mark the tasks and checklist complete, verifying each claim against the diff. Open the PR with `Refs #1688` and the footer.
 
 ## Dependencies
 
