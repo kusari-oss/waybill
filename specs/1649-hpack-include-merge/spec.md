@@ -165,6 +165,8 @@ Manifests that use neither construct produce the same documents as on `main`.
 - **FR-007 (byte identity)**: Output MUST be byte-identical to `main` for every `package.yaml` that uses neither `!include` nor `<<`.
 
 - **FR-008 (no new field beyond C200)**: The dependency changes appear through the existing component and edge emission. The only document-level change is FR-005's addition to C200, which goes through the same parity path in all three formats.
+- **FR-009 (lowering keeps hpack's names; added at T018's checkpoint)**: A dependency or build-tool name MUST keep its declared spelling, and last-wins MUST apply per exact spelling. A `package:qualifier` entry MUST name the package before the colon, as the `.cabal` reader does. Without this, the manifests FR-003 makes readable suppress generated `.cabal` files that got these identities right, so this spec would regress committed ogmios (`ouroboros-network` → `ouroboros-network:api`) and committed hs-opentelemetry (a duplicate `quickcheck`). Measured in `measurements/probe_lowering.md`; this also fixes #1684.
+- **FR-010 (`when:` as one mapping; added at T018's checkpoint)**: A `when:` written as a single mapping MUST be read as a one-element list, as hpack reads it. Three ogmios manifests made readable by FR-003 use this form and were otherwise `not-a-manifest`.
 
 ### Key Entities
 

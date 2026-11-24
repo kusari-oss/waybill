@@ -28,6 +28,9 @@ Each is a synthetic `waybill-fixture-*` tree, scanned in three formats with pari
 | U3 | `a.yaml` and `b.yaml` include each other | `partial`; `cycle`; terminates |
 | U4 | a chain of 9 includes | `partial`; `too-deep` |
 | U5 | `{deps: !include "x"}` in flow syntax | `partial`; `unsupported-position` |
+| L1 | `QuickCheck >= 2`, `quickcheck < 3`, `Text`, `text` (FR-009) | four names as declared; `QuickCheck` kept, never `quickcheck` alone |
+| L2 | `waybill-fixture-x:sub`, `waybill-fixture-x:other`; build tool `hspec-discover:hspec-discover` (FR-009, #1684) | `waybill-fixture-x`, `hspec-discover`; no name containing `:` |
+| L3 | `when:` as one mapping, `condition: true`, `dependencies: [unix]` (FR-010) | `unix`; `read` |
 | N1 | a manifest with neither construct | byte-identical to `main` (the control against T001's binary) |
 
 ## Unit tests (`hpack.rs`)

@@ -247,7 +247,7 @@ pub(crate) fn build_and_run(
         .expect("haskell registration must be present — we just registered it");
     let paths = extract_paths(haskell_reg);
 
-    finalize(paths, include_dev, exclude_set).0
+    finalize(rootfs, paths, include_dev, exclude_set).0
 }
 
 
@@ -697,7 +697,7 @@ pub fn read(
         stack_yaml_paths: discover_stack_yamls(rootfs, exclude_set),
         package_yaml_paths: discover_package_yamls(rootfs, exclude_set),
     };
-    finalize(paths, include_dev, exclude_set).0
+    finalize(rootfs, paths, include_dev, exclude_set).0
 }
 
 /// Post-walker entry — takes the discovered path lists (from either
@@ -729,6 +729,7 @@ pub struct HaskellParseSummary {
 }
 
 pub(crate) fn finalize(
+    rootfs: &Path,
     paths: HaskellDiscoveredPaths,
     _include_dev: bool,
     _exclude_set: &ExclusionSet,
@@ -986,7 +987,9 @@ pub(crate) fn finalize(
     for path in &package_yaml_paths {
         hpack_outcome.seen.push(path.clone());
         let Some(dir) = path.parent() else { continue };
-        match hpack::read_manifest(path) {
+        let (includes, read) = hpack::read_manifest(path, rootfs);
+        hpack_outcome.includes.extend(includes);
+        match read {
             Ok((mut manifest, unmodelled)) => {
                 for c in unmodelled {
                     // FR-001b — a knowably partial answer that says so.

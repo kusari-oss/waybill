@@ -104,6 +104,7 @@
   Record the killing tests in `MS/mutations.md`. Every mutation must be killed, the source is restored with `cp`, and the binary rebuilt.
 - [ ] T018 [US4] FR-001 measurement (R9): first confirm each no-generated-cabal copy still has 0 hpack-generated `.cabal` (analyze U1). Then scan T003's eight copies with this branch and with T001's binary. Record in `MS/corpus-counts.md`, per target, the manifests moving between `read`, `partial` and `unread`, and the `pkg:hackage` components gained or lost. Run T004's agreement on the four no-generated-cabal copies and record it in `MS/agreement-branch.md`. Every difference is fixed or explained (SC-002).
   - **Checkpoint**: if a count contradicts the spec, amend the spec first.
+- [ ] T018a [US4] Checkpoint outcome (added): T018 found three lowering defects that FR-003 exposes (`MS/probe_lowering.md`). Amend the spec with FR-009 and FR-010. In `HP`, keep the declared spelling and split `package:qualifier` as the `.cabal` reader does (`split_entry`, `merge_entries`), and accept a `when:` written as one mapping. Add cases L1–L3 to `IT` and contracts/wire.md. Then re-run T018's counts and agreement.
 - [ ] T019 [US4] Corpus: dispatch `public-corpus.yml` with `-f branch=1649-hpack-include-merge -f regen_goldens=true`, and confirm the scanned commit.
   - Install only the `hpack-*` goldens from the artifact.
   - Confirm every other golden is byte-identical to the committed one.

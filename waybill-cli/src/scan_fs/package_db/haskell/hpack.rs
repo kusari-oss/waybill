@@ -57,11 +57,20 @@
 //! normalisation would be work in service of matching an artifact this feature
 //! no longer reads.
 //!
+//! # `!include` and merge keys (spec 1649)
+//!
+//! Both are read as hpack reads them, in [`prep`]: an `!include` is spliced
+//! from a file under the scanned root, relative to the file that names it,
+//! and `<<` keys apply with hpack's measured precedence. An include that
+//! cannot be resolved (missing, outside the root, a cycle, too deep, or in
+//! flow syntax) leaves the manifest `partial`, and C200 names it with the
+//! reason.
+//!
 //! # What is not modelled, and is announced instead (FR-001b)
 //!
-//! `!include` and `defaults:`. Both are announced in the emitted document
-//! rather than passed over, so a manifest using one yields a partial answer
-//! that says it is partial.
+//! `defaults:`, and an `!include` that could not be resolved. Both are
+//! announced in the emitted document rather than passed over, so a manifest
+//! using one yields a partial answer that says it is partial.
 //!
 //! They are not the same kind of construct, which the probe also measured.
 //! `!include` resolves from a **sibling file on disk** and needs no network.
@@ -85,6 +94,10 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 
 use super::{CabalManifest, CabalStanza, DeclaredDep, ManifestOrigin, StanzaKind};
+
+mod prep;
+
+pub(crate) use prep::{IncludeOutcome, IncludeResolution};
 
 // ───────────────────────────────────────────────────────────────────────
 // T020 — what the reader could not do (FR-003, FR-001b)
@@ -133,8 +146,8 @@ impl UnreadableReason {
 pub(crate) enum UnmodelledConstruct {
     /// `defaults:`. Resolving it is a network fetch (FR-001c).
     Defaults,
-    /// `!include`. Measured to resolve from a sibling file on disk, so a
-    /// cheaper later win than `Defaults` — but still not modelled here.
+    /// An `!include` that could not be resolved (spec 1649 FR-004); C200's
+    /// `includes-unresolved` says which, and why.
     Include,
 }
 
@@ -171,6 +184,8 @@ pub(crate) struct HpackReadOutcome {
     /// A sibling hpack-generated `*.cabal` suppressed because the manifest is
     /// the source of truth (FR-002).
     pub(crate) suppressed_cabal: Vec<PathBuf>,
+    /// Every `!include` met, resolved or not (spec 1649 FR-005).
+    pub(crate) includes: Vec<IncludeResolution>,
 }
 
 impl HpackReadOutcome {
@@ -182,7 +197,7 @@ impl HpackReadOutcome {
     /// which is a `BTreeMap` here, so a golden can pin the string.
     pub(crate) fn to_document_value(&self) -> serde_json::Value {
         let path = |p: &PathBuf| p.display().to_string();
-        serde_json::json!({
+        let mut v = serde_json::json!({
             "manifests-seen": self.seen.iter().map(path).collect::<Vec<_>>(),
             "manifests-read": self.read.iter().map(path).collect::<Vec<_>>(),
             "manifests-unread": self
@@ -207,7 +222,33 @@ impl HpackReadOutcome {
                 .iter()
                 .map(path)
                 .collect::<Vec<_>>(),
-        })
+        });
+        // Spec 1649 (FR-005, R6): each key only when non-empty, so a scan
+        // with no `!include` keeps its C200 byte-identical (FR-007).
+        let entry = |r: &IncludeResolution| {
+            let mut e = serde_json::json!({
+                "manifest": path(&r.manifest),
+                "file": path(&r.file),
+                "include": r.include,
+            });
+            if let (IncludeOutcome::Unresolved(reason), Some(o)) = (r.outcome, e.as_object_mut()) {
+                o.insert("reason".to_string(), reason.as_str().into());
+            }
+            e
+        };
+        let resolved: Vec<_> =
+            self.includes.iter().filter(|r| r.outcome == IncludeOutcome::Resolved).map(entry).collect();
+        let unresolved: Vec<_> =
+            self.includes.iter().filter(|r| r.outcome != IncludeOutcome::Resolved).map(entry).collect();
+        if let Some(o) = v.as_object_mut() {
+            if !resolved.is_empty() {
+                o.insert("includes-resolved".to_string(), resolved.into());
+            }
+            if !unresolved.is_empty() {
+                o.insert("includes-unresolved".to_string(), unresolved.into());
+            }
+        }
+        v
     }
 }
 
@@ -290,7 +331,31 @@ struct HpackComponent {
     /// evidence and module purposes only.
     #[allow(dead_code)]
     source_dirs: OneOrMany,
+    #[serde(deserialize_with = "one_or_many_when")]
     when: Vec<HpackWhen>,
+}
+
+/// `when:` as hpack accepts it: a list of conditions, or one written as a
+/// single mapping (spec 1649 FR-010, measured in
+/// `measurements/probe_lowering.md`).
+///
+/// The list form is tried first: a derived struct also accepts a sequence,
+/// positionally, so trying the single form first would misread a list.
+fn one_or_many_when<'de, D>(d: D) -> Result<Vec<HpackWhen>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum When {
+        Many(Vec<HpackWhen>),
+        One(HpackWhen),
+    }
+    Ok(match Option::<When>::deserialize(d)? {
+        Some(When::Many(v)) => v,
+        Some(When::One(w)) => vec![w],
+        None => Vec::new(),
+    })
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -311,6 +376,7 @@ struct HpackManifest {
     dependencies: OneOrMany,
     build_tools: OneOrMany,
     flags: BTreeMap<String, HpackFlag>,
+    #[serde(deserialize_with = "one_or_many_when")]
     when: Vec<HpackWhen>,
     library: Option<HpackComponent>,
     internal_libraries: BTreeMap<String, HpackComponent>,
@@ -324,11 +390,18 @@ struct HpackManifest {
 // T021 — parse and lower
 // ───────────────────────────────────────────────────────────────────────
 
+/// A manifest lowered, with the constructs it could not model, or why it was
+/// not read.
+pub(crate) type ManifestRead = Result<(CabalManifest, Vec<UnmodelledConstruct>), UnreadableReason>;
+
 /// Read one `package.yaml` and lower it into the representation the `.cabal`
-/// reader already consumes.
+/// reader already consumes, with every `!include` it met (spec 1649), whether
+/// or not the manifest could be read.
 ///
 /// The parse order is measured, not chosen for tidiness (T004):
 ///
+/// 0. Splice the includes and rename the merge keys ([`prep::prepare`]),
+///    then fold the merges after parsing (spec 1649).
 /// 1. Parse the text to `serde_yaml::Value`. An unresolved `!include` survives
 ///    here as `Value::Tagged` — it is **not** an error at this level.
 /// 2. Walk the `Value` for unmodelled constructs, and *remove* a tagged entry
@@ -340,20 +413,26 @@ struct HpackManifest {
 /// says nothing about `!include`, and would therefore report a *partial*
 /// manifest (FR-001b) as an *unparseable* one (FR-003), telling the operator
 /// to fix a file that is not broken.
-pub(crate) fn read_manifest(
-    path: &Path,
-) -> Result<(CabalManifest, Vec<UnmodelledConstruct>), UnreadableReason> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| UnreadableReason::Unreadable(e.to_string()))?;
+pub(crate) fn read_manifest(path: &Path, root: &Path) -> (Vec<IncludeResolution>, ManifestRead) {
+    let text = match std::fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(e) => return (Vec::new(), Err(UnreadableReason::Unreadable(e.to_string()))),
+    };
+    let (prepared, includes) = prep::prepare(&text, path, root);
+    let any_unresolved = includes.iter().any(|r| r.outcome != IncludeOutcome::Resolved);
+    (includes, parse_prepared(&prepared, any_unresolved))
+}
 
-    let mut value: serde_yaml::Value = serde_yaml::from_str(&text)
+fn parse_prepared(text: &str, any_unresolved: bool) -> ManifestRead {
+    let mut value: serde_yaml::Value = serde_yaml::from_str(text)
         .map_err(|e| UnreadableReason::MalformedYaml(e.to_string()))?;
+    prep::fold_merges(&mut value);
 
     let mut found: Vec<UnmodelledConstruct> = Vec::new();
     if value.get("defaults").is_some_and(|v| !v.is_null()) {
         found.push(UnmodelledConstruct::Defaults);
     }
-    if strip_tagged(&mut value) {
+    if strip_tagged(&mut value) || any_unresolved {
         found.push(UnmodelledConstruct::Include);
     }
     found.sort();
@@ -411,6 +490,11 @@ fn strip_tagged(v: &mut serde_yaml::Value) -> bool {
 }
 
 /// One dependency entry as hpack writes it: `name`, or `name <constraint>`.
+///
+/// The name keeps its declared spelling (spec 1649 FR-009). Hackage names are
+/// case-sensitive, and hpack keeps `QuickCheck` and `quickcheck` as two
+/// entries (`measurements/probe_lowering.md`); the `.cabal` reader has kept
+/// the declared spelling since #943.
 fn split_entry(raw: &str) -> Option<(String, Option<String>)> {
     let t = raw.trim();
     if t.is_empty() {
@@ -424,7 +508,7 @@ fn split_entry(raw: &str) -> Option<(String, Option<String>)> {
         return None;
     }
     Some((
-        name.to_lowercase(),
+        name.to_string(),
         if rest.is_empty() {
             None
         } else {
@@ -440,6 +524,11 @@ fn split_entry(raw: &str) -> Option<(String, Option<String>)> {
 /// a bare entry *discards* a constraint an earlier one declared. Measured
 /// both across the inheritance boundary and within a single list, so this is
 /// one ordered merge rather than a precedence between levels.
+///
+/// The merge key is the name exactly as written, qualifier included, which is
+/// how hpack renders it (FR-009). A `package:qualifier` entry, a sub-library
+/// or a build tool's executable, then names the package before the colon, as
+/// the `.cabal` reader's `parse_build_depends` does.
 fn merge_entries(ordered: &[String]) -> Vec<DeclaredDep> {
     let mut order: Vec<String> = Vec::new();
     let mut chosen: HashMap<String, Option<String>> = HashMap::new();
@@ -454,8 +543,14 @@ fn merge_entries(ordered: &[String]) -> Vec<DeclaredDep> {
     }
     order
         .into_iter()
-        .map(|name| {
-            let range = chosen.get(&name).cloned().flatten();
+        .map(|written| {
+            let range = chosen.get(&written).cloned().flatten();
+            let (name, executable) = match written.split_once(':') {
+                Some((pkg, qual)) if !pkg.is_empty() && !qual.is_empty() => {
+                    (pkg.to_string(), Some(qual.to_lowercase()))
+                }
+                _ => (written, None),
+            };
             DeclaredDep {
                 // Deliberately empty. Mutation M5 — zeroing this field —
                 // SURVIVED, which sent me to look: the cross-stanza fold in
@@ -467,7 +562,7 @@ fn merge_entries(ordered: &[String]) -> Vec<DeclaredDep> {
                 all_ranges: Vec::new(),
                 name,
                 range,
-                executable: None,
+                executable,
             }
         })
         .collect()
