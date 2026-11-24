@@ -1,0 +1,20 @@
+[
+{
+  "directory": "@BUILD@",
+  "command": "/usr/bin/c++ -I@BUILD@/_deps/hdronly-src/include -I@BUILD@/_deps/urldep-src -o CMakeFiles/app.dir/main.cpp.o -c @SRC@/main.cpp",
+  "file": "@SRC@/main.cpp",
+  "output": "CMakeFiles/app.dir/main.cpp.o"
+},
+{
+  "directory": "@BUILD@",
+  "command": "/usr/bin/c++ -I@BUILD@/_deps/urldep-src -o _deps/urldep-build/CMakeFiles/urldep.dir/urldep.cpp.o -c @BUILD@/_deps/urldep-src/urldep.cpp",
+  "file": "@BUILD@/_deps/urldep-src/urldep.cpp",
+  "output": "_deps/urldep-build/CMakeFiles/urldep.dir/urldep.cpp.o"
+},
+{
+  "directory": "@BUILD@",
+  "command": "/usr/bin/c++ -I@BUILD@/_deps/mixedcase-src -o _deps/mixedcase-build/CMakeFiles/mixedcase_lib.dir/mixedcase.cpp.o -c @BUILD@/_deps/mixedcase-src/mixedcase.cpp",
+  "file": "@BUILD@/_deps/mixedcase-src/mixedcase.cpp",
+  "output": "_deps/mixedcase-build/CMakeFiles/mixedcase_lib.dir/mixedcase.cpp.o"
+}
+]

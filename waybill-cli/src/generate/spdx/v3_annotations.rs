@@ -729,6 +729,10 @@ fn push_document_fields(
     if let Some(record) = scan.cmake_fetch_coverage {
         push(out, crate::scan_fs::package_db::cmake::fetches::ANN_CMAKE_FETCH_COVERAGE, json!(record));
     }
+    // C246 (spec 1653).
+    if let Some(record) = scan.cmake_build_tree_coverage {
+        push(out, crate::scan_fs::package_db::cmake::build_tree::ANN_CMAKE_BUILD_TREE_COVERAGE, json!(record));
+    }
     // C237 (spec 1614).
     if let Some(record) = scan.cmake_find_coverage {
         push(out, crate::scan_fs::package_db::cmake::searches::ANN_CMAKE_FIND_COVERAGE, json!(record));

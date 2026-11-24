@@ -770,6 +770,8 @@ spdx23_anno!(c242_spdx23, "waybill:fingerprint-also-matched", component);
 spdx23_anno!(c243_spdx23, "waybill:retiered-from", component);
 // Spec 1652: C244 — what `--project-discovery` dropped.
 spdx23_anno!(c244_spdx23, "waybill:project-discovery-dropped", document);
+spdx23_anno!(c245_spdx23, "waybill:cmake-build-settlement", component);
+spdx23_anno!(c246_spdx23, "waybill:cmake-build-tree-coverage", document);
 spdx23_anno!(c42_spdx23, "waybill:lifecycle-scope", component);
 spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
 spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);

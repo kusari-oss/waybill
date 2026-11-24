@@ -211,6 +211,7 @@ pub struct CycloneDxBuilder {
     /// C229 (spec 1535).
     declared_downloads: Option<String>,
     cmake_fetch_coverage: Option<String>,
+    cmake_build_tree_coverage: Option<String>,
     cmake_find_coverage: Option<String>,
     /// C230 (spec 1536).
     python_owned_binaries: Option<String>,
@@ -318,6 +319,7 @@ impl CycloneDxBuilder {
             bundled_source_trees: None,
             declared_downloads: None,
             cmake_fetch_coverage: None,
+            cmake_build_tree_coverage: None,
             cmake_find_coverage: None,
             python_owned_binaries: None,
             closure_ecosystem_identity: None,
@@ -487,6 +489,12 @@ impl CycloneDxBuilder {
 
     pub fn with_cmake_fetch_coverage(mut self, value: Option<String>) -> Self {
         self.cmake_fetch_coverage = value;
+        self
+    }
+
+    /// C246 (spec 1653).
+    pub fn with_cmake_build_tree_coverage(mut self, value: Option<String>) -> Self {
+        self.cmake_build_tree_coverage = value;
         self
     }
 
@@ -1014,6 +1022,7 @@ impl CycloneDxBuilder {
                 bundled_source_trees: self.bundled_source_trees.as_deref(),
                 declared_downloads: self.declared_downloads.as_deref(),
                 cmake_fetch_coverage: self.cmake_fetch_coverage.as_deref(),
+                cmake_build_tree_coverage: self.cmake_build_tree_coverage.as_deref(),
                 cmake_find_coverage: self.cmake_find_coverage.as_deref(),
                 python_owned_binaries: self.python_owned_binaries.as_deref(),
                 closure_ecosystem_identity: self.closure_ecosystem_identity.as_deref(),

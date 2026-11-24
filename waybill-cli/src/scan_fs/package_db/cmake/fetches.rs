@@ -76,6 +76,9 @@ pub(crate) struct FetchCoverage {
     /// [`merge_into_existing`]: that merge reads a fetch's source files as
     /// where it is declared, and a search file is not a fetch declaration.
     pub(crate) search_evidence: Vec<(String, String)>,
+    /// Spec 1653 (C246): build-tree evidence counts, when `--cmake-build-tree`
+    /// named a tree. Not part of C231.
+    pub(crate) build_tree: Option<super::build_tree::BuildTreeCoverage>,
 }
 
 impl FetchCoverage {
@@ -138,7 +141,7 @@ fn mode_for(dir: &Path, modes: &BTreeMap<PathBuf, TryMode>) -> TryMode {
 
 #[cfg(test)]
 pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageDbEntry>, FetchCoverage) {
-    let (entries, cov, _) = read_declarations(scan_root, files);
+    let (entries, cov, _) = read_declarations(scan_root, files, None);
     (entries, cov)
 }
 
@@ -157,6 +160,10 @@ pub(crate) struct Declarations {
     /// Spec 1618 (#1616): each top-level `project()` in a `CMakeLists.txt`,
     /// with its version (research R1).
     pub(crate) project_decls: Vec<super::projects::ProjectDeclaration>,
+    /// Spec 1653 (FR-007): (build directory index, settlement key) of every
+    /// declaration a build directory owns, so a population or stamp none of
+    /// them accounts for is known to be build-only.
+    pub(crate) build_matched: BTreeSet<(usize, String)>,
 }
 
 /// [`read_fetches`], plus the package searches in the same files, read from
@@ -164,12 +171,14 @@ pub(crate) struct Declarations {
 pub(crate) fn read_declarations(
     scan_root: &Path,
     files: &[PathBuf],
+    build_tree: Option<&super::build_tree::BuildEvidence>,
 ) -> (Vec<PackageDbEntry>, FetchCoverage, Declarations) {
     let mut found = super::searches::FileSearches::default();
     let mut projects: BTreeSet<String> = BTreeSet::new();
     let mut project_decls: Vec<super::projects::ProjectDeclaration> = Vec::new();
     let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
-    let mut cov = FetchCoverage::default();
+    let mut cov = FetchCoverage { build_tree: build_tree.map(|ev| ev.coverage.clone()), ..Default::default() };
+    let mut build_matched: BTreeSet<(usize, String)> = BTreeSet::new();
     // Pre-pass: every file's commands, the mode each directory sets, and
     // whether any file defines a FetchContent-capable provider (R3).
     let mut parsed: Vec<ParsedFile> = Vec::new();
@@ -359,6 +368,12 @@ pub(crate) fn read_declarations(
                 None
             };
             mark(&mut entry, shape, test, &conditions, kept);
+            if let (Some(ev), Some(bt)) = (build_tree, cov.build_tree.as_mut()) {
+                let raw = decl_args.first().map(|a| super::expand_known_vars(a, vars)).unwrap_or_default();
+                if !raw.is_empty() && !raw.contains("${") {
+                    settle_declaration(ev, bt, &mut build_matched, kind, &raw, path, &mut entry);
+                }
+            }
             decls.push(Declaration { kind, name: decl_name, rel: rel.clone(), entry: Some(entry) });
         }
     }
@@ -387,8 +402,52 @@ pub(crate) fn read_declarations(
             "cmake: fetch declarations (spec 1538, 1539)"
         );
     }
-    let decls = Declarations { searches: found.searches, unresolved_searches: found.unresolved, fetch_purls, projects, project_decls };
+    let decls = Declarations {
+        searches: found.searches,
+        unresolved_searches: found.unresolved,
+        fetch_purls,
+        projects,
+        project_decls,
+        build_matched,
+    };
     (entries, cov, decls)
+}
+
+/// Spec 1653 (contracts/settlement.md, effect on the component): settle one
+/// declaration against the build tree, record C245, and bring a *taken* one
+/// into scope. Test scope (spec 1538 R7) outranks it and is kept.
+fn settle_declaration(
+    ev: &super::build_tree::BuildEvidence,
+    bt: &mut super::build_tree::BuildTreeCoverage,
+    matched: &mut BTreeSet<(usize, String)>,
+    kind: FetchKind,
+    raw_name: &str,
+    decl_file: &Path,
+    entry: &mut PackageDbEntry,
+) {
+    use super::build_tree::settle::{self, SettlementState};
+    let key = settle::key(kind, raw_name);
+    for i in ev.owners(decl_file) {
+        matched.insert((i, key.clone()));
+    }
+    let s = settle::settle(ev, kind, raw_name, decl_file);
+    *bt.declarations.entry(s.state.as_str()).or_default() += 1;
+    bt.conflicts += usize::from(s.conflict);
+    bt.signal_disagreements += usize::from(s.signal_disagreement);
+    if s.state == SettlementState::Taken && entry.lifecycle_scope == Some(LifecycleScope::Optional) {
+        entry.lifecycle_scope = None;
+        entry.extra_annotations.remove(ANN_OPTIONAL_DERIVATION);
+    }
+    entry
+        .extra_annotations
+        .insert(super::build_tree::ANN_CMAKE_BUILD_SETTLEMENT.to_string(), super::build_tree::settlement_value(ev, &s, false));
+}
+
+/// A component the build tree says was taken (C245).
+fn taken(e: &PackageDbEntry) -> bool {
+    e.extra_annotations
+        .get(super::build_tree::ANN_CMAKE_BUILD_SETTLEMENT)
+        .is_some_and(|v| v["state"] == "taken")
 }
 
 type Vars = HashMap<String, Option<String>>;
@@ -589,7 +648,15 @@ fn one_per_purl(entries: Vec<Counted>, cov: &mut FetchCoverage) -> Vec<PackageDb
         let mut chains = wrapper_chains(&first);
         let mut sup: Vec<serde_json::Value> =
             first.extra_annotations.get(ANN_SUPERSEDED).and_then(|v| v.as_array().cloned()).unwrap_or_default();
+        let mut settled = first.extra_annotations.get(super::build_tree::ANN_CMAKE_BUILD_SETTLEMENT).cloned();
         for other in group {
+            // Spec 1653 (T019): a component is taken if any declaration is.
+            if let Some(o) = other.extra_annotations.get(super::build_tree::ANN_CMAKE_BUILD_SETTLEMENT) {
+                settled = Some(match settled {
+                    Some(f) => super::build_tree::merge_settlement(&f, o),
+                    None => o.clone(),
+                });
+            }
             crate::scan_fs::also_detected::record("S5", first.purl.as_str(), &mut first.extra_annotations, &other.extra_annotations);
             conds.extend(conditions_of(&other));
             chains.extend(wrapper_chains(&other));
@@ -608,6 +675,15 @@ fn one_per_purl(entries: Vec<Counted>, cov: &mut FetchCoverage) -> Vec<PackageDb
         }
         if !chains.is_empty() {
             first.extra_annotations.insert(ANN_CMAKE_FETCH_WRAPPER.to_string(), serde_json::json!(chains));
+        }
+        if let Some(v) = settled {
+            // A taken declaration merged into an Optional survivor brings it
+            // into scope, as it would have alone (FR-004).
+            if v["state"] == "taken" && first.lifecycle_scope == Some(LifecycleScope::Optional) {
+                first.lifecycle_scope = None;
+                first.extra_annotations.remove(ANN_OPTIONAL_DERIVATION);
+            }
+            first.extra_annotations.insert(super::build_tree::ANN_CMAKE_BUILD_SETTLEMENT.to_string(), v);
         }
         if !sup.is_empty() {
             sup.sort_by_key(|v| (v["file"].as_str().unwrap_or("").to_string(), v["version"].as_str().unwrap_or("").to_string()));
@@ -687,8 +763,10 @@ pub(crate) fn merge_into_existing(entries: &mut Vec<PackageDbEntry>, cov: &mut F
     };
     // Spec 1641 (FR-006): conditional is the presence of a condition, not
     // the scope. A fetch spec 1641 keeps in scope carries C232 and no scope.
+    // Spec 1653 (T019): a fetch the build took is not a fallback to fold away.
     let conditional = |e: &PackageDbEntry| {
         is_fetch(e)
+            && !taken(e)
             && ((e.lifecycle_scope == Some(LifecycleScope::Optional)
                 && e.extra_annotations.get(ANN_OPTIONAL_DERIVATION).and_then(|v| v.as_str()).is_some_and(|d| d.starts_with("cmake-")))
                 || (e.lifecycle_scope.is_none() && e.extra_annotations.contains_key(ANN_CMAKE_FETCH_CONDITIONS)))
