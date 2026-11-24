@@ -16,6 +16,7 @@ Code references are at `main` `614e3c2`.
   - Serialised as a new key, so every existing key, the summary and the table output are unchanged.
 - **Rationale:** the only thing missing is exposing the verdict the rule already computes, so the two cannot disagree (SC-001).
 - **Alternative:** a boolean `passes`. Rejected: it cannot say "not checked", and that is how the expectation came to be read as the result.
+- **Implemented (I1):** the rule lives in one function, `parity::verdict::row_verdict`. `parity-check` uses it for both the field and the count. `tests/holistic_parity.rs` keeps its own per-directionality checks for their detailed messages, and asserts per row that its outcome agrees with `row_verdict`. A mutation making `row_verdict` fail every `SymmetricEqual` row failed `holistic_parity` on every fixture.
 
 ## R2. The shared helper (FR-003, FR-004)
 

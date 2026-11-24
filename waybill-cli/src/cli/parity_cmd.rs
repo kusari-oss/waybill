@@ -26,6 +26,7 @@ use serde_json::Value;
 
 use waybill::parity::catalog::{parse_mapping_doc, CatalogRow, Format, FormatCoverage};
 use waybill::parity::extractors::{Directionality, ParityExtractor, EXTRACTORS};
+use waybill::parity::verdict::{row_verdict, Verdict};
 
 /// Args for `waybill sbom parity-check`.
 #[derive(Args, Debug)]
@@ -80,6 +81,10 @@ pub struct CoverageRowReport {
     pub spdx23: CoverageStatus,
     pub spdx3: CoverageStatus,
     pub universal_parity: bool,
+    /// Spec 1654: `pass`, `fail` or `not-checked` — the row's result under
+    /// its directionality. `universal_parity` is the catalog's expectation,
+    /// not the result.
+    pub verdict: String,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -311,45 +316,23 @@ fn build_report(
         let spdx3_status = coverage_to_status(&classification.spdx3, spdx3_count);
 
         let universal_parity = classification.is_universal_parity();
+        // Spec 1654 (#1695): the per-directionality rule lives in one place,
+        // `parity::verdict::row_verdict`, which `tests/holistic_parity.rs`
+        // is also checked against. A universal row no format carries is
+        // `not-checked` per row and still counts as passing, as before.
+        let verdict = row_verdict(
+            extractor.map(|e| e.directional),
+            universal_parity,
+            &cdx_set,
+            &spdx23_set,
+            &spdx3_set,
+        );
         if universal_parity {
             universal_total += 1;
-            let any_present = !cdx_set.is_empty() || !spdx23_set.is_empty() || !spdx3_set.is_empty();
-            // Apply per-Directionality invariant. Mirrors the logic in
-            // tests/holistic_parity.rs so the CLI subcommand and the
-            // integration test return the same verdict.
-            let invariant_holds = match extractor.map(|e| e.directional) {
-                Some(Directionality::SymmetricEqual) => {
-                    // Skip rows where no format carries data — that's
-                    // an unexercised row, not a gap.
-                    if !any_present {
-                        true
-                    } else {
-                        cdx_set == spdx23_set && spdx23_set == spdx3_set
-                    }
-                }
-                Some(Directionality::CdxSubsetOfSpdx) => {
-                    // CDX may be empty if the scan has no CPEs at all.
-                    cdx_set.is_subset(&spdx23_set) && cdx_set.is_subset(&spdx3_set)
-                }
-                Some(Directionality::PresenceOnly) => {
-                    // Either all 3 carry data, or none do.
-                    if any_present {
-                        !cdx_set.is_empty() && !spdx23_set.is_empty() && !spdx3_set.is_empty()
-                    } else {
-                        true
-                    }
-                }
-                Some(Directionality::CdxOnly) => {
-                    // Only the CDX side is asserted. SPDX sides
-                    // intentionally not parity-checked.
-                    true
-                }
-                None => false,
-            };
-            if invariant_holds {
-                universal_pass += 1;
-            } else {
+            if verdict == Verdict::Fail {
                 gaps += 1;
+            } else {
+                universal_pass += 1;
             }
         } else {
             restricted += 1;
@@ -372,6 +355,7 @@ fn build_report(
             spdx23: spdx23_status,
             spdx3: spdx3_status,
             universal_parity,
+            verdict: verdict.as_str().to_string(),
         });
     }
 
@@ -410,6 +394,7 @@ mod tests {
                 spdx23: CoverageStatus::Present { value_count: 3 },
                 spdx3: CoverageStatus::Present { value_count: 3 },
                 universal_parity: true,
+                verdict: "pass".into(),
             }],
         };
         let mut buf: Vec<u8> = Vec::new();
@@ -439,6 +424,7 @@ mod tests {
                 spdx23: CoverageStatus::Present { value_count: 1 },
                 spdx3: CoverageStatus::Present { value_count: 1 },
                 universal_parity: true,
+                verdict: "fail".into(),
             }],
         };
         let mut buf: Vec<u8> = Vec::new();
@@ -448,5 +434,13 @@ mod tests {
         assert_eq!(v["summary"]["parity_gaps"], json!(1));
         assert_eq!(v["rows"][0]["row_id"], json!("A1"));
         assert_eq!(v["rows"][0]["cdx"]["kind"], json!("absent"));
+        // Spec 1654: the verdict is one added key; every existing key stays.
+        let keys: BTreeSet<&str> = v["rows"][0].as_object().unwrap().keys().map(String::as_str).collect();
+        assert_eq!(
+            keys,
+            BTreeSet::from(["row_id", "label", "section", "directional", "cdx", "spdx23", "spdx3", "universal_parity", "verdict"])
+        );
+        assert_eq!(v["rows"][0]["verdict"], json!("fail"));
+        assert_eq!(v["rows"][0]["universal_parity"], json!(true), "the expectation, unchanged");
     }
 }

@@ -17,7 +17,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Commit the FR-001 measurements already taken:
+- [X] T001 Commit the FR-001 measurements already taken:
   - `specs/1654-parity-verdict/measurements/{golden-gaps-before.md, golden-failing-rows-before.md, test-failing-rows-before.md, golden_parity.sh}`.
 
   Add a note to `golden-failing-rows-before.md`: the instrument was temporary and is not in the tree (`git diff main -- waybill-cli/src/cli/parity_cmd.rs` is empty).
@@ -28,16 +28,16 @@
 
 **Independent test:** on a scan directory where one row is removed from SPDX 3, that row reads `fail`, and the `fail` count equals `summary.parity_gaps`.
 
-- [ ] T002 [US1] Write the failing unit tests in `waybill-cli/src/cli/parity_cmd.rs`'s test module:
+- [X] T002 [US1] Write the failing unit tests in `waybill-cli/src/cli/parity_cmd.rs`'s test module:
   - a `SymmetricEqual` row with equal sets is `pass`, and with differing sets is `fail`;
   - a universal row no format carries is `not-checked`, and still counts in `universal_parity_rows_passing`;
   - a non-universal row is `not-checked`;
   - `CdxSubsetOfSpdx` and `PresenceOnly` follow their rules;
   - the number of `fail` rows equals `summary.parity_gaps`;
   - the serialised row keeps every existing key with unchanged values, `verdict` included (contract).
-- [ ] T003 [US1] Add `verdict: String` (`pass`, `fail`, `not-checked`) to `CoverageRowReport` in `waybill-cli/src/cli/parity_cmd.rs`, set in the branch that increments `universal_pass` or `gaps`. The table renderer is untouched. Make T002 green.
+- [X] T003 [US1] Add `verdict: String` (`pass`, `fail`, `not-checked`) to `CoverageRowReport` in `waybill-cli/src/cli/parity_cmd.rs`, set in the branch that increments `universal_pass` or `gaps`. The table renderer is untouched. Make T002 green.
   - **I1, the rule exists twice:** `tests/holistic_parity.rs` (lines 146–190) keeps its own copy of the per-directionality rule. Add a unit test that runs both on the same synthetic sets, one per directionality, both passing and failing, and asserts they agree. Or make `holistic_parity` read `parity-check`'s verdict. Record which in research R1.
-- [ ] T004 [US1] Update `specs/1654-parity-verdict/measurements/golden_parity.sh` to list rows by `verdict == "fail"` instead of inferring them from counts. Report G1 in its own column as "masking (R3)", so it is never mistaken for a defect. Run it on all goldens, and confirm it reproduces `golden-failing-rows-before.md` exactly: the same 80 rows (SC-001). Save the output as `measurements/golden-failing-rows-verdict.md`.
+- [X] T004 [US1] Update `specs/1654-parity-verdict/measurements/golden_parity.sh` to list rows by `verdict == "fail"` instead of inferring them from counts. Report G1 in its own column as "masking (R3)", so it is never mistaken for a defect. Run it on all goldens, and confirm it reproduces `golden-failing-rows-before.md` exactly: the same 80 rows (SC-001). Save the output as `measurements/golden-failing-rows-verdict.md`.
 
 ## Phase 3: User Story 3 — Closure scans and tested fixtures agree across formats (P1)
 

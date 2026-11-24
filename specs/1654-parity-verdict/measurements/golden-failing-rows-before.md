@@ -34,3 +34,5 @@ From a temporary, uncommitted instrument in `cli/parity_cmd.rs` that wrote each 
 | rust-ripgrep | G1 |
 
 Totals: {'A7': 16, 'A8': 1, 'B1': 15, 'B2': 15, 'E1': 5, 'G1': 28}; 80 in all.
+
+The instrument was temporary and is not in the tree: `git diff main -- waybill-cli/src/cli/parity_cmd.rs` was empty when T001 ran.

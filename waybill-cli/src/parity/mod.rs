@@ -26,3 +26,4 @@
 
 pub mod catalog;
 pub mod extractors;
+pub mod verdict;
