@@ -105,7 +105,7 @@
 - [X] T018 [US4] FR-001 measurement (R9): first confirm each no-generated-cabal copy still has 0 hpack-generated `.cabal` (analyze U1). Then scan T003's eight copies with this branch and with T001's binary. Record in `MS/corpus-counts.md`, per target, the manifests moving between `read`, `partial` and `unread`, and the `pkg:hackage` components gained or lost. Run T004's agreement on the four no-generated-cabal copies and record it in `MS/agreement-branch.md`. Every difference is fixed or explained (SC-002). *As built: all 46 manifests read; 49 includes resolved, 0 unresolved; 46 of 46 packages agree with hpack. The checkpoint fired: T018a.*
   - **Checkpoint**: if a count contradicts the spec, amend the spec first.
 - [X] T018a [US4] Checkpoint outcome (added): T018 found three lowering defects that FR-003 exposes (`MS/probe_lowering.md`). Amend the spec with FR-009 and FR-010. In `HP`, keep the declared spelling and split `package:qualifier` as the `.cabal` reader does (`split_entry`, `merge_entries`), and accept a `when:` written as one mapping. Add cases L1–L3 to `IT` and contracts/wire.md. Then re-run T018's counts and agreement. *As built: also found #1685 (a package outside `cabal.project` is emitted) and #1686 (edges fold case-differing names), both pre-existing and filed.*
-- [ ] T019 [US4] Corpus: dispatch `public-corpus.yml` with `-f branch=1649-hpack-include-merge -f regen_goldens=true`, and confirm the scanned commit.
+- [X] T019 [US4] Corpus: dispatch `public-corpus.yml` with `-f branch=1649-hpack-include-merge -f regen_goldens=true`, and confirm the scanned commit. *As built: run 45298296496 at `111b4514`, 174 passed. 24 goldens installed: 21 hpack, plus 3 for `nix-closure-slacklinker`, whose `HUnit` FR-009 stopped minting as `pkg:hackage/hunit`. Every hpack count matches T018. `MS/corpus.md`. The verification dispatch at the final commit follows the PR.*
   - Install only the `hpack-*` goldens from the artifact.
   - Confirm every other golden is byte-identical to the committed one.
   - Trace each hpack golden diff to manifests using `!include` or `<<`, matching T018.
@@ -120,8 +120,8 @@
   - `HP`'s module doc: `!include` is no longer unmodelled; `defaults:` still is;
   - the Haskell reader reference in `docs/reference/` (find the hpack section with grep): includes, merge precedence, the bounds, the C200 keys.
 - [X] T022 [P] `CHANGELOG.md`: a Fixed entry citing #1673 and #1674, built from T018 and T019.
-- [ ] T023 Run the full gate on the final commit, and record in `MS/gate-log.md` the per-target totals, `GATE_RESULT`, the expected line, and that `git diff ea149065 -- Cargo.lock '*Cargo.toml'` is empty.
-- [ ] T024 Close-out: check every task's claim against the tree and `MS/`, note as-built differences inline, and tick each task.
+- [X] T023 Run the full gate on the final commit, and record in `MS/gate-log.md` the per-target totals, `GATE_RESULT`, the expected line, and that `git diff ea149065 -- Cargo.lock '*Cargo.toml'` is empty. *As built: three runs. Run 1 found milestone 1273's include test asserting the old rule (fixed); run 2 hit #1492; run 3 passed, 11,132 / 0. `MS/gate-log.md`.*
+- [X] T024 Close-out: check every task's claim against the tree and `MS/`, note as-built differences inline, and tick each task. *As built: every ticked task's claim was checked against the tree and `MS/`.*
 
 ## Dependencies
 
