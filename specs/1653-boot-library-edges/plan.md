@@ -6,7 +6,7 @@
 ## Summary
 
 **The data:** a committed table, `ghc_boot_dependencies.tsv`, gives each boot library's direct dependencies for each of the 36 GHC releases milestone 966 covers. A probe builds it from GHC's own release bindists (R1).
-- It agrees with nixpkgs' installed package databases in 4 of 4 releases checked.
+- It agrees with nixpkgs' installed package databases in 5 of 5 releases checked, including every compiler output present in CI.
 - It agrees with milestone 966's library sets and versions in 36 of 36.
 
 **The scan:** under `--nix-closure`, a post-pass adds the edges between the boot-library components of the same compiler that the document already contains, and stamps the new per-component row C245 with their source (R4, R5).

@@ -57,7 +57,7 @@
 - [ ] T006 [P] [US1] Write the failing integration tests in a new `waybill-cli/tests/boot_library_edges.rs` (`#![cfg(unix)]`, `mod common;`), using `common::nix_stub::NixStub` over `tests/fixtures/nix_closure_boot_versions/` as `tests/closure_resolved_tier.rs` does:
   - **The positive control (SC-004):** `pkg:hackage/base@<9.10.3's>` → `pkg:hackage/ghc-prim@<9.10.3's>` in CycloneDX `dependencies`, SPDX 2.3 `DEPENDS_ON` and SPDX 3 `dependsOn`.
   - C245 is on every C218 component, and `waybill sbom parity-check` reports no gap.
-  - **SC-002a:** the same scan with `NixStub.store_dir` pointing at a tempdir holding a fake compiler output gives identical edges and C245.
+  - **SC-002a:** the same scan with `NixStub.store_dir` pointing at a tempdir holding a fake compiler output, whose `package.conf.d` declares a different `base` dependency, gives identical edges and C245. This guards against a future change that reads the store: T017's store-reading mutation must fail it.
   - Without `--nix-closure`, no C245 and no new edges.
 - [ ] T007 [US1] Implement `pub(crate) fn apply(components: &mut [ResolvedComponent], relationships: &mut Vec<Relationship>) -> BootEdgeSummary` in `waybill-cli/src/resolve/boot_library_edges.rs`, per research R4:
   - group by the C218 value, whose release is the value with `ghc-` or `ghc-binary-` stripped;
@@ -109,11 +109,16 @@
   - the classifier never pushes;
   - the `compositions` arm is removed;
   - C245 is not emitted in SPDX 3;
-  - `absent` is never filled.
+  - `absent` is never filled;
+  - the pass reads the fake store output's `package.conf.d` when present (it must fail the SC-002a test).
 - [ ] T018 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm `GATE_RESULT=pass`, the expected line, and every per-target `test result: ok. N passed; 0 failed`.
 - [ ] T019 Push, then dispatch the corpus with `regen_goldens=true`. Enumerate every job's conclusion and confirm the run scanned the branch head. Download the regenerated goldens and commit them. Trace every golden diff with a normalised, sorted diff, as SC-005 requires:
   - only the five closure goldens change;
-  - only by edges between C218 components, C245, C104/C105 and `compositions[]`.
+  - only by edges between C218 components, C245, C104/C105 and `compositions[]`, plus the orphan classification that follows: `waybill:orphan-reason` on a boot library that gains an incoming edge, and C105's orphan count. Each such change is traced to a specific new edge (spec US3 scenario 2).
+
+  Also assert and record:
+  - **SC-002:** for each golden and compiler, `base`'s `dependsOn` equals the table's `depends` for that release, filtered to components present.
+  - **The `ghc` library:** its edges before are a subset of its edges after, and no `dependsOn` entry is duplicated.
 
   Record per target the boot libraries with edges and the edge counts, before and after (SC-001), against research R2's prediction, in `measurements/after.md`.
 - [ ] T020 Dispatch a verification run without regeneration, and confirm every golden passes. File the follow-up issue for emitting each compiler's full boot-library set (research R3), with the public footer. Mark the tasks and checklist complete, verifying each claim against the diff. Open the PR with `Refs #1688` and the footer.

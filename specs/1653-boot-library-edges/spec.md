@@ -69,7 +69,7 @@ A consumer walks a closure document's dependency graph, for reachability or vuln
 
 ---
 
-### User Story 2 - A boot library whose dependencies are unknown is not presented as complete (Priority: P1)
+### User Story 2 - A boot library whose dependencies are unknown or incomplete is not presented as complete (Priority: P1)
 
 When the dependencies of one or more boot libraries cannot be established, because the table has no entry for that compiler's release or for that library, the document's graph-completeness verdict is not `complete`. The reason says how many boot libraries, and in which ecosystem.
 
@@ -77,9 +77,9 @@ When the dependencies of one or more boot libraries cannot be established, becau
 
 **Acceptance Scenarios**:
 
-1. **Given** a closure where some boot library's dependencies are unknown, **When** scanned, **Then** `waybill:graph-completeness` is not `complete`, and its reason names the count of such boot libraries and their ecosystem.
+1. **Given** a closure where some boot library's dependencies are unknown (not in the table) or incomplete (known, but naming a library that is not a component, research R3), **When** scanned, **Then** `waybill:graph-completeness` is not `complete`, and its reason names the count of such boot libraries and their ecosystem.
 2. **Given** CycloneDX output for that scan, **When** `compositions[]` is read, **Then** no record claims those components' ecosystem complete. The completeness pass and `compositions[]` agree, through an explicit case, not a wildcard.
-3. **Given** a closure where every boot library's dependencies are established, including those that truly have none, **When** scanned, **Then** no such reason is emitted.
+3. **Given** a closure where every boot library's dependencies are in the table and every one names a component of the document, including those that truly have none, **When** scanned, **Then** no such reason is emitted.
 4. **Given** a boot library that truly depends on nothing in the source (`rts`, for example), **When** scanned, **Then** it is a known leaf, not an unknown one.
 
 ---
@@ -89,14 +89,19 @@ When the dependencies of one or more boot libraries cannot be established, becau
 **Acceptance Scenarios**:
 
 1. **Given** any scan without `--nix-closure`, **When** compared with `main`, **Then** it is byte-identical.
-2. **Given** a closure scan, **When** compared with `main`, **Then** the only differences are the added boot-library edges, their provenance, and the completeness reason and `compositions[]` where it applies. Component sets, versions, tiers and every other edge are unchanged.
+2. **Given** a closure scan, **When** compared with `main`, **Then** the only differences are:
+   - the added boot-library edges and their provenance;
+   - the completeness reason and `compositions[]`, where they apply;
+   - their consequences for orphan classification: `waybill:orphan-reason` on a boot library that gains an incoming edge, and C105's `orphaned-components-detected` count. Orphan classification runs after the new pass, so each such change must trace to a specific new edge.
+
+   Component sets, versions, tiers, scopes and every other edge are unchanged.
 3. **Given** the five closure targets, **When** invariant I11 and the other corpus invariants are evaluated, **Then** they pass as before.
 
 ### Edge Cases
 
 - **The bootstrap compiler's output is absent on every target.** The table covers its release like any other, so its boot libraries get edges without the output being present.
 - **The table disagrees with a package database present in CI** (nixpkgs patching a boot library's dependencies, for example). That is found by FR-001's check and recorded in the plan's measurements. It is never resolved at scan time, because scans read only the table.
-- **A dependency is recorded by unit id** in a release's package database (`ghc-prim-0.12.0`). The table keeps the library name, and the edge goes to the component of that name from the same compiler. The version is the one milestone 966's table already gives that library in that release. When the two tables disagree on a version for the same release, the plan records it, and the edge is still drawn by name within the compiler.
+- **A dependency is recorded by unit id** in a release's package database (`ghc-prim-0.12.0`). The table keeps the library name, and the edge goes to the component of that name from the same compiler. The version is the one milestone 966's table already gives that library in that release. A version disagreement between the two tables fails the table test, and is settled when the tables are regenerated, never at scan time. Measured today: 0 disagreements across 36 releases.
 - **A boot library appears once per compiler,** and edges are keyed by the compiler (C218), so the two `base` components never share edges.
 - **A dependency outside the boot-library set** (an external library the compiler links). It is not a component, so no edge is drawn (US1 scenario 2).
 - **A compiler release outside the table.** All its boot libraries are unknown, and the reason counts them, whatever the machine's store holds.
@@ -117,7 +122,7 @@ When the dependencies of one or more boot libraries cannot be established, becau
 - **FR-004 (known leaves)**: A boot library whose established dependency list is empty is a known leaf, and does not count as unknown.
 - **FR-005 (completeness)**: When at least one boot library in the document has unknown dependencies, or known dependencies that are not components of the document (research R3), `waybill:graph-completeness` MUST NOT be `complete`. Its reason MUST be a closed-vocabulary code naming the count and the ecosystem. CycloneDX `compositions[]` MUST agree, through an explicit case for the code.
 - **FR-006 (no new network, no new eval)**: Establishing edges MUST NOT fetch, build, evaluate or read anything at scan time beyond what the closure tier already does. The table is committed data embedded in the binary; the probe that builds it runs at development time only.
-- **FR-007 (unchanged otherwise)**: Scans without `--nix-closure` MUST be byte-identical. On closure scans, nothing other than FR-002, FR-003 and FR-005's outputs may change.
+- **FR-007 (unchanged otherwise)**: Scans without `--nix-closure` MUST be byte-identical. On closure scans, nothing other than FR-002, FR-003 and FR-005's outputs, and the orphan classification that follows from the new edges, may change. Scope does not move, because the pass runs after scope propagation and role scope (`scan_cmd.rs` lines 5431–5596).
 - **FR-008 (no new dependencies)**: Zero new Cargo dependencies.
 
 ### Key Entities

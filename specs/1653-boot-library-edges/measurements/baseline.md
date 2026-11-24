@@ -30,7 +30,7 @@ The four releases cover:
 - a nixpkgs source build (`ghc967`, `ghc9103`);
 - both bootstrap compilers the goldens use, or their series (`ghc902Binary`, `ghc984Binary`).
 
-**There are 0 differences in 4 of 4.**
+**There are 0 differences in 5 of 5.** The fifth line is openai's own compiler: the GHC 9.6.6 that its pinned nixpkgs (`2c15aa59`, from `flake.lock` at openai `8a357137`) builds, which is the output present in CI. With 9.10.3 (slack-web, slacklinker), the table is checked against every compiler output present in CI (FR-001).
 
 **The issue's premise was wrong for 9.10.** Its `base` depends on `ghc-internal` and `ghc-prim`, not `ghc-bignum`. 9.6 and earlier depend on `ghc-bignum`, `ghc-prim` and `rts`.
 

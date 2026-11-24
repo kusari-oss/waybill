@@ -2,3 +2,4 @@ bd-9.10.3.json libs 42 42 only-bindist [] only-nixpkgs [] edges 199 199 differ 0
 bd-9.0.2.json libs 35 35 only-bindist [] only-nixpkgs [] edges 155 155 differ 0
 bd-9.6.7.json libs 37 37 only-bindist [] only-nixpkgs [] edges 179 179 differ 0
 bd-9.8.4.json libs 37 37 only-bindist [] only-nixpkgs [] edges 175 175 differ 0
+9.6.6.json libs 37 37 only-bindist [] only-nixpkgs [] edges 179 179 differ 0   # openai's own compiler: nixpkgs 2c15aa59 (openai@8a357137 flake.lock), /nix/store/4b0ycfpi0fi7za3nhd407dgv6pnk0q3j-ghc-9.6.6
