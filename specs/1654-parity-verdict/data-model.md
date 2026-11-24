@@ -28,6 +28,8 @@ Otherwise the edge is runtime (B1).
 
 Each pass rewrites only edges still `DependsOn`, so the passes take precedence in order.
 
+Pass 3 only has an effect when the function runs after `closure_role_scope::assign_role_scope` has set `artifact_presence`, so it is called again there (research R4).
+
 ## E1, an ecosystem completeness claim
 
 | format | present iff |
@@ -41,6 +43,7 @@ Each pass rewrites only edges still `DependsOn`, so the passes take precedence i
 
 **Asserts:**
 - no row has `verdict == "fail"`;
-- `summary.parity_gaps == 0`.
+- `summary.parity_gaps == 0`;
+- the number of `fail` rows equals `summary.parity_gaps`, which guards the verdict against drifting from the count (SC-001).
 
 **On failure:** it panics with each failing row's ID, label, and the three formats' kind and count.

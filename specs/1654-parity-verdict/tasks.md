@@ -36,6 +36,7 @@
   - the number of `fail` rows equals `summary.parity_gaps`;
   - the serialised row keeps every existing key with unchanged values, `verdict` included (contract).
 - [ ] T003 [US1] Add `verdict: String` (`pass`, `fail`, `not-checked`) to `CoverageRowReport` in `waybill-cli/src/cli/parity_cmd.rs`, set in the branch that increments `universal_pass` or `gaps`. The table renderer is untouched. Make T002 green.
+  - **I1, the rule exists twice:** `tests/holistic_parity.rs` (lines 146–190) keeps its own copy of the per-directionality rule. Add a unit test that runs both on the same synthetic sets, one per directionality, both passing and failing, and asserts they agree. Or make `holistic_parity` read `parity-check`'s verdict. Record which in research R1.
 - [ ] T004 [US1] Update `specs/1654-parity-verdict/measurements/golden_parity.sh` to list rows by `verdict == "fail"` instead of inferring them from counts. Report G1 in its own column as "masking (R3)", so it is never mistaken for a defect. Run it on all goldens, and confirm it reproduces `golden-failing-rows-before.md` exactly: the same 80 rows (SC-001). Save the output as `measurements/golden-failing-rows-verdict.md`.
 
 ## Phase 3: User Story 3 — Closure scans and tested fixtures agree across formats (P1)
@@ -56,19 +57,27 @@
 
 ### Fixes
 
-- [ ] T008 [P] [US3] Unit tests, then the B1/B2 target rule (R4a) in `waybill-cli/src/parity/extractors/cdx.rs`: `cdx_dependency_edges` classifies an edge by its target's `scope` only, with a comment citing research R4's measurement. Tests: an edge from an excluded source to a runtime target is runtime; an edge into an excluded target is dev.
-- [ ] T009 [P] [US3] Unit tests, then pass 3 (R4b) in `apply_lifecycle_scope_to_edges` (`waybill-cli/src/scan_fs/mod.rs`): a `DependsOn` into a component with `artifact_presence.is_absent_from_artifact()` becomes `BuildDependsOn`. Passes 1 and 2 keep precedence. One INFO line with the rewrite count. Tests: precedence over an already-typed edge; no effect without `artifact_presence`.
+- [ ] T008 [P] [US3] Unit tests, then the B1/B2 target rule (R4a) in `waybill-cli/src/parity/extractors/cdx.rs`: `cdx_dependency_edges` classifies an edge by its target's `scope` only, with a comment citing research R4's measurement.
+  - **Tests:** an edge from an excluded source to a runtime target is runtime; an edge into an excluded target is dev.
+  - **C1:** then run every test file that asserts on B1/B2 or calls these extractors. Grep `cdx_dependency_edges`, `runtime_deps`, `dev_deps`, `"B1"` and `"B2"` under `waybill-cli/tests/`, which includes `holistic_parity`, `spdx_cdx_parity`, `spdx3_cdx_parity` and every `transitive_parity_*`. Each stays green, or the failure is traced to R4 before going on.
+- [ ] T009 [P] [US3] Unit tests, then pass 3 (R4b) in `apply_lifecycle_scope_to_edges` (`waybill-cli/src/scan_fs/mod.rs`): a `DependsOn` into a component with `artifact_presence.is_absent_from_artifact()` becomes `BuildDependsOn`. Passes 1 and 2 keep precedence. One INFO line with the rewrite count.
+  - **Call site:** the function's last call in `waybill-cli/src/cli/scan_cmd.rs` (around line 5559) runs **before** `closure_role_scope::assign_role_scope` (around 5602) sets `artifact_presence`. Call `apply_lifecycle_scope_to_edges` once more after `withdraw_scope_runtime_evidence_contradicts` (around 5615), or pass 3 types nothing.
+  - **Unit tests:** precedence over an already-typed edge; no effect without `artifact_presence`.
+  - **Integration assertion,** in `tests/boot_library_edges.rs` or a new closure test: on the stub closure, SPDX 2.3 carries at least one `BUILD_DEPENDENCY_OF` whose target's CycloneDX `scope` is `excluded`. Unit tests alone build `artifact_presence` by hand and cannot catch a wrong call site.
+  - **U2:** confirm that `is_absent_from_artifact()` covers milestone 1277's `unreferenced` members on purpose, and say in the comment and in research R4 that `BUILD_DEPENDENCY_OF` is the nearest SPDX type for a member nix keeps but the artifact does not reference.
 - [ ] T010 [P] [US3] Unit tests, then the E1 rule (R6) in `e1_cdx`, `e1_spdx23` and `e1_spdx3` (`waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`):
   - CycloneDX is present iff a record has `aggregate == "complete"` and non-empty `assemblies`;
   - SPDX is present iff `complete_ecosystems` is non-empty.
 
   Tests include the shellcheck shape: no ecosystem complete, plus the root's dependency-only claim, gives absent in all three.
+  - **C2:** after the change, run T004's `golden_parity.sh` on all goldens. E1 still passes on the 23 non-closure goldens, and passes on the five closures.
 - [ ] T011 [US3] Implement R7 at the site T006 found: CycloneDX `metadata.component` carries the same `waybill:*` properties the root carries elsewhere. A unit test pins `source-type`, `evidence-kind`, the closure role and the scope source.
 - [ ] T012 [US3] Implement R8 at the site T005 found, with a unit test.
 - [ ] T013 [US3] Implement each closure A7 decision from T007, with unit tests. Where a shape is format-restricted, record the reason in that row's `docs/reference/sbom-format-mapping.md` entry, and keep the catalog classification consistent: the lib-target gate.
 - [ ] T014 [US3] Verify, without the helper:
-  - Run `parity-check` on a `--nix-closure` scan of `tests/fixtures/nix_closure_boot_versions` (through a temporary uncommitted test using `NixStub`, as spec 1653's T014 did) and on each closure golden regenerated locally where possible. The closure goldens are Linux-only, so the regeneration in T021 is the authoritative check.
-  - Confirm 0 `fail` rows on the stub scan, and record it in `measurements/after.md`.
+  - Run `parity-check` on a `--nix-closure` scan of `tests/fixtures/nix_closure_boot_versions`, through a temporary uncommitted test using `NixStub`, as spec 1653's T014 did.
+  - Confirm 0 `fail` rows, and record it in `measurements/after.md`.
+  - **The five closure goldens are not checked here.** They are Linux-only (a Darwin closure differs), so the CI regeneration in T021 and T022 is their check.
 
 ## Phase 4: User Story 2 — Test parity assertions can fail (P1)
 
@@ -76,7 +85,7 @@
 
 **Independent test:** each of the eleven files fails when one format's value of a row it exercises is removed.
 
-- [ ] T015 [US2] Create `waybill-cli/tests/common/parity.rs` with `pub fn assert_parity(out_dir: &Path)`, per data-model.md, and register it in `tests/common/mod.rs`. It panics listing each failing row's ID, label, kinds and counts. Put `#[allow(dead_code)]` on the module where test binaries that don't use it would otherwise warn, following `common`'s existing convention.
+- [ ] T015 [US2] Create `waybill-cli/tests/common/parity.rs` with `pub fn assert_parity(out_dir: &Path)`, per data-model.md, with all three assertions (no `fail`; `parity_gaps == 0`; `fail` count equals `parity_gaps`), and register it in `tests/common/mod.rs`. It panics listing each failing row's ID, label, kinds and counts. Put `#[allow(dead_code)]` on the module where test binaries that don't use it would otherwise warn, following `common`'s existing convention.
 - [ ] T016 [US2] Replace each file's own `parity` helper with `common::parity::assert_parity`, deleting the old helper:
   - `binary_kind_technique`, `closure_resolved_tier`, `hpack_include_merge`, `library_identity`, `merged_binary_evidence`;
   - `project_discovery_haskell`, `sbom_edit_retier`, `version_string_anchored`, `version_string_boundary`, `version_string_static`;

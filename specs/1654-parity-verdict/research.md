@@ -73,6 +73,8 @@ A12 (CPE) and D1 (identity evidence) differ in counts on many goldens but **fail
   - Measured as a temporary mutation over all 28 goldens: **no new failing target**, and haskell-security-advisories' B1 and B2 go from failing to passing.
   - Milestone 085's comment explains the target side (Maven puts scope on the target). The source side was milestone 052's original rule, kept by 085 out of caution, and no golden needs it.
 - **(b) The emitter:** `apply_lifecycle_scope_to_edges` gains a third pass. A `DependsOn` into a component with `artifact_presence.is_absent_from_artifact()` becomes `BuildDependsOn` (SPDX `BUILD_DEPENDENCY_OF`).
+  - **Ordering:** `artifact_presence` is set by `closure_role_scope::assign_role_scope` (`scan_cmd.rs` around line 5602), **after** the function's last call (around 5559). So it is called once more after `withdraw_scope_runtime_evidence_contradicts`.
+  - **The type:** `BUILD_DEPENDENCY_OF` is the nearest SPDX type for every artifact-absent member, including milestone 1277's `unreferenced` ones.
   - The same fact makes CycloneDX mark the target `excluded`.
   - It runs after passes 1 and 2, so it never re-types an edge they typed.
 - **Prediction (not measured):** (a) and (b) bring the closure goldens' B1/B2 to 0. The T-task measures it.
