@@ -343,6 +343,38 @@ jq -r '.metadata.properties[] | select(.name=="waybill:ghc-boot-libraries") | .v
 #  "schema":1,"system":"x86_64-linux","table":"2026-11-12"}
 ```
 
+### Boot-library dependency edges (spec 1653)
+
+Under `--nix-closure`, a boot library depends on the boot libraries its
+compiler release records: `base` of GHC 9.10.3 on `ghc-internal` and
+`ghc-prim`, `base` of 9.6.6 on `ghc-bignum`, `ghc-prim` and `rts`. Before
+spec 1653 every boot library was a leaf.
+
+- **Source:** a second committed table, `ghc_boot_dependencies.tsv`, built by
+  `scripts/ghc-boot-dependencies.py` from each release's own x86_64 Linux
+  bindist (`depends:` in `package.conf.d`, or `_DEP_NAMES` in the make-built
+  9.0 and 9.2). It covers the same 36 releases as the version table, and a
+  test fails if the two differ in releases, libraries or versions. No scan
+  reads a package database, from the network or the store, so the same
+  closure gets the same edges on any machine.
+- **Checked:** the bindists' dependencies equal nixpkgs' installed package
+  databases in 5 of 5 releases checked, including every compiler output the
+  closure corpus has present in CI.
+- **Edges:** only between boot libraries of the same compiler (C218), and only
+  to components the document already has. None is synthesised.
+- **Provenance:** C245 `waybill:boot-library-dependencies` on each boot
+  library names the table and its date, and lists the dependencies that are
+  not components (`rts` and `ghc-internal` never are).
+- **Verdict:** a boot library with absent dependencies, or one the table does
+  not cover, is counted by the completeness reason
+  `boot-library-edges-incomplete`. Every closure on the corpus carries it,
+  because `rts` is never a component.
+
+```sh
+jq -r '.components[] | select(.name=="ghc-prim") | .properties[] | select(.name=="waybill:boot-library-dependencies") | .value' app.cdx.json
+# {"absent":["rts"],"source":"ghc-boot-dependencies/2026-11-24"}
+```
+
 This is what lets a vulnerability scanner see them. On the five Haskell
 closure corpus targets, osv-scanner 2.7.0 newly reports HSEC-2023-0007 on
 `base` and HSEC-2026-0006 on the `Cabal` GHC ships, and loses no finding.
