@@ -32,7 +32,16 @@ The plan establishes each reader's exact behaviour before relying on it.
 
 **What reaches the document today:** C140 `waybill:project-discovery-mode` records the mode. The count of dropped projects (`nested_projects_ignored`) appears only in a log line. Completeness is computed on what remains, so a document emptied of its Haskell side can read `complete`.
 
-**The corpus never exercises this.** The four hpack corpus repositories give identical output under `root-only`, because none has a root manifest of another ecosystem, so `root-only` falls back to full scope (`corpus_harness_195/manifest.rs`, #1677). No corpus target is scanned with `--project-discovery`.
+**The corpus never exercises this.** Today the four hpack corpus repositories give identical output under `root-only`, because none has a root main module, so `root-only` falls back to full scope (`corpus_harness_195/manifest.rs`, #1677). No corpus target is scanned with `--project-discovery`.
+
+## Clarifications
+
+### Session 2026-11-24
+
+- Q: Does a root `cabal.project` or `stack.yaml` with `packages:`, and no root package, set `root-only`'s scope? → A: Yes. It is a root declaration: its listed packages become in-scope roots, and unlisted nested packages are dropped and recorded. #1045's fall-back applies only when there is neither a root main module nor a root declaration.
+- Q: Does FR-002 (reachability across main modules) apply to `--project-discovery=strict`? → A: Yes, FR-002 applies to `strict`: a nested main module reached through dependency edges is one of the root's own dependencies and rides along. FR-003 does not apply to `strict`: declared members drop, as cargo members do, and a root declaration does not set `strict`'s scope.
+- Q: What does the drop record name? → A: The count, the reason, and the sorted main-module PURLs of the dropped projects, as one document-level record.
+- Q: How does C200 show a manifest whose package was dropped by scope? → A: The manifest stays under `manifests-read`, and C200 gains a sorted `manifests-dropped-by-scope` list, present only when non-empty.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -61,7 +70,8 @@ A Haskell monorepo declares its packages in a root `cabal.project` (`packages:`)
 
 **Acceptance Scenarios**:
 
-1. **Given** a root `cabal.project` listing `local-packages/*`, and a root manifest of another ecosystem so that `root-only` does not fall back, **When** scanned with `root-only`, **Then** every listed package is kept with its dependencies.
+1. **Given** a root `cabal.project` listing `local-packages/*`, and a root manifest of another ecosystem, **When** scanned with `root-only`, **Then** every listed package is kept with its dependencies.
+4. **Given** a root `cabal.project` listing `local-packages/*` and no root package of any ecosystem, **When** scanned with `root-only`, **Then** the listed packages are the in-scope roots: they are kept with their dependencies, a nested package outside the list is dropped and recorded, and the scan does not fall back to full scope.
 2. **Given** a root `stack.yaml` listing two package directories, **When** scanned, **Then** both are kept.
 3. **Given** a nested package that the root `cabal.project` does **not** list, and that no in-scope root depends on, **When** scanned, **Then** it is dropped.
 
@@ -75,9 +85,9 @@ A consumer reading a `root-only` SBOM can tell how many projects were left out a
 
 **Acceptance Scenarios**:
 
-1. **Given** a `root-only` scan that drops nested projects, **When** the document is read, **Then** it states how many were dropped, and that the reason was project-discovery scope, in all three formats.
+1. **Given** a `root-only` scan that drops nested projects, **When** the document is read, **Then** it states how many were dropped, that the reason was project-discovery scope, and the main-module PURL of each dropped project, sorted, in all three formats.
 2. **Given** that scan, **When** the completeness verdict is read, **Then** it is not `complete`, and its reason names the scope.
-3. **Given** a manifest the Haskell reader read whose package `root-only` then dropped, **When** C200 is read, **Then** C200 does not present it as read without saying it was dropped.
+3. **Given** a manifest the Haskell reader read whose package `root-only` then dropped, **When** C200 is read, **Then** it stays under C200's `manifests-read`, and also appears in C200's sorted `manifests-dropped-by-scope` list. A scan that drops no hpack manifest has no such list, so its C200 value is unchanged.
 4. **Given** a `root-only` scan that drops nothing (every nested project is reached or a member), **When** the document is read, **Then** no drop is recorded, and completeness is computed as today.
 
 ---
@@ -87,9 +97,9 @@ A consumer reading a `root-only` SBOM can tell how many projects were left out a
 **Acceptance Scenarios**:
 
 1. **Given** any scan under the default `--project-discovery=all`, **When** compared with `main`, **Then** it is byte-identical.
-2. **Given** a scan with no root-level manifest of any ecosystem, **When** run with `root-only`, **Then** it falls back to full scope, as today (#1045).
+2. **Given** a scan with neither a root-level main module of any ecosystem nor a root declaration (`cabal.project` or `stack.yaml` with `packages:`), **When** run with `root-only`, **Then** it falls back to full scope, as today (#1045).
 3. **Given** `--split`, which shares the projection, **When** run on the same fixtures, **Then** its output is unchanged.
-4. **Given** `--project-discovery=strict`, **When** run, **Then** its documented behaviour holds: workspace members drop, and only the root project's own dependencies ride along. Any change is decided in the plan and stated.
+4. **Given** `--project-discovery=strict`, **When** run, **Then** its documented behaviour holds: workspace members drop, and the root project's own dependencies ride along. A nested main module the root depends on is one of those dependencies and is kept (FR-002). A package the root only declares is a member and drops (FR-003 does not apply). With no root main module, `strict` falls back to full scope as today, because a root declaration does not set its scope.
 
 ### Edge Cases
 
@@ -107,23 +117,24 @@ A consumer reading a `root-only` SBOM can tell how many projects were left out a
 - **FR-001 (measure first)**: Before the design is fixed, the work MUST establish three things from the code and from scans of the synthetic fixtures:
   - why `root-only` drops a nested main module the root depends on: the projection's sibling demotion, the edge's target, or both;
   - how each reader's components get `waybill:workspace-member`, and what makes a cargo member share the root's directory;
-  - for the corpus targets with nested main modules, how many components `root-only` keeps before and after the change. They are scanned locally with `root-only`, with a root manifest added where needed so that `root-only` does not fall back.
+  - for the corpus targets with nested main modules, how many components `root-only` keeps before and after the change. They are scanned locally with `root-only`, once as they are, which under the Clarification uses a root `cabal.project` or `stack.yaml` as the scope, and, where a target has neither, with a root manifest added so that `root-only` does not fall back.
 
   The counts are recorded.
-- **FR-002 (reachability crosses main modules)**: Under `root-only`, a main module reachable from an in-scope root main module through dependency edges MUST be kept with its own dependencies and the edges between them, in any ecosystem. `--split`'s output MUST NOT change.
-- **FR-003 (declared Haskell members)**: Under `root-only`, a package declared by the root's `cabal.project` `packages:`, or by the root's `stack.yaml` `packages:`, MUST be treated as a member of the root project, as a cargo workspace member is. The declaration forms are the ones the existing `cabal.project` reader parses (#1032).
-- **FR-004 (record the drop)**: When `root-only` drops one or more projects, the document MUST state how many and that project-discovery scope was the reason, identically in CycloneDX, SPDX 2.3 and SPDX 3. Use a standards-native construct first (Principle V); otherwise an existing row, extended compatibly; only failing both, a new row with its parity extractor.
-- **FR-005 (completeness)**: When `root-only` drops projects whose manifests were read, `waybill:graph-completeness` MUST NOT be `complete`, and its reason MUST name the scope.
-- **FR-006 (C200 coherence)**: C200 MUST NOT list a manifest as read without saying its package was dropped by project-discovery scope.
-- **FR-007 (unchanged otherwise)**: Default `all` scans MUST be byte-identical. `root-only`'s fall-back to full scope when no root-level manifest exists (#1045) MUST be kept, and `--split` unchanged.
+- **FR-002 (reachability crosses main modules)**: Under `root-only` and `strict`, a main module reachable from an in-scope root main module through dependency edges MUST be kept with its own dependencies and the edges between them, in any ecosystem. `--split`'s output MUST NOT change.
+- **FR-003 (declared Haskell members)**: Under `root-only` only (not `strict`, which drops members), a package declared by the root's `cabal.project` `packages:`, or by the root's `stack.yaml` `packages:`, MUST be treated as a member of the root project, as a cargo workspace member is. The declaration forms are the ones the existing `cabal.project` reader parses (#1032). A root declaration sets the scope on its own: when there is no root main module, its declared packages are the in-scope roots, and a nested package it does not list is dropped and recorded (FR-004).
+- **FR-004 (record the drop)**: When `root-only` or `strict` drops one or more projects, the document MUST carry one document-level record stating how many, that project-discovery scope was the reason, and the sorted main-module PURLs of the dropped projects, identically in CycloneDX, SPDX 2.3 and SPDX 3. Use a standards-native construct first (Principle V); otherwise an existing row, extended compatibly; only failing both, a new row with its parity extractor.
+- **FR-005 (completeness)**: When `root-only` or `strict` drops projects whose manifests were read, `waybill:graph-completeness` MUST NOT be `complete`, and its reason MUST name the scope.
+- **FR-006 (C200 coherence)**: A manifest whose package was dropped by project-discovery scope MUST stay in C200's `manifests-read` and MUST also be listed, sorted, in a new C200 field, `manifests-dropped-by-scope`. The field is omitted when empty, so every existing C200 value is byte-identical. The C200 parity extractor and catalog row are extended in the same change.
+- **FR-007 (unchanged otherwise)**: Default `all` scans MUST be byte-identical. `root-only`'s fall-back to full scope (#1045) MUST be kept for scans with neither a root main module nor a root declaration, and `--split` unchanged.
 - **FR-008 (no new dependencies)**: Zero new Cargo dependencies.
 
 ### Key Entities
 
 - **In-scope root**: a root-level main module under `root-only`.
 - **Reached main module**: a main module reachable from an in-scope root through dependency edges.
-- **Declared member**: a package listed by the root's `cabal.project` or `stack.yaml` `packages:`.
-- **Drop record**: how many projects `root-only` left out, and why.
+- **Root declaration**: a root `cabal.project` or `stack.yaml` with a `packages:` list. It sets `root-only`'s scope even with no root package.
+- **Declared member**: a package listed by a root declaration.
+- **Drop record**: one document-level record of how many projects `root-only` or `strict` left out, why, and the sorted main-module PURL of each.
 
 ## Success Criteria *(mandatory)*
 
@@ -132,7 +143,7 @@ A consumer reading a `root-only` SBOM can tell how many projects were left out a
 - **SC-001 (fixtures)**: On synthetic `waybill-fixture-*` trees, each acceptance scenario of User Stories 1 to 3 holds in all three formats, and `waybill sbom parity-check` reports no gap. The trees are:
   - a root `package.json` with a nested hpack pair;
   - a root `package.yaml` depending on a nested package, and on a chain;
-  - a root `cabal.project` listing local packages;
+  - a root `cabal.project` listing local packages, with and without a root manifest of another ecosystem;
   - a root `stack.yaml` listing packages;
   - an npm root depending on a nested npm package.
 - **SC-002 (the reproduction)**: The synthetic tree from the Background, under `root-only`, gives the root's dependencies and a recorded drop, and is not `complete`. The nested pair is dropped, because the `package.json` root neither depends on nor declares it. With a root `cabal.project` listing them, they are kept.
@@ -140,7 +151,7 @@ A consumer reading a `root-only` SBOM can tell how many projects were left out a
 - **SC-004 (nothing else)**: Every corpus golden is byte-identical; no corpus target uses `--project-discovery`. `--split` output on the fixtures is unchanged. Default-mode output is byte-identical to `main` on the fixtures.
 - **SC-005 (the counts)**: FR-001's before-and-after counts are recorded for every corpus target with nested main modules.
 - **SC-006 (mutations)**: Each rule is mutated, and each mutation is killed:
-  - reachability across main modules;
+  - reachability across main modules, under `root-only` and `strict` separately;
   - declared members, from `cabal.project` and `stack.yaml` separately;
   - the drop record;
   - completeness;
@@ -149,6 +160,6 @@ A consumer reading a `root-only` SBOM can tell how many projects were left out a
 ## Assumptions
 
 - **`root-only`'s purpose** is "the SBOM of the root project": what it builds and declares, as milestone 220 describes. Dropping independent nested projects stays correct.
-- **`strict` keeps its documented semantics.** FR-002 applies to `root-only`; whether it also applies to `strict` is decided in the plan against `strict`'s contract.
+- **`strict` keeps its documented semantics** (Clarifications): a nested main module reached through edges is one of the root's own dependencies, and a declared package is a member.
 - **#1676's private monorepo** is the motivation, not a measurement surface here. Its figures (85 read, 0 emitted) are cited, not re-measured.
 - **A Nix-only declaration of a monorepo's packages** is out of scope.
