@@ -80,8 +80,19 @@ fn closure_flags() -> Vec<&'static str> {
     v
 }
 
-/// `waybill sbom parity-check` over the three documents; a row is a gap only
-/// if some format carries a value.
+/// The parity gaps a closure scan already has on `main` (measured on this
+/// fixture at `91d84d1`): the dependency-edge rows B1 and B2, whose CycloneDX
+/// count differs structurally from SPDX's, and E1, which CycloneDX carries
+/// natively in `compositions[]`. Tracked separately; this spec adds none.
+const PRE_EXISTING_GAPS: &[&str] = &["B1", "B2", "E1"];
+
+/// `waybill sbom parity-check` over the three documents.
+///
+/// A row's `universal_parity` field says whether the catalog expects the row
+/// in every format, not whether it passed. The verdict is only in
+/// `summary.parity_gaps`, and the per-row report carries presence and counts.
+/// So: every universal row that any format carries must be present, with the
+/// same count, in all three, apart from the gaps `main` already has.
 fn parity(out_dir: &Path) {
     let out = Command::new(common::bin())
         .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
@@ -90,14 +101,23 @@ fn parity(out_dir: &Path) {
         .unwrap();
     let report: Value = serde_json::from_slice(&out.stdout)
         .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
+    let formats = ["cdx", "spdx23", "spdx3"];
     let gaps: Vec<&Value> = report["rows"]
         .as_array()
         .unwrap()
         .iter()
-        .filter(|r| r["universal_parity"] == false)
-        .filter(|r| ["cdx", "spdx23", "spdx3"].iter().any(|f| r[*f]["kind"] == "present"))
+        .filter(|r| r["universal_parity"] == true)
+        .filter(|r| formats.iter().any(|f| r[*f]["kind"] == "present"))
+        .filter(|r| {
+            let kinds: BTreeSet<String> = formats.iter().map(|f| r[*f]["kind"].to_string()).collect();
+            let counts: BTreeSet<String> = formats.iter().map(|f| r[*f]["value_count"].to_string()).collect();
+            kinds.len() > 1 || counts.len() > 1
+        })
+        .filter(|r| !PRE_EXISTING_GAPS.contains(&r["row_id"].as_str().unwrap_or("")))
         .collect();
     assert!(gaps.is_empty(), "parity gaps: {gaps:#?}");
+    let reported = report["summary"]["parity_gaps"].as_u64().unwrap() as usize;
+    assert!(reported <= PRE_EXISTING_GAPS.len(), "parity-check reports {reported} gaps: {:#?}", report["summary"]);
 }
 
 fn components(cdx: &Value) -> Vec<&Value> {

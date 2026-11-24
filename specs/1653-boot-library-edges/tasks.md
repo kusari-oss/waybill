@@ -90,12 +90,12 @@
 ## Phase 5: User Story 3 — Nothing else changes (Priority: P2)
 
 - [X] T013 [US3] Run `cargo test -p waybill --test closure_resolved_tier --test nix_closure_boot_versions` (and every other test file that drives `NixStub`; grep `nix_stub` under `waybill-cli/tests/`). Update an assertion only where the new edges, C245 or the reason are the explanation, and record each one in the test's doc comment.
-- [ ] T014 [US3] Byte identity without `--nix-closure`: build `main` in a worktree, scan two non-closure fixtures in three formats with both binaries, mask UUIDs and timestamps, and `diff -r` to 0 differences. Add a positive control: the stub closure scan differs. Record it in `specs/1653-boot-library-edges/measurements/after.md`.
+- [X] T014 [US3] Byte identity without `--nix-closure`: build `main` in a worktree, scan two non-closure fixtures in three formats with both binaries, mask UUIDs and timestamps, and `diff -r` to 0 differences. Add a positive control: the stub closure scan differs. Record it in `specs/1653-boot-library-edges/measurements/after.md`.
 
 ## Phase 6: Polish & cross-cutting
 
-- [ ] T015 [P] Update C105's row in `docs/reference/sbom-format-mapping.md` to the 12-code vocabulary with the new template. Update the nix closure documentation that describes milestone 966 (grep `boot-library-compiler` under `docs/`) with the edges and C245.
-- [ ] T016 [P] Add a CHANGELOG entry under Unreleased → Fixed. It covers:
+- [X] T015 [P] Update C105's row in `docs/reference/sbom-format-mapping.md` to the 12-code vocabulary with the new template. Update the nix closure documentation that describes milestone 966 (grep `boot-library-compiler` under `docs/`) with the edges and C245.
+- [X] T016 [P] Add a CHANGELOG entry under Unreleased → Fixed. It covers:
   - the edges and their source;
   - the corrected premise: 9.10's `base` depends on `ghc-internal`;
   - C245;
@@ -103,7 +103,7 @@
   - that every closure document now reads `partial`, and why (`rts`, `ghc-internal`).
 
   Refs #1688.
-- [ ] T017 Mutations, each via a `cp` backup, rebuild, the targeted tests (which must fail), restore and rebuild. Recorded in `measurements/after.md`:
+- [X] T017 Mutations, each via a `cp` backup, rebuild, the targeted tests (which must fail), restore and rebuild. Recorded in `measurements/after.md`:
   - `depends()` returns `None`;
   - the compiler key is ignored (match by name only, across compilers);
   - the classifier never pushes;
