@@ -47,8 +47,8 @@
 
 ### Measure first (R7, R8, closure A7)
 
-- [ ] T005 [P] [US3] Trace R8 on one binary test (for example `version_string_static`): keep its scan directory, and find why SPDX 2.3 lacks the synthetic root → bundled `.so` edge that CycloneDX and SPDX 3 carry. Check whether it is emitted under another relationship type, or skipped for file-tier targets, in `waybill-cli/src/generate/spdx/relationships.rs`. Record the cause and the fix site in `research.md` R8.
-- [ ] T006 [P] [US3] Trace R7: find where CycloneDX `metadata.component`'s properties are built (`waybill-cli/src/generate/cyclonedx/metadata.rs` or `builder.rs`), and why only `component-role`, `sbom-tier`, `source-files` and `workspace-member` survive when the root is not also in `components[]`. List which goldens' roots are only in `metadata.component`. Record it in `research.md` R7.
+- [X] T005 [P] [US3] Trace R8 on one binary test (for example `version_string_static`): keep its scan directory, and find why SPDX 2.3 lacks the synthetic root → bundled `.so` edge that CycloneDX and SPDX 3 carry. Check whether it is emitted under another relationship type, or skipped for file-tier targets, in `waybill-cli/src/generate/spdx/relationships.rs`. Record the cause and the fix site in `research.md` R8.
+- [X] T006 [P] [US3] Trace R7: find where CycloneDX `metadata.component`'s properties are built (`waybill-cli/src/generate/cyclonedx/metadata.rs` or `builder.rs`), and why only `component-role`, `sbom-tier`, `source-files` and `workspace-member` survive when the root is not also in `components[]`. List which goldens' roots are only in `metadata.component`. Record it in `research.md` R7.
 - [ ] T007 [P] [US3] Trace closure A7 on the five closure goldens:
   - classify every differing declared-licence value by shape (CycloneDX individual IDs against SPDX expression, `LicenseRef` text, SPDX 3 missing a value, other) with counts per target;
   - for each shape, name the emitter or extractor that is wrong.
@@ -71,8 +71,8 @@
 
   Tests include the shellcheck shape: no ecosystem complete, plus the root's dependency-only claim, gives absent in all three.
   - **C2:** after the change, run T004's `golden_parity.sh` on all goldens. E1 still passes on the 23 non-closure goldens, and passes on the five closures.
-- [ ] T011 [US3] Implement R7 at the site T006 found: CycloneDX `metadata.component` carries the same `waybill:*` properties the root carries elsewhere. A unit test pins `source-type`, `evidence-kind`, the closure role and the scope source.
-- [ ] T012 [US3] Implement R8 at the site T005 found, with a unit test.
+- [X] T011 [US3] Implement R7 at the site T006 found: CycloneDX `metadata.component` carries the same `waybill:*` properties the root carries elsewhere. A unit test pins `source-type`, `evidence-kind`, the closure role and the scope source.
+- [X] T012 [US3] Implement R8 at the site T005 found, with a unit test.
 - [ ] T013 [US3] Implement each closure A7 decision from T007, with unit tests. Where a shape is format-restricted, record the reason in that row's `docs/reference/sbom-format-mapping.md` entry, and keep the catalog classification consistent: the lib-target gate.
 - [ ] T014 [US3] Verify, without the helper:
   - Run `parity-check` on a `--nix-closure` scan of `tests/fixtures/nix_closure_boot_versions`, through a temporary uncommitted test using `NixStub`, as spec 1653's T014 did.

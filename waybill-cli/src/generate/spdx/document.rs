@@ -367,12 +367,13 @@ fn sweep_extracted_license_refs(
 
 /// Assemble the SPDX 2.3 document envelope from a scan.
 ///
-/// (T025) Picks a deterministic root: if the scan carries exactly
-/// one top-level component (no `parent_purl` on that entry, nothing
-/// else top-level), that component is the `documentDescribes`
-/// target; otherwise a synthetic `SPDXRef-DOCUMENT-ROOT`-style
-/// Package is synthesized so consumers always have exactly one
-/// described root (spec edge case "Multiple roots / no root").
+/// (T025) Picks a deterministic root: the selector's main module or
+/// override when there is one, else the top-level component named after
+/// the scan target, else a synthetic `SPDXRef-DocumentRoot-…` Package,
+/// so consumers always have exactly one described root (spec edge case
+/// "Multiple roots / no root"). Since spec 1654 a lone top-level
+/// component no longer becomes the root by itself, matching CycloneDX
+/// and SPDX 3.
 ///
 /// The synthetic-root path is exercised by the pip + gem + deb +
 /// apk fixtures which each have multiple independent components but
@@ -525,11 +526,11 @@ pub fn build_document(
                 let (id, root) = synthesize_root(artifacts.target_name, &namespace);
                 (vec![id], Some(root))
             }
-            1 => {
-                let idx = top_level[0];
-                let purl = &artifacts.components[idx].purl;
-                (vec![SpdxId::for_purl(purl)], None)
-            }
+            // Spec 1654 (#1695, R8): one top-level component takes the same
+            // path as several: the target-named one, else a synthetic root.
+            // A `1 =>` arm made a lone component the root, which CycloneDX
+            // and SPDX 3 never do; SPDX 2.3 alone then lacked the
+            // root -> component edge.
             _ => {
                 if let Some(idx) = top_level
                     .iter()
@@ -1535,8 +1536,7 @@ mod tests {
         // same image. Post-fix the SPDX PURL uses encode_purl_segment
         // (the same helper CDX uses) so colon is preserved literal.
         //
-        // Two components so multi-top-level triggers synthesize_root
-        // (single-top-level uses the lone component as root instead).
+        // Two components (a lone one takes the same path since spec 1654).
         let integ = empty_integrity();
         let comps = vec![
             mk_component("pkg:apk/alpine/busybox@1.36", "busybox", "1.36"),
@@ -1565,6 +1565,59 @@ mod tests {
             purl, "pkg:generic/postgres:16@0.0.0",
             "synthesized-root PURL must match CDX shape (colon preserved literal)"
         );
+    }
+
+    /// Spec 1654 (#1695, R8): a lone top-level component that is neither a
+    /// main module nor named after the target gets a synthetic root, as in
+    /// CycloneDX (`metadata.component`) and SPDX 3. Describing the component
+    /// itself dropped the root -> component edge from SPDX 2.3 only, which
+    /// every single-binary scan reported as a B1 parity gap.
+    #[test]
+    fn s1654_lone_component_gets_a_synthetic_root_like_cdx_and_spdx3() {
+        let integ = empty_integrity();
+        let comps = vec![mk_component(
+            "pkg:generic/waybill-fixture-bin?file-sha256=00",
+            "waybill-fixture-bin",
+            "",
+        )];
+        let arts = mk_artifacts("waybill-fixture-root", &comps, &[], &integ);
+        let doc = build_doc_value(&arts);
+        let rels = doc["relationships"].as_array().expect("relationships[]");
+        let described: Vec<&str> = rels
+            .iter()
+            .filter(|r| r["relationshipType"].as_str() == Some("DESCRIBES"))
+            .filter_map(|r| r["relatedSpdxElement"].as_str())
+            .collect();
+        assert_eq!(described.len(), 1, "{described:?}");
+        assert!(described[0].starts_with("SPDXRef-DocumentRoot-"), "{described:?}");
+        let edges: Vec<&str> = rels
+            .iter()
+            .filter(|r| {
+                r["spdxElementId"].as_str() == Some(described[0])
+                    && r["relationshipType"].as_str() == Some("DEPENDS_ON")
+            })
+            .filter_map(|r| r["relatedSpdxElement"].as_str())
+            .collect();
+        assert_eq!(edges.len(), 1, "the root must depend on the lone component: {rels:#?}");
+    }
+
+    /// The lone component named after the target is still the root, as in
+    /// SPDX 3's target-name match.
+    #[test]
+    fn s1654_lone_component_named_after_the_target_is_the_root() {
+        let integ = empty_integrity();
+        let comps = vec![mk_component("pkg:generic/waybill-fixture-root@1.0", "waybill-fixture-root", "1.0")];
+        let arts = mk_artifacts("waybill-fixture-root", &comps, &[], &integ);
+        let doc = build_doc_value(&arts);
+        let described: Vec<&str> = doc["relationships"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|r| r["relationshipType"].as_str() == Some("DESCRIBES"))
+            .filter_map(|r| r["relatedSpdxElement"].as_str())
+            .collect();
+        assert_eq!(described.len(), 1, "{described:?}");
+        assert!(!described[0].starts_with("SPDXRef-DocumentRoot-"), "{described:?}");
     }
 
     #[test]

@@ -111,15 +111,34 @@ Measured in the T-task across all goldens, before and after.
 ## R7. The root in `metadata.component` (C1, C4, C182, C203)
 
 - **Decision:** the CycloneDX `metadata.component` carries the same `waybill:*` properties the root would carry in `components[]`. This is the emitter fix, because CycloneDX is the only format that loses them.
-- **The T-task first:**
-  - finds where `metadata.component`'s properties are built and why only 4 survive;
-  - measures which goldens change. Every golden whose root is only in `metadata.component`, including the closures under `--root-name`, gains properties.
+- **Traced (T006).**
+  - **Where:** `cyclonedx/metadata.rs` builds a promoted main module's `properties` from a hand-picked list: `component-role`, `sbom-tier`, `source-files`, `detected-go`, `workspace-member`, `produces-binaries`, `syft:cpe23` and an operator C212. Each was added by a milestone that noticed it missing. The subject has no `components[]` entry (milestone 084), so nothing else supplies the rest.
+  - **The three files' failing scans:** kept via a temporary copy hook, restored with `cp`. In each, the root is a main module (`pkg:hackage/…` or `pkg:pub/…`) in `metadata.component` with **no twin** in `components[]`, carrying 4 properties. Both SPDX formats carry `source-type`, `evidence-kind`, `closure-role` and the scope source on that package.
+  - **Goldens:** none of the 28 takes this path. No golden's `metadata.component` carries `waybill:component-role`, and the closures use `--root-name` (an override), which skips the list. **The fix changes no golden.**
+- **Implemented (T011):**
+  - `builder.rs`'s inline `components[]` property block (about 450 lines) is now a method, `component_properties`. `components[]` calls it, with the `component.cpe` assignment left at the call site. The three byte-identity suites (`cdx_regression`, `spdx_regression`, `spdx3_regression`) are unchanged.
+  - For the subject main module, `metadata.component` gains each property that method yields and the list did not already name, appended after the list.
+  - `--component-id` identifiers are still counted and attached only for `components[]` (`match_counts: None`).
+  - After the fix, `hpack_include_merge` and `project_discovery_haskell` have 0 failing rows, and `closure_resolved_tier` keeps only B1, B2 and E1 (R4, R6).
+  - A unit test pins the four properties. Removing the merge fails it.
 
 ## R8. The binary tests' B1
 
-The binary tests' synthetic root → bundled `.so` edge is missing from SPDX 2.3 only. The T-task traces it in the SPDX 2.3 relationship emitter before choosing a fix:
-- it may be emitted as another relationship type;
-- or dropped because the target is file-tier.
+**Traced (T005).** Neither guess was right. The edge is not dropped or retyped: SPDX 2.3 has no root to start it from.
+
+- **Measured:** all 11 `version_string_static` cases were kept via a temporary, uncommitted copy hook in the test, restored with `cp`. The 6 failing cases (S3, S4, S5, S7, S8, and the both-tables importer) each have **exactly one component**, the binary. The 3 passing cases (S1, S2, S6) also have `liblzma`, so two components.
+- **On S7:**
+  - CycloneDX: `metadata.component` is the synthetic `waybill-fixture-root@0.0.0`, which depends on the binary.
+  - SPDX 3: the synthetic `pkg-root-…` `dependsOn` the binary.
+  - SPDX 2.3: `SPDXRef-DOCUMENT DESCRIBES` the binary's own package. There is no root package and no `DEPENDS_ON`.
+  - B1 is therefore 1 / absent / 1.
+- **Cause:** `generate/spdx/document.rs`'s root fallback (after `select_root` returns neither an override nor a main module) has a `1 =>` arm: a lone top-level component *becomes* the root. CycloneDX (`cyclonedx/metadata.rs`) and SPDX 3 (`v3_document.rs`) have no such arm. After a main module and a target-name match, both synthesize.
+- **Decision:** remove SPDX 2.3's `1 =>` arm, so the lone component goes through the same target-name match, then synthesis, as two or more. This is the SPDX 2.3 side moving to the rule the other two formats already follow.
+- **Golden impact, measured:** all 28 corpus goldens already have a synthetic SPDX 2.3 root (`SPDXRef-DocumentRoot-…`), so none changes.
+- **Implemented (T012):**
+  - The `1 =>` arm is removed. A unit test written first failed on the old code: a lone component not named after the target gets a synthetic root that `DEPENDS_ON` it. A control keeps a lone target-named component as the root.
+  - The unit suite and the three byte-identity regressions are unchanged.
+  - Re-measured: `binary_kind_technique` (10 scans), `version_string_anchored` (28), `version_string_boundary` (24) and `version_string_static` (9) report **0 failing rows**.
 
 ## R9. Goldens and G1 (FR-006)
 
