@@ -809,7 +809,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1036,7 +1036,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1180,7 +1180,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1573,7 +1573,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1800,7 +1800,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -5051,7 +5051,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -5116,7 +5116,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -5343,7 +5343,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -5404,7 +5404,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -5548,7 +5548,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -5851,7 +5851,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -7120,7 +7120,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -8016,7 +8016,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -10149,7 +10149,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -10672,7 +10672,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -11012,7 +11012,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -11047,7 +11047,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -12144,7 +12144,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -13230,7 +13230,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -13753,7 +13753,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -13788,7 +13788,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -14430,7 +14430,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -14718,7 +14718,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -17507,7 +17507,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -200321,9 +200321,6 @@
         "phase": "build"
       },
       {
-        "phase": "design"
-      },
-      {
         "phase": "post-build"
       },
       {
@@ -200401,7 +200398,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 498 component(s) not reachable from root; transitive-edges-unresolvable: cargo, hackage"
+        "value": "orphaned-components-detected: 498 component(s) not reachable from root; transitive-edges-unresolvable: cargo"
       },
       {
         "name": "waybill:workspaces-detected",

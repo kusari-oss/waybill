@@ -109,7 +109,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -174,7 +174,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -413,7 +413,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -837,7 +837,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -906,7 +906,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1115,7 +1115,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1180,7 +1180,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1419,7 +1419,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1989,7 +1989,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -2024,7 +2024,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -2197,7 +2197,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -2232,7 +2232,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -2267,7 +2267,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -2302,7 +2302,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -2676,7 +2676,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -2711,7 +2711,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -2868,7 +2868,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -3095,7 +3095,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -3252,7 +3252,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",
@@ -3348,7 +3348,7 @@
       "properties": [
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "build"
         },
         {
           "name": "waybill:boot-library-compiler",

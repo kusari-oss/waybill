@@ -101,6 +101,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Under `--nix-closure`, Haskell components the closure resolved are no longer labelled `design` (#1681).**
+  The evaluated project package and the boot libraries of the closure's GHC kept the manifest reader's `waybill:sbom-tier=design`. With `--root-name` the project package is the root's only direct dependency, so a consumer that drops `design` components, and what hangs below them, kept nothing of four of the five corpus closure documents.
+  - **Now:** both are `build`. That covers the package the closure evaluated (C203 `exempt-evaluated-package`) whatever its outputs' state, and a boot library a closure compiler supplies (C218), which is the tier the same library already had when no manifest declared it. This reverses milestone 966's rule that such a library keeps the reader's `design`: under the closure, that rule gave one library two tiers in one document.
+  - **Unchanged:** a repository package the closure does not evaluate (moat's `readme`) and a dependency nothing versioned stay `design`. Scans without `--nix-closure` are byte-identical.
+  - **Consequences:**
+    - `--tier design-only` on a closure scan no longer emits these components.
+    - The document's lifecycle phases lose `design` where none remains.
+    - The completeness reason loses `transitive-edges-unresolvable: hackage` on three targets. Boot libraries are emitted as leaves, which shellcheck already showed; that gap is #1688.
+  - **Measured:** on the five corpus closure targets, `design` goes from 21, 22, 24, 24 and 0 to 1, 0, 0, 0 and 0. Dropping `design` nodes now keeps 1,134 / 1,362 / 1,235 / 2,441 / 2,085 components, against 0 / 0 / 0 / 0 / 2,085 before. New corpus invariant I11 fails CI if a closure-resolved component is `design`, or if the root depends only on `design` components.
+
 - **hpack manifests that use `!include` or YAML merge keys are read as hpack reads them (#1673, #1674).**
   Before, a manifest whose anchors came from an included file failed to parse (`unknown anchor`), and its package was dropped. A manifest with two `<<` keys in one mapping failed as a duplicate key. A single `<<` was read as `read` while silently losing every merged key.
   - **Now:** an `!include` is resolved relative to the file that names it, with anchors visible across files in both directions. It is followed only under the scanned root, never twice on one chain, and no deeper than 8. Merge keys apply with hpack's precedence: explicit beats merged, and the first merge wins. `waybill:hpack-read-outcome` lists every include under `includes-resolved` or `includes-unresolved`, the latter with a reason.
