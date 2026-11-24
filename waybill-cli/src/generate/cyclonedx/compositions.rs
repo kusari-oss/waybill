@@ -154,6 +154,11 @@ pub(crate) fn degraded_ecosystems(
             ReasonCode::ProjectDiscoveryScope { ecosystems, .. } => {
                 degraded.extend(ecosystems.iter().cloned());
             }
+            // Spec 1653 (FR-005) — boot libraries are Hackage packages; their
+            // edges are incomplete, so the ecosystem's graph is not complete.
+            ReasonCode::BootLibraryEdgesIncomplete { .. } => {
+                degraded.insert("hackage".to_string());
+            }
             _ => {}
         }
     }
@@ -443,6 +448,15 @@ mod tests {
         let c = dependency_claims(&cs, &["golang".into()], Some(&reach), &degraded, &clean_integrity(), false);
         assert!(c.complete.is_empty());
         assert_eq!(c.unknown.len(), 1);
+    }
+
+    /// Spec 1653 (FR-005): incomplete boot-library edges degrade hackage.
+    #[test]
+    fn incomplete_boot_library_edges_degrade_hackage() {
+        use crate::generate::graph_completeness::{GraphCompletenessResult, ReasonCode};
+        let mut gc = GraphCompletenessResult::trivially_complete();
+        gc.reason_codes.push(ReasonCode::BootLibraryEdgesIncomplete { incomplete: 1, unknown: 0 });
+        assert_eq!(degraded_ecosystems(&gc), set(&["hackage"]));
     }
 
     /// Spec 1652 (FR-005): an ecosystem `--project-discovery` dropped

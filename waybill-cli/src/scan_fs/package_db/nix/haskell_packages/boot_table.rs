@@ -187,6 +187,13 @@ impl BootLibraryTable {
             .map(|r| r.version.as_str())
     }
 
+    /// Every release the table has. Test-only: spec 1653's dependency table
+    /// asserts it covers exactly these (SC-002b).
+    #[cfg(test)]
+    pub(crate) fn releases(&self) -> BTreeSet<&str> {
+        self.rows.keys().map(String::as_str).collect()
+    }
+
     #[cfg(test)]
     fn row(&self, release: &str, name: &str) -> Option<&BootRow> {
         self.rows.get(release)?.get(name)

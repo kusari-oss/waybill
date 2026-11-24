@@ -1,4 +1,5 @@
 pub mod closure_role_scope;
+pub mod boot_library_edges;
 pub mod closure_resolved_tier;
 pub mod component_role;
 pub mod deduplicator;
