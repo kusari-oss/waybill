@@ -170,7 +170,7 @@
 
 ### Tests (write first; must fail before T024)
 
-- [ ] T022 [US2] Add to `IT`:
+- [X] T022 [US2] Add to `IT`:
   - **Default OFF, configured ON**: `extra` in `FX/system` is in scope; C246 `configured-values-applied` ≥ 1.
   - **Cache string**: `bdep` in `FX/system` is in scope; in `FX/fetch`, optional with C122 `cmake-conditional`.
   - **Still unknown** (`if(DEFINED SOMETHING)`): in scope, per spec 1641 FR-004.
@@ -180,19 +180,19 @@
 
 ### Implementation
 
-- [ ] T023 [US2] **Overlay type.** In `CD`, add `ConfiguredOverlay { values: HashMap<String, Configured> }` (`Known(String) | Conflicting`) and `Defaults::with_overlay(self, &ConfiguredOverlay) -> Defaults`. In `Defaults::lookup` (`CD:247`), an overlay value is checked before the source defaults:
+- [X] T023 [US2] **Overlay type.** In `CD`, add `ConfiguredOverlay { values: HashMap<String, Configured> }` (`Known(String) | Conflicting`) and `Defaults::with_overlay(self, &ConfiguredOverlay) -> Defaults`. In `Defaults::lookup` (`CD:247`), an overlay value is checked before the source defaults:
   - a boolean reading uses CMake truthiness (data-model.md);
   - `Conflicting` reads as `Unknown`.
 
   Only `Bool`, `String`, `Uninitialized` and `Untyped` cache entries feed it. Unit tests cover each truthiness case and the precedence.
-- [ ] T024 [US2] **Comparisons.** In `Parser::compare` (`CD:470-485`), when both operands are known literals or overlay values (or one is a quoted literal), evaluate:
+- [X] T024 [US2] **Comparisons.** In `Parser::compare` (`CD:470-485`), when both operands are known literals or overlay values (or one is a quoted literal), evaluate:
   - `STREQUAL`, `EQUAL`;
   - `MATCHES`: translate the CMake regex to `regex::Regex` only when it uses the shared syntax subset; otherwise `Unknown`;
   - `VERSION_LESS`, `VERSION_GREATER`, `VERSION_EQUAL`, `VERSION_LESS_EQUAL`, `VERSION_GREATER_EQUAL`, with CMake's component-wise integer comparison.
 
   Platform and `Standalone` handling are unchanged. Unit tests cover each operator, plus an unknown operand.
-- [ ] T025 [US2] **Applying the overlay.** In `RE::defaults_for` (`RE:127`), apply the overlay of the deepest-owning build directory (`BT/settle.rs::owners`). Pass `Option<&BuildEvidence>` into `ReachMap` from `CM::finalize`. Build each overlay once per `BuildDir`. Several owners with different values give `Conflicting`.
-- [ ] T026 [US2] **Searches.** In `SE::read_file` (`SE:389-396`), replace `Defaults::default()` with the overlay for the file's owning build directory when evidence is present. Count `configured_values_applied` in `CD`/`FE` whenever a chain's result with the overlay differs from its result without it. Do not recount through the census tracing at `FE:470`.
+- [X] T025 [US2] **Applying the overlay.** *Applied where `RE::defaults_for` is called (`FE::read_declarations`), via `BuildEvidence::overlay_for`, rather than inside `ReachMap`, so `ReachMap` stays build-agnostic.* In `RE::defaults_for` (`RE:127`), apply the overlay of the deepest-owning build directory (`BT/settle.rs::owners`). Pass `Option<&BuildEvidence>` into `ReachMap` from `CM::finalize`. Build each overlay once per `BuildDir`. Several owners with different values give `Conflicting`.
+- [X] T026 [US2] **Searches.** In `SE::read_file` (`SE:389-396`), replace `Defaults::default()` with the overlay for the file's owning build directory when evidence is present. Count `configured_values_applied` in `CD`/`FE` whenever a chain's result with the overlay differs from its result without it. Do not recount through the census tracing at `FE:470`.
 
 **Checkpoint**: T022 passes; T014 and T006 still pass.
 

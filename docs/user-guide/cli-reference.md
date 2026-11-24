@@ -1144,6 +1144,13 @@ waybill sbom scan --path . --cmake-build-tree build --output project.cdx.json
 - **Repeatable.** For a build split across CI stages, name each stage's tree.
   For a super-build, name the top of its build tree: every configured
   subproject beneath it is found.
+- **Conditions use the configured values.** Each build directory's cache
+  values (`BOOL`, `STRING`, untyped) replace the source's defaults when
+  waybill evaluates the `if()` around a fetch or package search, and
+  `STREQUAL`, `EQUAL`, `MATCHES` and `VERSION_*` comparisons against them
+  are decided. A fetch under `if(BLAS STREQUAL MKL)` is in scope only if the
+  build configured `BLAS=MKL`. Builds that configured different values
+  leave the condition undecided, and it stays in scope.
 - **Configure is enough for FetchContent**, which populates during configure.
   ExternalProject downloads happen at build time.
 - **Read-only.** Nothing is written into the build tree, and no host path from
