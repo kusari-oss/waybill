@@ -1,0 +1,1 @@
+int extproj_fn();
