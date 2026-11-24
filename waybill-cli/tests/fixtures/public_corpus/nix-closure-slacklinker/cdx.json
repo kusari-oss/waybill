@@ -440,6 +440,89 @@
       "version": "11707dc2f618dd54ca8739b309ec4fc024de578b"
     },
     {
+      "bom-ref": "pkg:hackage/HUnit@1.6.2.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.yaml"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b0b7538871ffc058486fc00740886d2f3172f8fa6869936bfe83a5e10bd744ab"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "HUnit",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.yaml\"]"
+        },
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "statically-linked"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:closure-contents",
+          "value": "read"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "artifact-input"
+        },
+        {
+          "name": "waybill:nixpkgs-component-origin",
+          "value": "declared"
+        },
+        {
+          "name": "waybill:nixpkgs-resolved-via",
+          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\",\"source\":\"nixpkgs\"}"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/HUnit@1.6.2.0",
+      "type": "library",
+      "version": "1.6.2.0"
+    },
+    {
       "bom-ref": "pkg:hackage/adjunctions@4.4.4",
       "evidence": {
         "identity": [
@@ -3428,71 +3511,6 @@
       "purl": "pkg:hackage/http-types@0.12.4",
       "type": "library",
       "version": "0.12.4"
-    },
-    {
-      "bom-ref": "pkg:hackage/hunit",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "package.yaml"
-          }
-        ]
-      },
-      "name": "hunit",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"package.yaml\"]"
-        },
-        {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "absent-from-package-set"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\".\"]"
-        }
-      ],
-      "purl": "pkg:hackage/hunit",
-      "scope": "excluded",
-      "type": "library"
     },
     {
       "bom-ref": "pkg:hackage/monad-logger@0.3.42",
@@ -6523,67 +6541,6 @@
       "purl": "pkg:hackage/warp@3.4.9",
       "type": "library",
       "version": "3.4.9"
-    },
-    {
-      "bom-ref": "pkg:hackage/HUnit@1.6.2.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "b0b7538871ffc058486fc00740886d2f3172f8fa6869936bfe83a5e10bd744ab"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
-      "name": "HUnit",
-      "properties": [
-        {
-          "name": "waybill:scope-classification-source",
-          "value": "statically-linked"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:closure-contents",
-          "value": "read"
-        },
-        {
-          "name": "waybill:closure-role",
-          "value": "artifact-input"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/HUnit@1.6.2.0",
-      "type": "library",
-      "version": "1.6.2.0"
     },
     {
       "bom-ref": "pkg:hackage/OneTuple@0.4.2.1",
@@ -195354,10 +195311,6 @@
       "ref": "pkg:hackage/http2@5.3.10"
     },
     {
-      "dependsOn": [],
-      "ref": "pkg:hackage/hunit"
-    },
-    {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.10",
@@ -198453,7 +198406,6 @@
         "pkg:hackage/http-client@0.7.19",
         "pkg:hackage/http-media@0.8.1.1",
         "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/hunit",
         "pkg:hackage/monad-logger@0.3.42",
         "pkg:hackage/mono-traversable@1.0.21.0",
         "pkg:hackage/network-uri@2.6.4.2",
@@ -200389,7 +200341,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":420,\"excluded_files\":7,\"excluded_members\":1518,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":390,\"with_candidates\":612}"
+        "value": "{\"addressable_without_cpe\":419,\"excluded_files\":7,\"excluded_members\":1518,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":390,\"with_candidates\":612}"
       },
       {
         "name": "waybill:closure-graph-admission",
@@ -200413,7 +200365,7 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":1,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":64,\"revision\":\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\",\"unresolved\":{\"absent-from-package-set\":1,\"nixpkgs-version-violates-requirement\":1}}"
+        "value": "{\"disagreements\":1,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":65,\"revision\":\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\",\"unresolved\":{\"nixpkgs-version-violates-requirement\":1}}"
       },
       {
         "name": "waybill:scope-exemptions",
@@ -200421,7 +200373,7 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",
-        "value": "{\"declared\":77,\"relations-walked\":1770,\"transitive\":204,\"unresolved\":{}}"
+        "value": "{\"declared\":77,\"relations-walked\":1770,\"transitive\":203,\"unresolved\":{}}"
       },
       {
         "name": "waybill:os-release-missing-fields",

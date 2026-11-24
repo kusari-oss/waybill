@@ -19,15 +19,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -35,7 +35,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -47,7 +47,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -79,23 +79,27 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/contra-tracers/contra-tracers.cabal"
+            "location": "server/modules/contra-tracers/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-rpc/json-rpc.cabal"
+            "location": "server/modules/json-rpc/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/json-via-show/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -103,7 +107,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/contra-tracers/contra-tracers.cabal\",\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/modules/json-rpc/json-rpc.cabal\",\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -115,7 +119,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -123,7 +127,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
+          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
         }
       ],
       "purl": "pkg:hackage/aeson",
@@ -147,11 +151,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -159,7 +163,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -171,7 +175,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -203,7 +207,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           }
         ]
       },
@@ -211,7 +215,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/hspec-json-schema/hspec-json-schema.cabal\"]"
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -223,7 +227,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -255,7 +259,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -263,7 +267,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -275,7 +279,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -311,7 +315,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -319,7 +323,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -331,7 +335,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -363,7 +367,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -371,7 +375,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -383,7 +387,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -415,31 +419,35 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/contra-tracers/contra-tracers.cabal"
+            "location": "server/modules/contra-tracers/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/git-th/git-th.cabal"
+            "location": "server/modules/git-th/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-rpc/json-rpc.cabal"
+            "location": "server/modules/json-rpc/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/json-via-show/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -447,11 +455,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/contra-tracers/contra-tracers.cabal\",\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/modules/git-th/git-th.cabal\",\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/modules/json-rpc/json-rpc.cabal\",\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=4.17 && <5\",\">=4.7 && <5\"]"
+          "value": "[\">= 4.17 && < 5\",\">= 4.7 && < 5\"]"
         },
         {
           "name": "waybill:source-type",
@@ -463,7 +471,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -475,7 +483,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
+          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
         }
       ],
       "purl": "pkg:hackage/base",
@@ -499,11 +507,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -511,7 +519,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -523,7 +531,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -555,7 +563,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -563,7 +571,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -575,7 +583,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -607,11 +615,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -619,7 +627,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -631,7 +639,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -663,7 +671,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -671,7 +679,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -683,7 +691,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -715,7 +723,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -723,7 +731,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -735,7 +743,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -767,23 +775,23 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-rpc/json-rpc.cabal"
+            "location": "server/modules/json-rpc/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -791,7 +799,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/modules/json-rpc/json-rpc.cabal\",\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -803,7 +811,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -839,7 +847,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -847,7 +855,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -859,7 +867,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -891,7 +899,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -899,7 +907,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -911,7 +919,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -943,7 +951,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -951,7 +959,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -963,7 +971,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -995,7 +1003,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1003,7 +1011,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1015,7 +1023,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1047,7 +1055,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           }
         ]
       },
@@ -1055,7 +1063,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1067,7 +1075,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1099,7 +1107,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1107,7 +1115,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1119,7 +1127,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1151,7 +1159,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1159,7 +1167,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1171,7 +1179,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:cabal-build-tool-executable",
@@ -1207,7 +1215,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1215,7 +1223,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1227,7 +1235,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1259,7 +1267,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1267,7 +1275,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1279,7 +1287,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1311,7 +1319,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1319,7 +1327,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1331,7 +1339,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1363,11 +1371,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1375,7 +1383,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1387,7 +1395,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1419,7 +1427,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1427,7 +1435,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1439,7 +1447,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:cabal-build-tool-executable",
@@ -1475,7 +1483,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1483,7 +1491,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1495,7 +1503,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1527,7 +1535,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1535,7 +1543,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1547,7 +1555,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:cabal-build-tool-executable",
@@ -1583,7 +1591,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1591,7 +1599,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1603,7 +1611,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1635,7 +1643,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1643,7 +1651,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1655,7 +1663,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1687,7 +1695,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1695,7 +1703,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1707,7 +1715,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1739,11 +1747,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1751,7 +1759,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1763,7 +1771,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1795,7 +1803,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1803,7 +1811,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1815,7 +1823,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1847,11 +1855,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1859,7 +1867,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1871,7 +1879,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1903,11 +1911,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/json-via-show/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1915,7 +1927,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1927,7 +1939,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -1939,7 +1951,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+          "value": "[\"server\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
         }
       ],
       "purl": "pkg:hackage/containers",
@@ -1963,15 +1975,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/contra-tracers/contra-tracers.cabal"
+            "location": "server/modules/contra-tracers/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -1979,7 +1991,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/contra-tracers/contra-tracers.cabal\",\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1991,7 +2003,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2023,7 +2035,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/contra-tracers/contra-tracers.cabal"
+            "location": "server/modules/contra-tracers/package.yaml"
           }
         ]
       },
@@ -2039,7 +2051,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/contra-tracers/contra-tracers.cabal\"]"
+          "value": "[\"server/modules/contra-tracers/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2051,7 +2063,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -2084,7 +2096,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           }
         ]
       },
@@ -2092,7 +2104,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2108,7 +2120,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2141,7 +2153,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           }
         ]
       },
@@ -2149,7 +2161,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2161,7 +2173,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -2197,7 +2209,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2205,7 +2217,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2217,7 +2229,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -2253,7 +2265,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2261,7 +2273,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2273,7 +2285,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2305,7 +2317,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           }
         ]
       },
@@ -2321,7 +2333,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2333,7 +2345,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -2366,7 +2378,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2374,7 +2386,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2386,7 +2398,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2418,7 +2430,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2426,7 +2438,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2438,7 +2450,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -2474,7 +2486,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2482,7 +2494,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2494,7 +2506,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2526,7 +2538,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2534,7 +2546,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2550,7 +2562,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2583,7 +2595,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2591,7 +2603,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2603,7 +2615,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2635,7 +2647,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/git-th/git-th.cabal"
+            "location": "server/modules/git-th/package.yaml"
           }
         ]
       },
@@ -2651,7 +2663,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/git-th/git-th.cabal\"]"
+          "value": "[\"server/modules/git-th/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2663,7 +2675,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -2696,7 +2708,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           }
         ]
       },
@@ -2704,7 +2716,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/hspec-json-schema/hspec-json-schema.cabal\"]"
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2716,7 +2728,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2748,7 +2760,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           }
         ]
       },
@@ -2756,7 +2768,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/hspec-json-schema/hspec-json-schema.cabal\"]"
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2768,7 +2780,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2800,23 +2812,27 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/git-th/git-th.cabal"
+            "location": "server/modules/git-th/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-rpc/json-rpc.cabal"
+            "location": "server/modules/json-rpc/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2824,7 +2840,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/modules/git-th/git-th.cabal\",\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/modules/json-rpc/json-rpc.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2840,7 +2856,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2848,7 +2864,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\"]"
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\"]"
         }
       ],
       "purl": "pkg:hackage/hspec",
@@ -2873,27 +2889,31 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/git-th/git-th.cabal"
+            "location": "server/modules/git-th/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-rpc/json-rpc.cabal"
+            "location": "server/modules/json-rpc/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/json-via-show/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -2901,7 +2921,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/modules/git-th/git-th.cabal\",\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/modules/json-rpc/json-rpc.cabal\",\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2917,11 +2937,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:cabal-build-tool-executable",
-          "value": "hspec-discover"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2929,7 +2945,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
         }
       ],
       "purl": "pkg:hackage/hspec-discover",
@@ -2954,7 +2970,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           }
         ]
       },
@@ -2970,7 +2986,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/hspec-json-schema/hspec-json-schema.cabal\"]"
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2982,7 +2998,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -3015,7 +3031,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3023,7 +3039,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3035,7 +3051,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3067,7 +3083,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3075,7 +3091,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3087,7 +3103,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3119,11 +3135,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3131,7 +3147,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3143,7 +3159,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3175,7 +3191,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3183,7 +3199,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3195,7 +3211,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3227,11 +3243,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3239,7 +3255,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3251,7 +3267,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3283,7 +3299,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3291,7 +3307,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3303,7 +3319,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3335,7 +3351,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-rpc/json-rpc.cabal"
+            "location": "server/modules/json-rpc/package.yaml"
           }
         ]
       },
@@ -3351,7 +3367,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/json-rpc/json-rpc.cabal\"]"
+          "value": "[\"server/modules/json-rpc/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3363,7 +3379,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -3377,6 +3393,67 @@
       "purl": "pkg:hackage/json-rpc@1.0.0",
       "type": "library",
       "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/json-via-show@2.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "json-via-show",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/json-via-show/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/json-via-show\"]"
+        }
+      ],
+      "purl": "pkg:hackage/json-via-show@2.0.0",
+      "type": "library",
+      "version": "2.0.0"
     },
     {
       "bom-ref": "pkg:hackage/lens-aeson",
@@ -3396,7 +3473,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3404,7 +3481,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3416,7 +3493,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3448,7 +3525,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3456,7 +3533,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3468,7 +3545,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3500,7 +3577,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3508,7 +3585,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3520,7 +3597,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -3556,7 +3633,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           }
         ]
       },
@@ -3564,7 +3641,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3576,7 +3653,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3608,7 +3685,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3624,7 +3701,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3636,7 +3713,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -3669,7 +3746,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3677,7 +3754,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3689,7 +3766,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3721,11 +3798,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3733,7 +3810,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3745,7 +3822,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:cabal-build-tool-executable",
@@ -3781,11 +3858,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3793,7 +3870,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3805,7 +3882,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:cabal-build-tool-executable",
@@ -3841,7 +3918,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           }
         ]
       },
@@ -3857,7 +3934,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3869,7 +3946,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -3902,7 +3979,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3910,7 +3987,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3922,7 +3999,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3954,7 +4031,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -3962,7 +4039,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3974,7 +4051,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4006,7 +4083,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4014,7 +4091,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4026,7 +4103,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4058,7 +4135,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/git-th/git-th.cabal"
+            "location": "server/modules/git-th/package.yaml"
           }
         ]
       },
@@ -4066,7 +4143,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/git-th/git-th.cabal\"]"
+          "value": "[\"server/modules/git-th/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4078,7 +4155,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -4114,7 +4191,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4122,7 +4199,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4134,7 +4211,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4166,7 +4243,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4174,7 +4251,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4186,7 +4263,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4218,7 +4295,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4226,7 +4303,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -4242,7 +4319,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4275,7 +4352,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           }
         ]
       },
@@ -4283,7 +4360,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -4299,7 +4376,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4332,11 +4409,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4344,7 +4421,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4356,7 +4433,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4388,7 +4465,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4396,7 +4473,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4408,7 +4485,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4440,7 +4517,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4448,7 +4525,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4460,7 +4537,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4492,11 +4569,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4504,7 +4581,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4516,7 +4593,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4548,7 +4625,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4556,7 +4633,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4568,7 +4645,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4600,7 +4677,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4608,7 +4685,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4620,7 +4697,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4652,7 +4729,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4660,7 +4737,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4672,7 +4749,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4704,7 +4781,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4712,7 +4789,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4724,7 +4801,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -4760,7 +4837,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4768,7 +4845,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4780,7 +4857,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4812,7 +4889,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           }
         ]
       },
@@ -4820,7 +4897,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/hspec-json-schema/hspec-json-schema.cabal\"]"
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -4836,7 +4913,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4869,11 +4946,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/git-th/git-th.cabal"
+            "location": "server/modules/git-th/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -4881,7 +4958,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/git-th/git-th.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/git-th/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -4893,7 +4970,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -4929,7 +5006,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/git-th/git-th.cabal"
+            "location": "server/modules/git-th/package.yaml"
           }
         ]
       },
@@ -4937,7 +5014,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/git-th/git-th.cabal\"]"
+          "value": "[\"server/modules/git-th/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -4953,7 +5030,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -4986,19 +5063,23 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/fast-bech32/fast-bech32.cabal"
+            "location": "server/modules/fast-bech32/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/hspec-json-schema/hspec-json-schema.cabal"
+            "location": "server/modules/hspec-json-schema/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-rpc/json-rpc.cabal"
+            "location": "server/modules/json-rpc/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5006,7 +5087,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/fast-bech32.cabal\",\"server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"server/modules/json-rpc/json-rpc.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5018,7 +5099,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -5030,7 +5111,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\"]"
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\"]"
         }
       ],
       "purl": "pkg:hackage/text",
@@ -5054,7 +5135,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5062,7 +5147,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5074,7 +5159,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -5086,7 +5171,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\"]"
+          "value": "[\"server\",\"server/modules/json-via-show\"]"
         }
       ],
       "purl": "pkg:hackage/time",
@@ -5110,7 +5195,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5118,7 +5203,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5130,7 +5215,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -5162,7 +5247,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5170,7 +5255,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5182,7 +5267,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -5218,11 +5303,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal"
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5230,7 +5315,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"server/ogmios.cabal\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5242,7 +5327,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:cabal-build-tool-executable",
@@ -5278,7 +5363,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5286,7 +5371,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5298,7 +5383,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -5334,7 +5419,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5342,7 +5427,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5354,7 +5439,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -5386,7 +5471,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5394,7 +5479,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5406,7 +5491,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -5438,7 +5523,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5446,7 +5531,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5458,7 +5543,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -5490,7 +5575,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5498,7 +5583,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5510,7 +5595,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -5542,7 +5627,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5550,7 +5635,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5562,7 +5647,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -5594,7 +5679,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5602,7 +5687,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5614,7 +5699,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -5646,7 +5731,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/ogmios.cabal"
+            "location": "server/package.yaml"
           }
         ]
       },
@@ -5654,7 +5739,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/ogmios.cabal\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5666,7 +5751,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -7775,6 +7860,7 @@
         "pkg:hackage/git-th@1.1.0",
         "pkg:hackage/hspec-json-schema@1.0.0",
         "pkg:hackage/json-rpc@1.0.0",
+        "pkg:hackage/json-via-show@2.0.0",
         "pkg:hackage/ogmios@0",
         "pkg:hackage/ouroboros-network-ogmios@0.0.0"
       ],
@@ -8063,6 +8149,18 @@
         "pkg:hackage/text"
       ],
       "ref": "pkg:hackage/json-rpc@1.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/base",
+        "pkg:hackage/containers",
+        "pkg:hackage/hspec",
+        "pkg:hackage/hspec-discover",
+        "pkg:hackage/text",
+        "pkg:hackage/time"
+      ],
+      "ref": "pkg:hackage/json-via-show@2.0.0"
     },
     {
       "dependsOn": [],
@@ -8388,7 +8486,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":102,\"excluded_files\":10,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":5,\"with_candidates\":1031}"
+        "value": "{\"addressable_without_cpe\":103,\"excluded_files\":10,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":5,\"with_candidates\":1031}"
       },
       {
         "name": "waybill:git-submodule-coverage",
@@ -8424,11 +8522,11 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 194 component(s) not reachable from root; transitive-edges-unresolvable: hackage; manifest-unread: 8 haskell manifest(s) found but not read"
+        "value": "orphaned-components-detected: 194 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"clients/TypeScript\",\"clients/TypeScript/packages/client\",\"clients/TypeScript/packages/repl\",\"clients/TypeScript/packages/schema\",\"server\",\"server/dashboard\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
+        "value": "[\".\",\"clients/TypeScript\",\"clients/TypeScript/packages/client\",\"clients/TypeScript/packages/repl\",\"clients/TypeScript/packages/schema\",\"server\",\"server/dashboard\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",
@@ -8440,7 +8538,7 @@
       },
       {
         "name": "waybill:hpack-read-outcome",
-        "value": "{\"generated-cabal-suppressed\":[],\"manifests-partial\":[],\"manifests-read\":[],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-via-show/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/package.yaml\"],\"manifests-unread\":[{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/contra-tracers/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/fast-bech32/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/git-th/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/hspec-json-schema/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-rpc/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-via-show/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/ouroboros-network-ogmios/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 21 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/package.yaml\",\"reason\":\"malformed-yaml\"}]}"
+        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/contra-tracers/contra-tracers.cabal\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/fast-bech32/fast-bech32.cabal\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/git-th/git-th.cabal\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/hspec-json-schema/hspec-json-schema.cabal\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-rpc/json-rpc.cabal\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/ouroboros-network-ogmios/ouroboros-network-ogmios.cabal\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/ogmios.cabal\"],\"includes-resolved\":[{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/contra-tracers/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/contra-tracers/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/contra-tracers/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/fast-bech32/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/fast-bech32/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/fast-bech32/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/git-th/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/git-th/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/git-th/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/hspec-json-schema/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/hspec-json-schema/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/hspec-json-schema/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-rpc/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-rpc/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-rpc/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-via-show/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-via-show/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-via-show/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/ouroboros-network-ogmios/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/ouroboros-network-ogmios/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/ouroboros-network-ogmios/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/package.yaml\",\"include\":\".hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/package.yaml\"}],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-via-show/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/json-via-show/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/repo/server/package.yaml\"],\"manifests-unread\":[]}"
       }
     ],
     "supplier": {

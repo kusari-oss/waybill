@@ -101,6 +101,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **hpack manifests that use `!include` or YAML merge keys are read as hpack reads them (#1673, #1674).**
+  Before, a manifest whose anchors came from an included file failed to parse (`unknown anchor`), and its package was dropped. A manifest with two `<<` keys in one mapping failed as a duplicate key. A single `<<` was read as `read` while silently losing every merged key.
+  - **Now:** an `!include` is resolved relative to the file that names it, with anchors visible across files in both directions. It is followed only under the scanned root, never twice on one chain, and no deeper than 8. Merge keys apply with hpack's precedence: explicit beats merged, and the first merge wins. `waybill:hpack-read-outcome` lists every include under `includes-resolved` or `includes-unresolved`, the latter with a reason.
+  - **Also fixed, because these manifests exposed it:** names keep their declared spelling (`QuickCheck` was minted as `pkg:hackage/quickcheck`); a `package:qualifier` entry names the package (`ouroboros-network:api` and `hspec-discover:hspec-discover` became package names, #1684); and a `when:` written as one mapping is read. Without this, reading the manifest in place of its generated `.cabal` would have regressed identities the `.cabal` reader already gets right.
+  - **Measured:** on the four hpack corpus repositories, every one of 46 manifests is read, against 16 on `main`, and 49 includes resolve. Each package's dependency set equals the `build-depends` hpack 0.38.3 generates: 46 of 46 agree, against 16. With the generated `.cabal` removed, the four repositories now give the same 127, 62, 73 and 103 hackage components as with it committed. On `main` they gave 89, 8, 73 and 0. Scan time is within 1.03× `main` (median of 7). A package outside `cabal.project`'s `packages:` is now reachable this way and is emitted (#1685).
+
 - **A library named by a binary's imports, or by source paths compiled into it, is labelled `binary-analysis` (#1668).**
   These components reported `manifest-analysis`, as though a package manager had listed them; the evidence came from the binary. CycloneDX 1.6 defines `binary-analysis` as examining a compiled binary, and `manifest-analysis` as examining a package management system.
   - **Now:** `dynamic-linkage` and `embedded-source-path` components report `binary-analysis` in CycloneDX `evidence.identity` and in the SPDX 2.3 and SPDX 3 `evidence.identity` annotations.
