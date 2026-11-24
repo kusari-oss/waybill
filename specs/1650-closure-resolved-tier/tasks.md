@@ -17,17 +17,17 @@ Research decisions are R1–R8; fixture cases are contracts/wire.md's P1–P3, B
 
 ## Phase 1: Setup
 
-- [ ] T001 FR-001 census, in `MS/census.md`. For every `design` component in the five closure goldens in `GD` (`main` `18691d8`), record:
+- [X] T001 FR-001 census, in `MS/census.md`. For every `design` component in the five closure goldens in `GD` (`main` `18691d8`), record: *As built: counts confirmed; a third origin found (milestone 985's transitive walk, 12–15 C218 components per target); no bootstrap-versioned `design`; C218 and C203 `exempt-evaluated-package` appear only in the five closure goldens. `MS/census.md`.*
   - its group: C203 `exempt-evaluated-package`, C218 (and which compiler), or neither;
   - whether a component already held its PURL before the closure ran, which explains why the closure did not synthesise it as `build` (R1);
   - its evidence (`package.yaml` / `.cabal` occurrence, or none).
 
   Confirm the counts in research R7: 21, 22, 24, 24 and 0, and the `readme` exception. Confirm that no `design` component is versioned from a bootstrap `ghc-binary`. Trace moat's evidence-free `transformers` and `unix` to the reader output that emitted them. A count that contradicts R7 amends the spec before T004.
-- [ ] T002 Build `main`'s binary at `18691d8` into the session scratchpad as `waybill-main-18691d8`, after confirming `git diff 18691d8 -- waybill-cli waybill-common Cargo.toml Cargo.lock` is empty. Record the full SHA in `MS/control.md`.
+- [X] T002 Build `main`'s binary at `18691d8` into the session scratchpad as `waybill-main-18691d8`, after confirming `git diff 18691d8 -- waybill-cli waybill-common Cargo.toml Cargo.lock` is empty. Record the full SHA in `MS/control.md`.
 
 ## Phase 2: Foundational
 
-- [ ] T003 Create `IT` with the stub-`nix` harness, copied from `waybill-cli/tests/closure_role_scope.rs` (stub `nix` from `nix_config_closure.rs`; package-set cache seeded as `nix_haskell_resolution_m926.rs` does; `#![cfg(unix)]`; no host cache). Include:
+- [X] T003 Create `IT` with the stub-`nix` harness, copied from `waybill-cli/tests/closure_role_scope.rs` (stub `nix` from `nix_config_closure.rs`; package-set cache seeded as `nix_haskell_resolution_m926.rs` does; `#![cfg(unix)]`; no host cache). Include: *As built: built on milestone 966's fixtures, which reproduce #1681 exactly. `NixStub` gained an optional `bin` for the control. Cross-format tier agreement is checked by `parity-check`'s row C5 (`SymmetricEqual`) rather than a hand-written reader.*
   - a three-format scan helper with parity and unique `bom-ref`s;
   - `tier(doc, purl_prefix)` read from all three formats, asserting that they agree;
   - `root_direct_tiers(doc)`;
@@ -38,23 +38,23 @@ Research decisions are R1–R8; fixture cases are contracts/wire.md's P1–P3, B
 **Goal**: FR-002.
 **Independent test**: P1–P3 and R1.
 
-- [ ] T004 [US1] Write P1, P2, P3, R1 and T1 in `IT`. P1, P2, R1 and T1 are red; P3 passes (a guard).
-- [ ] T005 [US1] Create `RT` with `pub(crate) fn retier(components: &mut [ResolvedComponent]) -> RetierSummary` (data-model). For a `design` component carrying C203 = `exempt-evaluated-package`, set `build`. Unit tests `s1650_*`:
+- [X] T004 [US1] Write P1, P2, P3, R1 and T1 in `IT`. P1, P2, R1 and T1 are red; P3 passes (a guard). *As built: P1 (C214 `read`) is covered by the unit test `s1650_evaluated_package_becomes_build_whatever_c214_says`, with `read` and `absent`; the fixture covers P2 (`absent`).*
+- [X] T005 [US1] Create `RT` with `pub(crate) fn retier(components: &mut [ResolvedComponent]) -> RetierSummary` (data-model). For a `design` component carrying C203 = `exempt-evaluated-package`, set `build`. Unit tests `s1650_*`:
   - the evaluated package becomes `build`;
   - a component already `source` or `build` is untouched;
   - a `design` component with no C203 is untouched;
   - C214 has no effect, checked with `read` and with `absent`.
 
   Register the module in `waybill-cli/src/resolve/mod.rs`.
-- [ ] T006 [US1] In `SC`, call `retier` straight after `closure_role_scope::withdraw_scope_runtime_evidence_contradicts`, which must stay above the second `apply_tier_filter` call (#1360's, after the closure passes) so `--tier` sees the final tiers (analyze U1), (both follow `assign_role_scope`, whose C203 it reads), and log the summary at INFO when non-zero. P1, P2, P3, R1 and T1 pass.
+- [X] T006 [US1] In `SC`, call `retier` straight after `closure_role_scope::withdraw_scope_runtime_evidence_contradicts`, which must stay above the second `apply_tier_filter` call (#1360's, after the closure passes) so `--tier` sees the final tiers (analyze U1), (both follow `assign_role_scope`, whose C203 it reads), and log the summary at INFO when non-zero. P1, P2, P3, R1 and T1 pass. *As built: `retier` runs at `scan_cmd.rs` between the two `--tier` filters (lines 4240 and 5899).*
 
 ## Phase 4: User Story 2 — a boot library of the closure's compiler has one tier (P1)
 
 **Goal**: FR-003.
 **Independent test**: B1–B3.
 
-- [ ] T007 [US2] Write B1–B5 in `IT`. B1 is red; B2–B5 pass (guards).
-- [ ] T008 [US2] In `RT`, add the C218 rule: a `design` component carrying `waybill:boot-library-compiler` becomes `build`. Unit tests:
+- [X] T007 [US2] Write B1–B5 in `IT`. B1 is red; B2–B5 pass (guards). *As built: B5 cannot be constructed, because a declared boot library always takes the compiler's version, and so C218. B3 (`Win32`, no C218) covers "no C218 means unchanged".*
+- [X] T008 [US2] In `RT`, add the C218 rule: a `design` component carrying `waybill:boot-library-compiler` becomes `build`. Unit tests: *As built: milestone 966's `design_tier_base_takes_the_project_compilers_version` asserted `design`, and now asserts `build`, with the reason. It was the only failure across 48 closure, Nix and Haskell test files.*
   - a C218 component becomes `build`;
   - a `design` component with neither annotation is untouched.
 
@@ -65,22 +65,22 @@ Research decisions are R1–R8; fixture cases are contracts/wire.md's P1–P3, B
 **Goal**: FR-006 (I11).
 **Independent test**: V1–V5, and the positive control.
 
-- [ ] T009 [US3] Create `INV/checks/closure_resolved_tier.rs` with `KINDS` and `check`, following `INV/checks/closure_role_scope.rs`:
+- [X] T009 [US3] Create `INV/checks/closure_resolved_tier.rs` with `KINDS` and `check`, following `INV/checks/closure_role_scope.rs`:
   - **precondition:** a component carrying C214, else `NotApplicable`;
   - **(a)** a `design` component carrying C203 `exempt-evaluated-package` or C218;
   - **(b)** the root has direct dependencies and all are `design`;
   - each violation names the component, or the root's direct dependencies with their tiers.
 
   Unit tests V1–V5. Register `pub mod closure_resolved_tier` in `INV/checks/mod.rs`, and an `Invariant { id: "I11", … }` entry in `INV/mod.rs`'s `REGISTRY`.
-- [ ] T010 [US3] Positive control, recorded in `MS/control.md`. With I11 registered and `GD` still holding `main`'s goldens, `golden_matrix_is_evaluable_and_gated` must fail with I11 undeclared failures on exactly moat, openai, slack-web and slacklinker, and must pass on shellcheck. Record the output verbatim. From here until T014 installs the new goldens, the local gate is red on purpose. Do not declare these cells away, and open no PR before T015 (analyze L2).
-- [ ] T011 [P] [US3] Catalog I11 in `docs/reference/sbom-invariants.md`: what it catches, its boundary with I9 and I10 (they assert scope, I11 asserts tier), and what to do when it fires (R6).
+- [X] T010 [US3] Positive control, recorded in `MS/control.md`. With I11 registered and `GD` still holding `main`'s goldens, `golden_matrix_is_evaluable_and_gated` must fail with I11 undeclared failures on exactly moat, openai, slack-web and slacklinker, and must pass on shellcheck. Record the output verbatim. From here until T014 installs the new goldens, the local gate is red on purpose. Do not declare these cells away, and open no PR before T015 (analyze L2).
+- [X] T011 [P] [US3] Catalog I11 in `docs/reference/sbom-invariants.md`: what it catches, its boundary with I9 and I10 (they assert scope, I11 asserts tier), and what to do when it fires (R6).
 
 ## Phase 6: User Story 4 — nothing else changes (P2)
 
 **Goal**: FR-007; SC-002, SC-004–SC-006.
 
-- [ ] T012 [US4] Write N1 in `IT`, and run `control_byte_identical_to_main` for N1 against T002's binary; it must pass. As a positive control, P1 must differ.
-- [ ] T013 [US4] Mutations (SC-006), with `MS/mutate.py` copied from spec 1649's runner:
+- [X] T012 [US4] Write N1 in `IT`, and run `control_byte_identical_to_main` for N1 against T002's binary; it must pass. As a positive control, P1 must differ.
+- [X] T013 [US4] Mutations (SC-006), with `MS/mutate.py` copied from spec 1649's runner: *As built: 6 mutations, all killed. `MS/mutations.md`.*
   - Ma: FR-002's rule removed;
   - Mb: FR-003's rule removed;
   - Mc: the `design` guard removed (re-tiers any tier);
@@ -89,24 +89,24 @@ Research decisions are R1–R8; fixture cases are contracts/wire.md's P1–P3, B
   - Mf: the evidence check removed, so every `design` component is re-tiered (spec SC-006, "FR-004's unresolved exemption removed"), killed by P3 and B3.
 
   Every mutation must be killed. Restore with `cp`, rebuild, and record the results in `MS/mutations.md`.
-- [ ] T014 [US4] Corpus. Push, and dispatch `public-corpus.yml -f branch=1650-closure-resolved-tier -f regen_goldens=true`. Confirm the scanned commit and every job's conclusion.
+- [X] T014 [US4] Corpus. Push, and dispatch `public-corpus.yml -f branch=1650-closure-resolved-tier -f regen_goldens=true`. Confirm the scanned commit and every job's conclusion. *As built: run 45315425551 at `896de593`, 179 passed. 12 goldens differ, all traced. Not predicted: `transitive-edges-unresolvable: hackage` leaves three completeness reasons; its real cause, leaf boot libraries, predates this spec (shellcheck) and is #1688.*
   - Install only goldens that differ, after tracing each one.
   - Every non-closure golden must be byte-identical (SC-004).
   - Each closure golden diff must be a tier change on a T001 component, or a document-level aggregate (CycloneDX `metadata.lifecycles`, SPDX 3 `software_sbomType`).
 
   Record in `MS/corpus.md`.
-- [ ] T015 [US4] SC-002: on the installed goldens, count `design` per closure target (expected 1, 0, 0, 0, 0) and reachability without `design` nodes (expected 1,134, 1,362, 1,235, 2,441, 2,085). I11 must pass on all five, and `golden_matrix_is_evaluable_and_gated` must pass. Record in `MS/corpus.md`. Then run a verification dispatch (no regeneration) at the final commit, which must pass.
+- [X] T015 [US4] SC-002: on the installed goldens, count `design` per closure target (expected 1, 0, 0, 0, 0) and reachability without `design` nodes (expected 1,134, 1,362, 1,235, 2,441, 2,085). I11 must pass on all five, and `golden_matrix_is_evaluable_and_gated` must pass. Record in `MS/corpus.md`. Then run a verification dispatch (no regeneration) at the final commit, which must pass. *As built: exactly R7's numbers. The verification dispatch at the final commit follows the push.*
 
 ## Phase 7: Polish
 
-- [ ] T016 [P] Docs:
+- [X] T016 [P] Docs:
   - in `docs/reference/sbom-format-mapping.md`, the C203 and C218 rows: under `--nix-closure` they imply `waybill:sbom-tier=build` (R5);
   - in `docs/reference/sbom-types.md`, a paragraph on closure scans: the evaluated package and compiler-supplied boot libraries are `build`; manifest-only `design` is unchanged.
-- [ ] T017 [P] `CHANGELOG.md`: a Fixed entry citing #1681, with T015's numbers. It must state the reversal of milestone 966's clarification.
-- [ ] T018 Run the full gate on the final commit, and record in `MS/gate-log.md`:
+- [X] T017 [P] `CHANGELOG.md`: a Fixed entry citing #1681, with T015's numbers. It must state the reversal of milestone 966's clarification.
+- [X] T018 Run the full gate on the final commit, and record in `MS/gate-log.md`:
   - the per-target totals, `GATE_RESULT` and the expected line;
   - that `git diff 18691d8 -- Cargo.lock '*Cargo.toml'` is empty.
-- [ ] T019 Close-out: check each task's claim against the tree and `MS/`, note as-built differences inline, and tick each task.
+- [X] T019 Close-out: check each task's claim against the tree and `MS/`, note as-built differences inline, and tick each task. *As built: each task's claim was checked against the tree and `MS/`.*
 
 ## Dependencies
 
