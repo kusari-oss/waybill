@@ -85,7 +85,7 @@ A consumer that reads the document-level type, rather than component tiers, sees
 
 1. **Given** a document whose only `design` components are relabelled, **When** its document-level type is read, **Then** `design` is no longer listed, in both CycloneDX and SPDX 3.
 2. **Given** a document whose completeness reason says `transitive-edges-unresolvable`, **When** it is relabelled, **Then** the verdict and the reason are unchanged.
-3. **Given** a document whose document-level type was asserted by the operator at scan time (`--sbom-type`), **When** it is relabelled, **Then** the operator's assertion is kept and not recomputed.
+3. **Given** a document whose document-level type differs from what its own component tiers give (asserted with `--sbom-type`, or written by another tool), **When** it is relabelled, **Then** the type is kept and not recomputed.
 
 ---
 
@@ -105,7 +105,7 @@ A consumer that reads the document-level type, rather than component tiers, sees
 - **Combined with other edit operations** (drop, redact, drop-annotations), the relabel applies to the components that remain. If `--drop-annotations waybill:` removes the tier annotations, there is nothing left to relabel: the counts say so, and the operation order is recorded.
 - **Relabelling from a non-CISA value** (`image`, `declared`) is allowed. Relabelling into one is not.
 - **An already-edited document** can be edited again. The new derivation record chains to the edited original as usual, and `verify-chain` follows the chain.
-- **The per-component marker is protected** like the rest of the edit's provenance: a later `--drop-annotations` on its namespace does not remove it, or the history of a component's tier would be erasable.
+- **The per-component marker is protected** like the rest of the edit's provenance: a later `--drop-annotations` on its namespace does not remove it, or the history of a component's tier would be erasable. On a second relabel it keeps its first value, the tier the component had when scanned; the derivation chain records every hop (research R4).
 
 ## Requirements *(mandatory)*
 
@@ -125,7 +125,7 @@ A consumer that reads the document-level type, rather than component tiers, sees
   - signatures.
 - **FR-004 (per-component marker)**: Each relabelled component MUST carry a marker naming its original tier, identical across CycloneDX, SPDX 2.3 and SPDX 3. It is a new catalog row with its parity extractor in the same change, and joins the edit's protected set.
 - **FR-005 (derivation record)**: The edit's derivation record MUST list each mapping and the number of components it relabelled, including 0. `waybill sbom verify-chain` MUST verify the result against its original.
-- **FR-006 (document type)**: CycloneDX `metadata.lifecycles`, and SPDX 3's `software_sbomType` with its lifecycle-phases comment, MUST be recomputed from the relabelled tiers. Exception: when the original's document type was the operator's own assertion (`--sbom-type`), it is kept.
+- **FR-006 (document type)**: The document type MUST be recomputed from the relabelled tiers wherever it appears: CycloneDX `metadata.lifecycles`, SPDX 2.3's `creationInfo.comment` phases, and SPDX 3's `software_sbomType` with its comment. Exception: it is recomputed only when the original's type equals what the original's own component tiers give. Otherwise the type was asserted (`--sbom-type`, which an emitted document does not record) or written by another tool, and it is kept. An assertion that happens to equal the derived value cannot be told apart, and is recomputed; the documentation says so (research R5).
 - **FR-007 (completeness untouched)**: `waybill:graph-completeness` and its reason MUST be unchanged. A relabel resolves nothing. The documentation says so, including that a milestone-177 `transitive-edges-unresolvable` clause may name an ecosystem whose `design` components were relabelled; it still describes the data, not the labels.
 - **FR-008 (parity)**: Editing each of a scan's three documents with the same `--retier` MUST give documents that `waybill sbom parity-check` reports with no gap.
 - **FR-009 (no new dependencies)**: Zero new Cargo dependencies.
@@ -160,6 +160,6 @@ A consumer that reads the document-level type, rather than component tiers, sees
 
 - The edit acts on one document at a time, as milestone 1071 does. Format agreement comes from applying the same operation to each of a scan's documents.
 - The per-component marker's name, row number and exact wire shape are decided in the plan, after the standards-native audit. The audit is expected to find no native field, as for `waybill:sbom-tier` itself.
-- How the operator's `--sbom-type` assertion is recognised in an emitted document is established in the plan. If the document does not record it, the plan says so and FR-006's exception is amended.
+- An emitted document does not record `--sbom-type` (research R5). FR-006's exception is therefore inferred, by comparing the original's type with what its own tiers give.
 - `image` and `declared` being outside the CISA vocabulary is a separate, pre-existing inconsistency. This feature neither emits nor fixes them.
 - Pico's rule is modelled, not run. kusaridev/iac#3552 tracks the fix there.
