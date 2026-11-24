@@ -153,6 +153,27 @@ The two documents agree; the extractors don't.
   - The unit suite and the three byte-identity regressions are unchanged.
   - Re-measured: `binary_kind_technique` (10 scans), `version_string_anchored` (28), `version_string_boundary` (24) and `version_string_static` (9) report **0 failing rows**.
 
+## R11. A7, the declared licence (traced at T007)
+
+**How it was measured.** The same temporary dump instrument, over all 28 goldens (16 fail A7), then restored with `cp` and rebuilt. Shapes per target, where *c*, *2* and *3* mark which formats carry a value:
+
+| Target group | Shapes |
+|---|---|
+| five `nix-closure-*` | (a) compound, (b) placeholder text, (c) hash ref, simple values in c+2 only, c only, and c+3 only |
+| haskell-language-server | (a), (b), c only, c+3 only |
+| image-postgres16 | (a), (c), c only, c+2 only |
+| haskell-aeson, maven-guice | (c) plus c+2 only: one licence spelled two ways |
+| six hpack targets | c+2 only |
+
+**The shapes:**
+- **(a) Compound split.** CycloneDX splits an `AND` compound into separate licence IDs (milestone 202, so scanners match IDs), while SPDX keeps the expression (`GPL-2.0-only AND LGPL-2.1`). The value sets differ though the licences are the same. Extractor semantics; no document defect.
+- **(b) Placeholder text.** The SPDX 2.3 extractor replaces a `LicenseRef-*` with its `extractedText`, and for refs with no real text that is the placeholder "License text not extracted by waybill…". CycloneDX and SPDX 3 report the ref (`LicenseRef-LGPL`). Extractor defect.
+- **(c) Custom licence by hash.** SPDX 3 spells a non-listed licence as `LicenseRef-<hash>` (milestone 154). Its extractor reports the hash, where SPDX 2.3's maps the ref to its text (`BSD3`, `The Apache Software License, Version 2.0`). Extractor asymmetry.
+- **(d) Missing from SPDX 3.** hpack-lootbox's `MPL-2.0` (and the other hpack targets' c+2-only values) are absent from SPDX 3 entirely. **Emitter defect.**
+- **(e) Bare non-listed IDs in SPDX 2.3.** `publicDomain` and `BSD-3-Clause AND publicDomain` are carried bare, where SPDX 3 has `LicenseRef-publicDomain` or a hash. To be confirmed: whether SPDX 2.3's `licenseDeclared` is a non-conformant expression here or the extractor is substituting text. **Possible emitter defect.**
+
+**Scope:** decided with the maintainer at T007 (see tasks.md T013).
+
 ## R9. Goldens and G1 (FR-006)
 
 **No test parity-checks goldens.** G1 needs no product change. `measurements/golden_parity.sh` will:

@@ -49,7 +49,7 @@
 
 - [X] T005 [P] [US3] Trace R8 on one binary test (for example `version_string_static`): keep its scan directory, and find why SPDX 2.3 lacks the synthetic root → bundled `.so` edge that CycloneDX and SPDX 3 carry. Check whether it is emitted under another relationship type, or skipped for file-tier targets, in `waybill-cli/src/generate/spdx/relationships.rs`. Record the cause and the fix site in `research.md` R8.
 - [X] T006 [P] [US3] Trace R7: find where CycloneDX `metadata.component`'s properties are built (`waybill-cli/src/generate/cyclonedx/metadata.rs` or `builder.rs`), and why only `component-role`, `sbom-tier`, `source-files` and `workspace-member` survive when the root is not also in `components[]`. List which goldens' roots are only in `metadata.component`. Record it in `research.md` R7.
-- [ ] T007 [P] [US3] Trace closure A7 on the five closure goldens:
+- [X] T007 [P] [US3] Trace closure A7 on the five closure goldens:
   - classify every differing declared-licence value by shape (CycloneDX individual IDs against SPDX expression, `LicenseRef` text, SPDX 3 missing a value, other) with counts per target;
   - for each shape, name the emitter or extractor that is wrong.
 
