@@ -41,7 +41,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":420,\\\"excluded_files\\\":7,\\\"excluded_members\\\":1518,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":390,\\\"with_candidates\\\":612}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":419,\\\"excluded_files\\\":7,\\\"excluded_members\\\":1518,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":390,\\\"with_candidates\\\":612}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -53,13 +53,13 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":1,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":64,\\\"revision\\\":\\\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\\\",\\\"unresolved\\\":{\\\"absent-from-package-set\\\":1,\\\"nixpkgs-version-violates-requirement\\\":1}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":1,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":65,\\\"revision\\\":\\\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\\\",\\\"unresolved\\\":{\\\"nixpkgs-version-violates-requirement\\\":1}}\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-closure\",\"value\":\"{\\\"declared\\\":77,\\\"relations-walked\\\":1770,\\\"transitive\\\":204,\\\"unresolved\\\":{}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-closure\",\"value\":\"{\\\"declared\\\":77,\\\"relations-walked\\\":1770,\\\"transitive\\\":203,\\\"unresolved\\\":{}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -782,6 +782,102 @@
       "licenseDeclared": "NOASSERTION",
       "name": "flake-utils",
       "versionInfo": "11707dc2f618dd54ca8739b309ec4fc024de578b"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ARETAJUE7HGVBXSI",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"statically-linked\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package.yaml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-contents\",\"value\":\"read\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-component-origin\",\"value\":\"declared\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-resolved-via\",\"value\":{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\",\"source\":\"nixpkgs\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b0b7538871ffc058486fc00740886d2f3172f8fa6869936bfe83a5e10bd744ab"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/HUnit@1.6.2.0",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
+      "name": "HUnit",
+      "versionInfo": "1.6.2.0"
     },
     {
       "SPDXID": "SPDXRef-Package-5NYFPNETG2VZOEUC",
@@ -4280,90 +4376,6 @@
       "licenseDeclared": "BSD-3-Clause",
       "name": "http-types",
       "versionInfo": "0.12.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-VWCUMHFRRFNB6BYQ",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"development\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package.yaml\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:haskell-version-unresolved-reason\",\"value\":\"absent-from-package-set\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-component-origin\",\"value\":\"declared\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:hackage/hunit",
-          "referenceType": "purl"
-        }
-      ],
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "hunit",
-      "versionInfo": "NOASSERTION"
     },
     {
       "SPDXID": "SPDXRef-Package-L7N4D6RXMGPLKNGB",
@@ -7910,72 +7922,6 @@
       "licenseDeclared": "MIT",
       "name": "warp",
       "versionInfo": "3.4.9"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-ARETAJUE7HGVBXSI",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"statically-linked\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-contents\",\"value\":\"read\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-component-origin\",\"value\":\"transitive\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-resolved-via\",\"value\":{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\",\"source\":\"nixpkgs\"}}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "b0b7538871ffc058486fc00740886d2f3172f8fa6869936bfe83a5e10bd744ab"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:hackage/HUnit@1.6.2.0",
-          "referenceType": "purl"
-        }
-      ],
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "BSD-3-Clause",
-      "name": "HUnit",
-      "versionInfo": "1.6.2.0"
     },
     {
       "SPDXID": "SPDXRef-Package-AQOMUHWLUFUEUX3W",
@@ -286225,11 +286171,6 @@
       "relatedSpdxElement": "SPDXRef-Package-ZMWTLXEHJRLPHVAI",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-VVQKWLD4J2GQMM5A"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OYADOV27R5JHUXL7",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-VWCUMHFRRFNB6BYQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",

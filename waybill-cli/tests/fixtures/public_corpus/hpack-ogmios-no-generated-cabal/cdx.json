@@ -1,6 +1,5771 @@
 {
   "bomFormat": "CycloneDX",
-  "components": [],
+  "components": [
+    {
+      "bom-ref": "pkg:hackage/QuickCheck",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "QuickCheck",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/hspec-json-schema\"]"
+        }
+      ],
+      "purl": "pkg:hackage/QuickCheck",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/aeson",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/contra-tracers/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-rpc/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "aeson",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/aeson",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/aeson-pretty",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "aeson-pretty",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/hspec-json-schema\"]"
+        }
+      ],
+      "purl": "pkg:hackage/aeson-pretty",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/ansi-wl-pprint",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          }
+        ]
+      },
+      "name": "ansi-wl-pprint",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/hspec-json-schema\"]"
+        }
+      ],
+      "purl": "pkg:hackage/ansi-wl-pprint",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/array",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "array",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/array",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/async",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "async",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/async",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/attoparsec-aeson",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "attoparsec-aeson",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/attoparsec-aeson",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/contra-tracers/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/git-th/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-rpc/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "base",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">= 4.17 && < 5\",\">= 4.7 && < 5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base16",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "base16",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/fast-bech32\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base16",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base58-bytestring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "base58-bytestring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base58-bytestring",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/bech32",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "bech32",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/fast-bech32\"]"
+        }
+      ],
+      "purl": "pkg:hackage/bech32",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/bech32-th",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "bech32-th",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/bech32-th",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/binary",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "binary",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/binary",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/bytestring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-rpc/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "bytestring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/bytestring",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-crypto",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-crypto",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-crypto",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-crypto-class",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-crypto-class",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-crypto-class",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-crypto-wrapper",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-crypto-wrapper",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-crypto-wrapper",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-data",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-data",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-data",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-diffusion",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-diffusion",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-diffusion",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-allegra",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-allegra",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-allegra",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-alonzo",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-alonzo",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:cabal-build-tool-executable",
+          "value": "testlib"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-alonzo",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-api",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-api",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-api",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-babbage",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-babbage",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-babbage",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-binary",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-binary",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-binary",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-byron",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-byron",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-byron",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-conway",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-conway",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:cabal-build-tool-executable",
+          "value": "testlib"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-conway",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-core",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-core",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-core",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-dijkstra",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-dijkstra",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:cabal-build-tool-executable",
+          "value": "testlib"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-dijkstra",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-mary",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-mary",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-mary",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-ledger-shelley",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-ledger-shelley",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-ledger-shelley",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-protocol-tpraos",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-protocol-tpraos",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-protocol-tpraos",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-slotting",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-slotting",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-slotting",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cardano-strict-containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cardano-strict-containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cardano-strict-containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/cborg",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "cborg",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/cborg",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/contra-tracer",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/contra-tracers/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "contra-tracer",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/contra-tracer",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/contra-tracers@1.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/contra-tracers/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "contra-tracers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/contra-tracers/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/contra-tracers\"]"
+        }
+      ],
+      "purl": "pkg:hackage/contra-tracers@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/criterion",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          }
+        ]
+      },
+      "name": "criterion",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/fast-bech32\"]"
+        }
+      ],
+      "purl": "pkg:hackage/criterion",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/deepseq",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          }
+        ]
+      },
+      "name": "deepseq",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/deepseq",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/directory",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "directory",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/directory",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/ekg-core",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "ekg-core",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/ekg-core",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/fast-bech32@1.0.1",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "fast-bech32",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/fast-bech32\"]"
+        }
+      ],
+      "purl": "pkg:hackage/fast-bech32@1.0.1",
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "bom-ref": "pkg:hackage/file-embed",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "file-embed",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/file-embed",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/filepath",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "filepath",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/filepath",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/formatting",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "formatting",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/formatting",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/generic-arbitrary",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "generic-arbitrary",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/generic-arbitrary",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/generic-lens",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "generic-lens",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/generic-lens",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/git-th@1.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/git-th/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "git-th",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/git-th/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/git-th\"]"
+        }
+      ],
+      "purl": "pkg:hackage/git-th@1.1.0",
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/hjsonpointer",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          }
+        ]
+      },
+      "name": "hjsonpointer",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/hspec-json-schema\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hjsonpointer",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hjsonschema",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          }
+        ]
+      },
+      "name": "hjsonschema",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/hspec-json-schema\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hjsonschema",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hspec",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/git-th/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-rpc/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "hspec",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hspec",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hspec-discover",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/git-th/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-rpc/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "hspec-discover",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hspec-discover",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hspec-json-schema@1.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "hspec-json-schema",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/hspec-json-schema\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hspec-json-schema@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/http-client",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "http-client",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/http-client",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/http-types",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "http-types",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/http-types",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/io-classes",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "io-classes",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/io-classes",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/io-sim",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "io-sim",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/io-sim",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/iohk-monitoring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "iohk-monitoring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/iohk-monitoring",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/iproute",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "iproute",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/iproute",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/json-rpc@1.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-rpc/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "json-rpc",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/json-rpc/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/json-rpc\"]"
+        }
+      ],
+      "purl": "pkg:hackage/json-rpc@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/json-via-show@2.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "json-via-show",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/json-via-show/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/json-via-show\"]"
+        }
+      ],
+      "purl": "pkg:hackage/json-via-show@2.0.0",
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/lens-aeson",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "lens-aeson",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/lens-aeson",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/memory",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "memory",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/memory",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/mtl",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "mtl",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/mtl",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/network-mux",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          }
+        ]
+      },
+      "name": "network-mux",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/network-mux",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/ogmios@0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "ogmios",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/ogmios@0",
+      "type": "library",
+      "version": "0"
+    },
+    {
+      "bom-ref": "pkg:hackage/optparse-applicative",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "optparse-applicative",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/optparse-applicative",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/ouroboros-consensus",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "ouroboros-consensus",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:cabal-build-tool-executable",
+          "value": "cardano"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/ouroboros-consensus",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/ouroboros-network",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "ouroboros-network",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:cabal-build-tool-executable",
+          "value": "api"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/ouroboros-network",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/ouroboros-network-ogmios@0.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "name": "ouroboros-network-ogmios",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/ouroboros-network-ogmios@0.0.0",
+      "type": "library",
+      "version": "0.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/plutus-core",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "plutus-core",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/plutus-core",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/plutus-ledger-api",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "plutus-ledger-api",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/plutus-ledger-api",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/prettyprinter",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "prettyprinter",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/prettyprinter",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/process",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/git-th/package.yaml"
+          }
+        ]
+      },
+      "name": "process",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/git-th/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/git-th\"]"
+        }
+      ],
+      "purl": "pkg:hackage/process",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/profunctors",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "profunctors",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/profunctors",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/prometheus",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "prometheus",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/prometheus",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/random",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "random",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/random",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/random-bytestring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          }
+        ]
+      },
+      "name": "random-bytestring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/fast-bech32\"]"
+        }
+      ],
+      "purl": "pkg:hackage/random-bytestring",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/relude",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "relude",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/fast-bech32\"]"
+        }
+      ],
+      "purl": "pkg:hackage/relude",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/safe",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "safe",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/safe",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/safe-exceptions",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "safe-exceptions",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/safe-exceptions",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/scientific",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "scientific",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/hspec-json-schema\"]"
+        }
+      ],
+      "purl": "pkg:hackage/scientific",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/serialise",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "serialise",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/serialise",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/small-steps",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "small-steps",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/small-steps",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/sop-extras",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "sop-extras",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/sop-extras",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/stm",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "stm",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/stm",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/strict-sop-core",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "strict-sop-core",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/strict-sop-core",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/string-interpolate",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          }
+        ]
+      },
+      "name": "string-interpolate",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/hspec-json-schema/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/hspec-json-schema\"]"
+        }
+      ],
+      "purl": "pkg:hackage/string-interpolate",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/template-haskell",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/git-th/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "template-haskell",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/git-th/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/git-th\"]"
+        }
+      ],
+      "purl": "pkg:hackage/template-haskell",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/temporary",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/git-th/package.yaml"
+          }
+        ]
+      },
+      "name": "temporary",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/git-th/package.yaml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server/modules/git-th\"]"
+        }
+      ],
+      "purl": "pkg:hackage/temporary",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/text",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/fast-bech32/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/hspec-json-schema/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-rpc/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "text",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\"]"
+        }
+      ],
+      "purl": "pkg:hackage/text",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/time",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/json-via-show/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "time",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/json-via-show\"]"
+        }
+      ],
+      "purl": "pkg:hackage/time",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/time-manager",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "time-manager",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/time-manager",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/transformers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "transformers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/transformers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/typed-protocols",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/modules/ouroboros-network-ogmios/package.yaml"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "typed-protocols",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:cabal-build-tool-executable",
+          "value": "cborg"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
+        }
+      ],
+      "purl": "pkg:hackage/typed-protocols",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/unix",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "unix",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/unix",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/vector",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "vector",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/vector",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/vector-map",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "vector-map",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/vector-map",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/wai",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "wai",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/wai",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/wai-websockets",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "wai-websockets",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/wai-websockets",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/warp",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "warp",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/warp",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/websockets",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "websockets",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/websockets",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/yaml",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "server/package.yaml"
+          }
+        ]
+      },
+      "name": "yaml",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"server/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"server\"]"
+        }
+      ],
+      "purl": "pkg:hackage/yaml",
+      "type": "library"
+    }
+  ],
   "compositions": [
     {
       "aggregate": "complete",
@@ -2089,8 +7854,590 @@
   ],
   "dependencies": [
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:hackage/contra-tracers@1.0.0",
+        "pkg:hackage/fast-bech32@1.0.1",
+        "pkg:hackage/git-th@1.1.0",
+        "pkg:hackage/hspec-json-schema@1.0.0",
+        "pkg:hackage/json-rpc@1.0.0",
+        "pkg:hackage/json-via-show@2.0.0",
+        "pkg:hackage/ogmios@0",
+        "pkg:hackage/ouroboros-network-ogmios@0.0.0"
+      ],
       "ref": "hpack-ogmios-no-generated-cabal@435189a"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/QuickCheck"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/aeson"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/aeson-pretty"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/ansi-wl-pprint"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/array"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/async"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/attoparsec-aeson"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base16"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base58-bytestring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/bech32"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/bech32-th"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/binary"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/bytestring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-crypto"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-crypto-class"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-crypto-wrapper"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-data"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-diffusion"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-allegra"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-alonzo"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-api"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-babbage"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-binary"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-byron"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-conway"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-core"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-dijkstra"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-mary"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-ledger-shelley"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-protocol-tpraos"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-slotting"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cardano-strict-containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/cborg"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/contra-tracer"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/base",
+        "pkg:hackage/contra-tracer"
+      ],
+      "ref": "pkg:hackage/contra-tracers@1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/criterion"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/deepseq"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/directory"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/ekg-core"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/QuickCheck",
+        "pkg:hackage/base",
+        "pkg:hackage/base16",
+        "pkg:hackage/bech32",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/criterion",
+        "pkg:hackage/hspec",
+        "pkg:hackage/hspec-discover",
+        "pkg:hackage/random-bytestring",
+        "pkg:hackage/relude",
+        "pkg:hackage/text"
+      ],
+      "ref": "pkg:hackage/fast-bech32@1.0.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/file-embed"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/filepath"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/formatting"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/generic-arbitrary"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/generic-lens"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base",
+        "pkg:hackage/hspec",
+        "pkg:hackage/hspec-discover",
+        "pkg:hackage/process",
+        "pkg:hackage/template-haskell",
+        "pkg:hackage/temporary"
+      ],
+      "ref": "pkg:hackage/git-th@1.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hjsonpointer"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hjsonschema"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hspec"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hspec-discover"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/QuickCheck",
+        "pkg:hackage/aeson",
+        "pkg:hackage/aeson-pretty",
+        "pkg:hackage/ansi-wl-pprint",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/hjsonpointer",
+        "pkg:hackage/hjsonschema",
+        "pkg:hackage/hspec",
+        "pkg:hackage/hspec-discover",
+        "pkg:hackage/scientific",
+        "pkg:hackage/string-interpolate",
+        "pkg:hackage/text"
+      ],
+      "ref": "pkg:hackage/hspec-json-schema@1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/http-client"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/http-types"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/io-classes"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/io-sim"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/iohk-monitoring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/iproute"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/hspec",
+        "pkg:hackage/hspec-discover",
+        "pkg:hackage/text"
+      ],
+      "ref": "pkg:hackage/json-rpc@1.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/base",
+        "pkg:hackage/containers",
+        "pkg:hackage/hspec",
+        "pkg:hackage/hspec-discover",
+        "pkg:hackage/text",
+        "pkg:hackage/time"
+      ],
+      "ref": "pkg:hackage/json-via-show@2.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/lens-aeson"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/memory"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/mtl"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/network-mux"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/QuickCheck",
+        "pkg:hackage/aeson",
+        "pkg:hackage/aeson-pretty",
+        "pkg:hackage/array",
+        "pkg:hackage/async",
+        "pkg:hackage/attoparsec-aeson",
+        "pkg:hackage/base",
+        "pkg:hackage/base16",
+        "pkg:hackage/base58-bytestring",
+        "pkg:hackage/bech32",
+        "pkg:hackage/bech32-th",
+        "pkg:hackage/binary",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/cardano-crypto",
+        "pkg:hackage/cardano-crypto-class",
+        "pkg:hackage/cardano-crypto-wrapper",
+        "pkg:hackage/cardano-data",
+        "pkg:hackage/cardano-ledger-allegra",
+        "pkg:hackage/cardano-ledger-alonzo",
+        "pkg:hackage/cardano-ledger-api",
+        "pkg:hackage/cardano-ledger-babbage",
+        "pkg:hackage/cardano-ledger-binary",
+        "pkg:hackage/cardano-ledger-byron",
+        "pkg:hackage/cardano-ledger-conway",
+        "pkg:hackage/cardano-ledger-core",
+        "pkg:hackage/cardano-ledger-dijkstra",
+        "pkg:hackage/cardano-ledger-mary",
+        "pkg:hackage/cardano-ledger-shelley",
+        "pkg:hackage/cardano-protocol-tpraos",
+        "pkg:hackage/cardano-slotting",
+        "pkg:hackage/cardano-strict-containers",
+        "pkg:hackage/cborg",
+        "pkg:hackage/containers",
+        "pkg:hackage/contra-tracer",
+        "pkg:hackage/contra-tracers@1.0.0",
+        "pkg:hackage/directory",
+        "pkg:hackage/ekg-core",
+        "pkg:hackage/fast-bech32@1.0.1",
+        "pkg:hackage/file-embed",
+        "pkg:hackage/filepath",
+        "pkg:hackage/formatting",
+        "pkg:hackage/generic-arbitrary",
+        "pkg:hackage/generic-lens",
+        "pkg:hackage/git-th@1.1.0",
+        "pkg:hackage/hspec",
+        "pkg:hackage/hspec-discover",
+        "pkg:hackage/hspec-json-schema@1.0.0",
+        "pkg:hackage/http-client",
+        "pkg:hackage/http-types",
+        "pkg:hackage/io-classes",
+        "pkg:hackage/io-sim",
+        "pkg:hackage/iohk-monitoring",
+        "pkg:hackage/iproute",
+        "pkg:hackage/json-rpc@1.0.0",
+        "pkg:hackage/lens-aeson",
+        "pkg:hackage/memory",
+        "pkg:hackage/mtl",
+        "pkg:hackage/optparse-applicative",
+        "pkg:hackage/ouroboros-consensus",
+        "pkg:hackage/ouroboros-network",
+        "pkg:hackage/ouroboros-network-ogmios@0.0.0",
+        "pkg:hackage/plutus-core",
+        "pkg:hackage/plutus-ledger-api",
+        "pkg:hackage/prettyprinter",
+        "pkg:hackage/profunctors",
+        "pkg:hackage/prometheus",
+        "pkg:hackage/random",
+        "pkg:hackage/relude",
+        "pkg:hackage/safe",
+        "pkg:hackage/safe-exceptions",
+        "pkg:hackage/scientific",
+        "pkg:hackage/serialise",
+        "pkg:hackage/small-steps",
+        "pkg:hackage/sop-extras",
+        "pkg:hackage/stm",
+        "pkg:hackage/strict-sop-core",
+        "pkg:hackage/template-haskell",
+        "pkg:hackage/text",
+        "pkg:hackage/time",
+        "pkg:hackage/time-manager",
+        "pkg:hackage/transformers",
+        "pkg:hackage/typed-protocols",
+        "pkg:hackage/unix",
+        "pkg:hackage/vector",
+        "pkg:hackage/vector-map",
+        "pkg:hackage/wai",
+        "pkg:hackage/wai-websockets",
+        "pkg:hackage/warp",
+        "pkg:hackage/websockets",
+        "pkg:hackage/yaml"
+      ],
+      "ref": "pkg:hackage/ogmios@0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/optparse-applicative"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/ouroboros-consensus"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/ouroboros-network"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/cardano-diffusion",
+        "pkg:hackage/cardano-ledger-byron",
+        "pkg:hackage/cardano-slotting",
+        "pkg:hackage/cborg",
+        "pkg:hackage/containers",
+        "pkg:hackage/contra-tracer",
+        "pkg:hackage/deepseq",
+        "pkg:hackage/hspec-discover",
+        "pkg:hackage/io-classes",
+        "pkg:hackage/iohk-monitoring",
+        "pkg:hackage/network-mux",
+        "pkg:hackage/ouroboros-consensus",
+        "pkg:hackage/ouroboros-network",
+        "pkg:hackage/typed-protocols"
+      ],
+      "ref": "pkg:hackage/ouroboros-network-ogmios@0.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/plutus-core"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/plutus-ledger-api"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/prettyprinter"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/process"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/profunctors"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/prometheus"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/random"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/random-bytestring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/relude"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/safe"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/safe-exceptions"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/scientific"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/serialise"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/small-steps"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/sop-extras"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/stm"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/strict-sop-core"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/string-interpolate"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/template-haskell"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/temporary"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/text"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/time"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/time-manager"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/transformers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/typed-protocols"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/unix"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/vector"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/vector-map"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/wai"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/wai-websockets"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/warp"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/websockets"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/yaml"
     }
   ],
   "metadata": {
@@ -2122,6 +8469,9 @@
     ],
     "lifecycles": [
       {
+        "phase": "design"
+      },
+      {
         "phase": "pre-build"
       }
     ],
@@ -2136,7 +8486,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":10,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":5,\"with_candidates\":1031}"
+        "value": "{\"addressable_without_cpe\":103,\"excluded_files\":10,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":5,\"with_candidates\":1031}"
       },
       {
         "name": "waybill:git-submodule-coverage",
@@ -2172,11 +8522,11 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 194 component(s) not reachable from root; manifest-unread: 8 haskell manifest(s) found but not read"
+        "value": "orphaned-components-detected: 194 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"clients/TypeScript\",\"clients/TypeScript/packages/client\",\"clients/TypeScript/packages/repl\",\"clients/TypeScript/packages/schema\",\"server/dashboard\"]"
+        "value": "[\".\",\"clients/TypeScript\",\"clients/TypeScript/packages/client\",\"clients/TypeScript/packages/repl\",\"clients/TypeScript/packages/schema\",\"server\",\"server/dashboard\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",
@@ -2188,7 +8538,7 @@
       },
       {
         "name": "waybill:hpack-read-outcome",
-        "value": "{\"generated-cabal-suppressed\":[],\"manifests-partial\":[],\"manifests-read\":[],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"],\"manifests-unread\":[{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 22 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 21 column 21\",\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\",\"reason\":\"malformed-yaml\"}]}"
+        "value": "{\"generated-cabal-suppressed\":[],\"includes-resolved\":[{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\",\"include\":\".hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"}],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"],\"manifests-unread\":[]}"
       }
     ],
     "supplier": {

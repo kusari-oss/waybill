@@ -2873,7 +2873,7 @@ fn run_shared_walker_pilot(
         .find(|r| r.reader_id == ReaderId::HASKELL)
         .map(|reg| {
             let paths = haskell::extract_paths(reg);
-            haskell::finalize(paths, include_dev, exclude_set)
+            haskell::finalize(rootfs, paths, include_dev, exclude_set)
         })
         .unwrap_or_default();
     // Milestone 895 (FR-012a/b) — doc-scope count of dependency entries the

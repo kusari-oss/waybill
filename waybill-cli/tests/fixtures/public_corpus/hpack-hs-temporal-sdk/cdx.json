@@ -1611,7 +1611,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/hspec-discover:hspec-discover",
+      "bom-ref": "pkg:hackage/hspec-discover",
       "evidence": {
         "identity": [
           {
@@ -1632,7 +1632,7 @@
           }
         ]
       },
-      "name": "hspec-discover:hspec-discover",
+      "name": "hspec-discover",
       "properties": [
         {
           "name": "waybill:source-files",
@@ -1655,6 +1655,10 @@
           "value": "hpack-manifest"
         },
         {
+          "name": "waybill:cabal-build-tool-executable",
+          "value": "hspec-discover"
+        },
+        {
           "name": "waybill:haskell-version-unresolved-reason",
           "value": "offline"
         },
@@ -1667,7 +1671,7 @@
           "value": "[\"sdk\"]"
         }
       ],
-      "purl": "pkg:hackage/hspec-discover:hspec-discover",
+      "purl": "pkg:hackage/hspec-discover",
       "scope": "excluded",
       "type": "library"
     },
@@ -3019,7 +3023,7 @@
       "version": "2025.10.1.0"
     },
     {
-      "bom-ref": "pkg:hackage/temporal-codec-encryption",
+      "bom-ref": "pkg:hackage/temporal-codec-encryption@2025.10.1.0",
       "evidence": {
         "identity": [
           {
@@ -3075,73 +3079,12 @@
           "value": "[\"codec-encryption\"]"
         }
       ],
-      "purl": "pkg:hackage/temporal-codec-encryption",
+      "purl": "pkg:hackage/temporal-codec-encryption@2025.10.1.0",
       "type": "library",
-      "version": "0.0.0-unknown"
+      "version": "2025.10.1.0"
     },
     {
-      "bom-ref": "pkg:hackage/temporal-sdk",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "sdk/package.yaml"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
-      "name": "temporal-sdk",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"sdk/package.yaml\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"sdk\"]"
-        }
-      ],
-      "purl": "pkg:hackage/temporal-sdk",
-      "type": "library",
-      "version": "0.0.0-unknown"
-    },
-    {
-      "bom-ref": "pkg:hackage/temporal-sdk-codec-server",
+      "bom-ref": "pkg:hackage/temporal-sdk-codec-server@2025.10.1.0",
       "evidence": {
         "identity": [
           {
@@ -3197,12 +3140,12 @@
           "value": "[\"codec-server\"]"
         }
       ],
-      "purl": "pkg:hackage/temporal-sdk-codec-server",
+      "purl": "pkg:hackage/temporal-sdk-codec-server@2025.10.1.0",
       "type": "library",
-      "version": "0.0.0-unknown"
+      "version": "2025.10.1.0"
     },
     {
-      "bom-ref": "pkg:hackage/temporal-sdk-core",
+      "bom-ref": "pkg:hackage/temporal-sdk-core@2025.10.1.0",
       "evidence": {
         "identity": [
           {
@@ -3258,12 +3201,12 @@
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:hackage/temporal-sdk-core",
+      "purl": "pkg:hackage/temporal-sdk-core@2025.10.1.0",
       "type": "library",
-      "version": "0.0.0-unknown"
+      "version": "2025.10.1.0"
     },
     {
-      "bom-ref": "pkg:hackage/temporal-sdk-optimal-codec",
+      "bom-ref": "pkg:hackage/temporal-sdk-optimal-codec@2025.10.1.0",
       "evidence": {
         "identity": [
           {
@@ -3319,9 +3262,70 @@
           "value": "[\"optimal-codec\"]"
         }
       ],
-      "purl": "pkg:hackage/temporal-sdk-optimal-codec",
+      "purl": "pkg:hackage/temporal-sdk-optimal-codec@2025.10.1.0",
       "type": "library",
-      "version": "0.0.0-unknown"
+      "version": "2025.10.1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/temporal-sdk@2025.10.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "sdk/package.yaml"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "temporal-sdk",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"sdk/package.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"sdk\"]"
+        }
+      ],
+      "purl": "pkg:hackage/temporal-sdk@2025.10.1.0",
+      "type": "library",
+      "version": "2025.10.1.0"
     },
     {
       "bom-ref": "pkg:hackage/text",
@@ -3624,7 +3628,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/tix-to-markdown",
+      "bom-ref": "pkg:hackage/tix-to-markdown@2025.10.1.0",
       "evidence": {
         "identity": [
           {
@@ -3645,6 +3649,14 @@
           }
         ]
       },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "tix-to-markdown",
       "properties": [
         {
@@ -3672,9 +3684,9 @@
           "value": "[\"tools/tix-to-markdown\"]"
         }
       ],
-      "purl": "pkg:hackage/tix-to-markdown",
+      "purl": "pkg:hackage/tix-to-markdown@2025.10.1.0",
       "type": "library",
-      "version": "0.0.0-unknown"
+      "version": "2025.10.1.0"
     },
     {
       "bom-ref": "pkg:hackage/transformers",
@@ -5114,12 +5126,12 @@
     {
       "dependsOn": [
         "pkg:hackage/temporal-api-protos@2025.10.1.0",
-        "pkg:hackage/temporal-codec-encryption",
-        "pkg:hackage/temporal-sdk",
-        "pkg:hackage/temporal-sdk-codec-server",
-        "pkg:hackage/temporal-sdk-core",
-        "pkg:hackage/temporal-sdk-optimal-codec",
-        "pkg:hackage/tix-to-markdown"
+        "pkg:hackage/temporal-codec-encryption@2025.10.1.0",
+        "pkg:hackage/temporal-sdk-codec-server@2025.10.1.0",
+        "pkg:hackage/temporal-sdk-core@2025.10.1.0",
+        "pkg:hackage/temporal-sdk-optimal-codec@2025.10.1.0",
+        "pkg:hackage/temporal-sdk@2025.10.1.0",
+        "pkg:hackage/tix-to-markdown@2025.10.1.0"
       ],
       "ref": "hpack-hs-temporal-sdk@d24313e"
     },
@@ -5229,7 +5241,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/hspec-discover:hspec-discover"
+      "ref": "pkg:hackage/hspec-discover"
     },
     {
       "dependsOn": [],
@@ -5337,10 +5349,61 @@
         "pkg:hackage/hedgehog",
         "pkg:hackage/memory",
         "pkg:hackage/proto-lens",
-        "pkg:hackage/temporal-sdk",
+        "pkg:hackage/temporal-sdk@2025.10.1.0",
         "pkg:hackage/text"
       ],
-      "ref": "pkg:hackage/temporal-codec-encryption"
+      "ref": "pkg:hackage/temporal-codec-encryption@2025.10.1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/containers",
+        "pkg:hackage/hs-opentelemetry-api",
+        "pkg:hackage/http-types",
+        "pkg:hackage/temporal-sdk@2025.10.1.0",
+        "pkg:hackage/text",
+        "pkg:hackage/transformers",
+        "pkg:hackage/vector",
+        "pkg:hackage/wai",
+        "pkg:hackage/wai-cors"
+      ],
+      "ref": "pkg:hackage/temporal-sdk-codec-server@2025.10.1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson",
+        "pkg:hackage/async",
+        "pkg:hackage/atomic-primops",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/containers",
+        "pkg:hackage/hspec",
+        "pkg:hackage/lens-family",
+        "pkg:hackage/monad-logger",
+        "pkg:hackage/mtl",
+        "pkg:hackage/network-bsd",
+        "pkg:hackage/proto-lens",
+        "pkg:hackage/stm",
+        "pkg:hackage/temporal-api-protos@2025.10.1.0",
+        "pkg:hackage/text",
+        "pkg:hackage/unix",
+        "pkg:hackage/unliftio",
+        "pkg:hackage/unordered-containers",
+        "pkg:hackage/uuid",
+        "pkg:hackage/vector"
+      ],
+      "ref": "pkg:hackage/temporal-sdk-core@2025.10.1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base",
+        "pkg:hackage/containers",
+        "pkg:hackage/if-instance",
+        "pkg:hackage/temporal-sdk@2025.10.1.0"
+      ],
+      "ref": "pkg:hackage/temporal-sdk-optimal-codec@2025.10.1.0"
     },
     {
       "dependsOn": [
@@ -5366,7 +5429,7 @@
         "pkg:hackage/hs-opentelemetry-sdk",
         "pkg:hackage/hspec",
         "pkg:hackage/hspec-api",
-        "pkg:hackage/hspec-discover:hspec-discover",
+        "pkg:hackage/hspec-discover",
         "pkg:hackage/hspec-hedgehog",
         "pkg:hackage/lens-family",
         "pkg:hackage/list-t",
@@ -5385,7 +5448,7 @@
         "pkg:hackage/stm-containers",
         "pkg:hackage/template-haskell",
         "pkg:hackage/temporal-api-protos@2025.10.1.0",
-        "pkg:hackage/temporal-sdk-core",
+        "pkg:hackage/temporal-sdk-core@2025.10.1.0",
         "pkg:hackage/text",
         "pkg:hackage/th-lift-instances",
         "pkg:hackage/these",
@@ -5401,58 +5464,7 @@
         "pkg:hackage/vector",
         "pkg:hackage/zlib"
       ],
-      "ref": "pkg:hackage/temporal-sdk"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/aeson",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/hs-opentelemetry-api",
-        "pkg:hackage/http-types",
-        "pkg:hackage/temporal-sdk",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
-        "pkg:hackage/vector",
-        "pkg:hackage/wai",
-        "pkg:hackage/wai-cors"
-      ],
-      "ref": "pkg:hackage/temporal-sdk-codec-server"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/aeson",
-        "pkg:hackage/async",
-        "pkg:hackage/atomic-primops",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/hspec",
-        "pkg:hackage/lens-family",
-        "pkg:hackage/monad-logger",
-        "pkg:hackage/mtl",
-        "pkg:hackage/network-bsd",
-        "pkg:hackage/proto-lens",
-        "pkg:hackage/stm",
-        "pkg:hackage/temporal-api-protos@2025.10.1.0",
-        "pkg:hackage/text",
-        "pkg:hackage/unix",
-        "pkg:hackage/unliftio",
-        "pkg:hackage/unordered-containers",
-        "pkg:hackage/uuid",
-        "pkg:hackage/vector"
-      ],
-      "ref": "pkg:hackage/temporal-sdk-core"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/if-instance",
-        "pkg:hackage/temporal-sdk"
-      ],
-      "ref": "pkg:hackage/temporal-sdk-optimal-codec"
+      "ref": "pkg:hackage/temporal-sdk@2025.10.1.0"
     },
     {
       "dependsOn": [],
@@ -5481,7 +5493,7 @@
         "pkg:hackage/filepath",
         "pkg:hackage/hpc"
       ],
-      "ref": "pkg:hackage/tix-to-markdown"
+      "ref": "pkg:hackage/tix-to-markdown@2025.10.1.0"
     },
     {
       "dependsOn": [],
@@ -5634,7 +5646,7 @@
       },
       {
         "name": "waybill:hpack-read-outcome",
-        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/temporal-codec-encryption.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/temporal-sdk-codec-server.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/temporal-sdk-core.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/temporal-sdk-optimal-codec.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/temporal-api-protos.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/temporal-sdk.cabal\"],\"manifests-partial\":[{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"unmodelled-construct\":\"include\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\",\"unmodelled-construct\":\"include\"}],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"],\"manifests-unread\":[]}"
+        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/temporal-codec-encryption.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/temporal-sdk-codec-server.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/temporal-sdk-core.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/temporal-sdk-optimal-codec.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/temporal-api-protos.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/temporal-sdk.cabal\"],\"includes-resolved\":[{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\",\"include\":\"../../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"}],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"],\"manifests-unread\":[]}"
       }
     ],
     "supplier": {

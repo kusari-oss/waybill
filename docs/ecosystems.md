@@ -2845,7 +2845,18 @@ documentation:
   flag defaults, so one project cannot get two answers depending on which
   file declared its dependencies;
 - `source-dirs`, for evidence only — measured to be incapable of changing
-  the dependency set.
+  the dependency set;
+- `!include` and YAML merge keys (`<<`), since spec 1649 (#1673, #1674):
+  - **An include is resolved from disk, relative to the file that names it,**
+    and read as if written in place. So an anchor defined in an included
+    file is visible to the manifest, an anchor the manifest defined earlier
+    is visible to the included file, and a later definition wins. Includes
+    are followed only to files under the scanned root, never twice on one
+    chain, and no deeper than 8.
+  - **Merge keys apply with hpack's precedence:** an explicit key beats a
+    merged one wherever it appears, the first of several merges wins, and a
+    merge of something other than a mapping contributes nothing. Repeated
+    `<<` keys in one mapping, hpack's common pattern, are read.
 
 For a repeated name the **last declaration wins and replaces** the earlier
 constraint; there is no intersection. `text >= 1.0` followed by `text < 3`
@@ -2853,10 +2864,25 @@ yields `< 3`, which is what hpack renders. The range is recorded as the
 manifest declares it, not as hpack normalises it (`>= 4 && < 5` stays, rather
 than becoming `==4.*`).
 
-**What is not modelled is announced, not passed over.** `!include` and
-`defaults:` both appear in `waybill:hpack-read-outcome`, naming the construct
-and the file, so a manifest using one yields a partial answer that says it is
-partial. `defaults:` is never fetched: hpack resolves it by retrieving YAML
+A name keeps its declared spelling, and "repeated" means the same exact
+spelling: `QuickCheck` and `quickcheck` are two dependencies, as hpack renders
+them. A `package:qualifier` entry, either a sub-library such as
+`ouroboros-network:api` or a build tool such as
+`hspec-discover:hspec-discover`, names the package before the colon, as the
+`.cabal` reader does. A `when:` may be one mapping or a list.
+
+On the seven hpack corpus targets, every package's dependency set equals the
+`build-depends` hpack 0.38.3 generates for it: 46 of 46
+(`specs/1649-hpack-include-merge/measurements/`).
+
+**What is not modelled is announced, not passed over.** An `!include` that
+cannot be resolved, and `defaults:`, both appear in
+`waybill:hpack-read-outcome`, naming the construct and the file, so a manifest
+using one yields a partial answer that says it is partial. Every include met
+is listed there under `includes-resolved` or `includes-unresolved`. An
+unresolved one carries its reason: `missing`, `outside-root`, `cycle`,
+`too-deep`, `unreadable`, or `unsupported-position` for an include in flow
+syntax. `defaults:` is never fetched: hpack resolves it by retrieving YAML
 from a remote repository, which a manifest reader is not the place to
 introduce and which `--offline` could not honour anyway. A manifest that
 cannot be parsed is likewise named, with a reason, and does **not** leave the

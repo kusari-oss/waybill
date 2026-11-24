@@ -35,7 +35,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 1 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage; manifest-unread: 6 haskell manifest(s) found but not read\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 1 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -59,7 +59,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/loot-demo.cabal\\\"],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\\\"],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\\\"],\\\"manifests-unread\\\":[{\\\"detail\\\":\\\"unknown anchor at line 6 column 7\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 6 column 7\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 6 column 7\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 6 column 7\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"unknown anchor at line 6 column 7\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"},{\\\"detail\\\":\\\"duplicate entry with key \\\\\\\"<<\\\\\\\" at line 6 column 1\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\\\",\\\"reason\\\":\\\"malformed-yaml\\\"}]}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/loot-base.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/loot-config.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/loot-crypto.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/loot-demo.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/loot-log.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/loot-network.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/loot-prelude.cabal\\\"],\\\"includes-resolved\\\":[{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\\\",\\\"include\\\":\\\"hpack/lib.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\\\",\\\"include\\\":\\\"definitions.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\\\",\\\"include\\\":\\\"../base/hpack/lib.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\\\",\\\"include\\\":\\\"definitions.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\\\",\\\"include\\\":\\\"../base/hpack/lib.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\\\",\\\"include\\\":\\\"definitions.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\\\",\\\"include\\\":\\\"../base/hpack/lib.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\\\",\\\"include\\\":\\\"definitions.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\\\",\\\"include\\\":\\\"../base/hpack/lib.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\\\",\\\"include\\\":\\\"definitions.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\\\",\\\"include\\\":\\\"../base/hpack/definitions.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\\\"}],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\\\"],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\\\"],\\\"manifests-unread\\\":[]}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -130,7 +130,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -142,7 +142,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -154,7 +154,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -196,7 +196,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -208,7 +208,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -220,7 +220,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -262,7 +262,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -274,7 +274,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -286,7 +286,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -328,7 +328,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -340,7 +340,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -352,7 +352,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -400,7 +400,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -412,7 +412,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -424,7 +424,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -466,7 +466,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -478,7 +478,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/demo/package.yaml\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\",\"code/prelude/loot-prelude.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/package.yaml\",\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/demo/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\",\"code/prelude/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -490,7 +490,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/loot-base.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/demo/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/prelude/loot-prelude.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/demo/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/prelude/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -532,7 +532,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -550,7 +550,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -562,7 +562,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -604,7 +604,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -616,7 +616,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -628,7 +628,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -688,7 +688,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/demo/package.yaml\",\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -700,7 +700,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/demo/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/demo/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -742,7 +742,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -754,7 +754,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -766,7 +766,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -808,7 +808,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -820,7 +820,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -832,7 +832,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -874,7 +874,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -886,7 +886,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -898,7 +898,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -940,7 +940,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -952,7 +952,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -964,7 +964,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1006,7 +1006,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1018,7 +1018,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1030,7 +1030,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1078,7 +1078,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1090,7 +1090,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1102,7 +1102,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1144,7 +1144,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1156,7 +1156,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1168,7 +1168,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1210,7 +1210,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1222,7 +1222,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1234,7 +1234,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1276,7 +1276,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1288,7 +1288,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1300,7 +1300,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1342,7 +1342,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1354,7 +1354,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1366,7 +1366,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1408,7 +1408,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1426,7 +1426,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1438,7 +1438,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1480,7 +1480,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1492,7 +1492,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/demo/package.yaml\",\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1504,7 +1504,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/demo/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/demo/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1546,7 +1546,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1564,7 +1564,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1576,7 +1576,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1618,7 +1618,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1630,7 +1630,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1642,7 +1642,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1684,7 +1684,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1702,7 +1702,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1714,7 +1714,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1756,7 +1756,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1768,7 +1768,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1780,7 +1780,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1822,7 +1822,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1834,7 +1834,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1846,7 +1846,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1888,7 +1888,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1900,7 +1900,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/loot-base.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1912,7 +1912,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/loot-base.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1954,7 +1954,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1966,7 +1966,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1978,7 +1978,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2020,7 +2020,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2032,7 +2032,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2044,7 +2044,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2152,7 +2152,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2164,7 +2164,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2176,7 +2176,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2218,7 +2218,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2230,7 +2230,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2242,7 +2242,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2284,7 +2284,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2296,7 +2296,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/prelude/loot-prelude.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/prelude/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2308,7 +2308,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/prelude/loot-prelude.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/prelude/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2350,7 +2350,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2362,7 +2362,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2374,7 +2374,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2416,7 +2416,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2428,7 +2428,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2440,7 +2440,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2482,7 +2482,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2494,7 +2494,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2506,7 +2506,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2548,7 +2548,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2560,7 +2560,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2572,7 +2572,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2614,7 +2614,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2626,7 +2626,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2638,7 +2638,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2686,7 +2686,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2698,7 +2698,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2710,7 +2710,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2752,7 +2752,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2764,7 +2764,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2776,7 +2776,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2818,7 +2818,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2830,7 +2830,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2842,7 +2842,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2884,7 +2884,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2896,7 +2896,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2908,7 +2908,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2950,7 +2950,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2962,7 +2962,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2974,7 +2974,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3016,7 +3016,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3028,7 +3028,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3040,7 +3040,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3082,7 +3082,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3094,7 +3094,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3106,7 +3106,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3148,7 +3148,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3160,7 +3160,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3172,7 +3172,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3214,7 +3214,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3226,7 +3226,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3238,7 +3238,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3286,7 +3286,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3298,7 +3298,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/loot-base.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3310,7 +3310,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/loot-base.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3352,7 +3352,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3370,7 +3370,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/package.yaml\",\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3382,7 +3382,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/loot-base.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3424,7 +3424,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3442,7 +3442,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/base/package.yaml\",\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3454,7 +3454,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/loot-base.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/base/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3496,7 +3496,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3514,7 +3514,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3526,7 +3526,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3568,7 +3568,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3586,7 +3586,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3598,7 +3598,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3640,7 +3640,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3658,7 +3658,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3670,7 +3670,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3712,7 +3712,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3724,7 +3724,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3736,7 +3736,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3784,7 +3784,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3796,7 +3796,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/loot-crypto.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/crypto/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3808,7 +3808,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/loot-crypto.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/crypto/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3850,7 +3850,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3862,7 +3862,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3874,7 +3874,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3922,7 +3922,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3934,7 +3934,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/prelude/loot-prelude.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/prelude/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3946,7 +3946,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/prelude/loot-prelude.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/prelude/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3988,7 +3988,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4000,7 +4000,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4012,7 +4012,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4054,7 +4054,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4066,7 +4066,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4078,7 +4078,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4120,7 +4120,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4132,7 +4132,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/loot-config.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/config/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4144,7 +4144,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/loot-config.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/config/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4198,7 +4198,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/demo/package.yaml\",\"code/log/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4210,7 +4210,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/demo/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/loot-log.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/demo/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/log/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4252,7 +4252,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"cabal-pkg-descriptor\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4264,7 +4264,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/loot-network.cabal\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"code/network/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4276,7 +4276,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/loot-network.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/network/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",

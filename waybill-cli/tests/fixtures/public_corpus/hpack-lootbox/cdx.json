@@ -19,11 +19,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -31,7 +31,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -43,7 +43,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -75,7 +75,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           }
         ]
       },
@@ -83,7 +83,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\"]"
+          "value": "[\"code/config/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -95,7 +95,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -127,7 +127,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -135,7 +135,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -147,7 +147,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -179,7 +179,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           }
         ]
       },
@@ -187,7 +187,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -199,7 +199,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -235,7 +235,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -243,7 +243,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -255,7 +255,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -287,15 +287,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/base/loot-base.cabal"
+            "location": "code/base/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
@@ -303,15 +303,15 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/prelude/loot-prelude.cabal"
+            "location": "code/prelude/package.yaml"
           }
         ]
       },
@@ -319,7 +319,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/demo/package.yaml\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\",\"code/prelude/loot-prelude.cabal\"]"
+          "value": "[\"code/base/package.yaml\",\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/demo/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\",\"code/prelude/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -331,7 +331,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -363,7 +363,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           }
         ]
       },
@@ -371,7 +371,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -387,7 +387,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -420,15 +420,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -436,7 +436,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -448,7 +448,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -488,7 +488,7 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -496,7 +496,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/demo/package.yaml\",\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -540,7 +540,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -548,7 +548,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -560,7 +560,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -592,7 +592,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -600,7 +600,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -612,7 +612,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -644,7 +644,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -652,7 +652,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -664,7 +664,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -696,7 +696,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -704,7 +704,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -716,7 +716,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -748,7 +748,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -756,7 +756,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -768,7 +768,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -804,7 +804,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           }
         ]
       },
@@ -812,7 +812,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -824,7 +824,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -856,11 +856,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -868,7 +868,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -880,7 +880,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -912,7 +912,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -920,7 +920,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -932,7 +932,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -964,7 +964,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -972,7 +972,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -984,7 +984,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1016,7 +1016,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -1024,7 +1024,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1036,7 +1036,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1068,7 +1068,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           }
         ]
       },
@@ -1076,7 +1076,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -1092,7 +1092,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1125,7 +1125,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
@@ -1133,7 +1133,7 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -1141,7 +1141,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/demo/package.yaml\",\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1153,7 +1153,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1185,19 +1185,19 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -1205,7 +1205,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -1221,7 +1221,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1254,7 +1254,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -1262,7 +1262,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1274,7 +1274,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1306,7 +1306,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -1314,7 +1314,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -1330,7 +1330,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1363,7 +1363,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -1371,7 +1371,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1383,7 +1383,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1415,7 +1415,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -1423,7 +1423,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1435,7 +1435,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1467,7 +1467,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/base/loot-base.cabal"
+            "location": "code/base/package.yaml"
           }
         ]
       },
@@ -1483,7 +1483,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/base/loot-base.cabal\"]"
+          "value": "[\"code/base/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1495,7 +1495,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -1528,7 +1528,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           }
         ]
       },
@@ -1544,7 +1544,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\"]"
+          "value": "[\"code/config/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1556,7 +1556,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -1589,7 +1589,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           }
         ]
       },
@@ -1605,7 +1605,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1617,7 +1617,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -1703,7 +1703,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -1719,7 +1719,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1731,7 +1731,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -1764,7 +1764,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -1780,7 +1780,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1792,7 +1792,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -1825,7 +1825,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/prelude/loot-prelude.cabal"
+            "location": "code/prelude/package.yaml"
           }
         ]
       },
@@ -1841,7 +1841,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/prelude/loot-prelude.cabal\"]"
+          "value": "[\"code/prelude/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1853,7 +1853,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -1886,7 +1886,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           }
         ]
       },
@@ -1894,7 +1894,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1906,7 +1906,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1938,11 +1938,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -1950,7 +1950,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1962,7 +1962,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1994,7 +1994,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -2002,7 +2002,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2014,7 +2014,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2046,7 +2046,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -2054,7 +2054,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2066,7 +2066,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2098,15 +2098,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2114,7 +2114,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2126,7 +2126,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -2162,7 +2162,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -2170,7 +2170,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2182,7 +2182,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2214,7 +2214,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           }
         ]
       },
@@ -2222,7 +2222,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\"]"
+          "value": "[\"code/config/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2234,7 +2234,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2266,7 +2266,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2274,7 +2274,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2286,7 +2286,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2318,7 +2318,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2326,7 +2326,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2338,7 +2338,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2370,11 +2370,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2382,7 +2382,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2394,7 +2394,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2426,7 +2426,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2434,7 +2434,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2446,7 +2446,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2478,7 +2478,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2486,7 +2486,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2498,7 +2498,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2530,7 +2530,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2538,7 +2538,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2550,7 +2550,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2582,7 +2582,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2590,7 +2590,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2602,7 +2602,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -2638,11 +2638,11 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/base/loot-base.cabal"
+            "location": "code/base/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2650,7 +2650,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/base/loot-base.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/base/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -2662,7 +2662,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2694,23 +2694,23 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/base/loot-base.cabal"
+            "location": "code/base/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2718,7 +2718,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/base/package.yaml\",\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2734,7 +2734,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2767,23 +2767,23 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/base/loot-base.cabal"
+            "location": "code/base/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2791,7 +2791,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/base/loot-base.cabal\",\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/base/package.yaml\",\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2807,7 +2807,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2840,19 +2840,19 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2860,7 +2860,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2876,7 +2876,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2909,7 +2909,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -2917,7 +2917,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2933,7 +2933,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2966,15 +2966,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -2982,7 +2982,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/crypto/loot-crypto.cabal\",\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/crypto/package.yaml\",\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2998,7 +2998,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3031,15 +3031,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -3047,7 +3047,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3059,7 +3059,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -3095,7 +3095,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/crypto/loot-crypto.cabal"
+            "location": "code/crypto/package.yaml"
           }
         ]
       },
@@ -3103,7 +3103,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/crypto/loot-crypto.cabal\"]"
+          "value": "[\"code/crypto/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3115,7 +3115,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3147,7 +3147,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -3155,7 +3155,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3167,7 +3167,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -3203,7 +3203,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/prelude/loot-prelude.cabal"
+            "location": "code/prelude/package.yaml"
           }
         ]
       },
@@ -3211,7 +3211,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/prelude/loot-prelude.cabal\"]"
+          "value": "[\"code/prelude/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3223,7 +3223,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3255,15 +3255,15 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -3271,7 +3271,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\",\"code/log/loot-log.cabal\",\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/config/package.yaml\",\"code/log/package.yaml\",\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3283,7 +3283,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3315,7 +3315,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           }
         ]
       },
@@ -3323,7 +3323,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\"]"
+          "value": "[\"code/config/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3335,7 +3335,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3367,7 +3367,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/config/loot-config.cabal"
+            "location": "code/config/package.yaml"
           }
         ]
       },
@@ -3375,7 +3375,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/config/loot-config.cabal\"]"
+          "value": "[\"code/config/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3387,7 +3387,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3423,7 +3423,7 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/loot-log.cabal"
+            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -3431,7 +3431,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/demo/package.yaml\",\"code/log/loot-log.cabal\"]"
+          "value": "[\"code/demo/package.yaml\",\"code/log/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3475,7 +3475,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/loot-network.cabal"
+            "location": "code/network/package.yaml"
           }
         ]
       },
@@ -3483,7 +3483,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/loot-network.cabal\"]"
+          "value": "[\"code/network/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -3495,7 +3495,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3970,7 +3970,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 1 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage; manifest-unread: 6 haskell manifest(s) found but not read"
+        "value": "orphaned-components-detected: 1 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -3986,7 +3986,7 @@
       },
       {
         "name": "waybill:hpack-read-outcome",
-        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/loot-demo.cabal\"],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\"],\"manifests-unread\":[{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"unknown anchor at line 6 column 7\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\",\"reason\":\"malformed-yaml\"},{\"detail\":\"duplicate entry with key \\\"<<\\\" at line 6 column 1\",\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\",\"reason\":\"malformed-yaml\"}]}"
+        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/loot-base.cabal\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/loot-config.cabal\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/loot-crypto.cabal\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/loot-demo.cabal\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/loot-log.cabal\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/loot-network.cabal\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/loot-prelude.cabal\"],\"includes-resolved\":[{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\",\"include\":\"hpack/lib.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\",\"include\":\"definitions.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\",\"include\":\"../base/hpack/lib.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\",\"include\":\"definitions.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\",\"include\":\"../base/hpack/lib.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\",\"include\":\"definitions.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\",\"include\":\"../base/hpack/lib.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\",\"include\":\"definitions.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\",\"include\":\"../base/hpack/lib.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/hpack/lib.yaml\",\"include\":\"definitions.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\",\"include\":\"../base/hpack/definitions.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\"}],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/base/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/config/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/crypto/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/demo/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/log/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/network/package.yaml\",\"/home/runner/.cache/waybill/corpus/e0d1b75bd913f6b4/2cd7b1e0fde3888593404d1e1842d45e1b62bb6c/repo/code/prelude/package.yaml\"],\"manifests-unread\":[]}"
       }
     ],
     "supplier": {
