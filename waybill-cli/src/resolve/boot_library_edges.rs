@@ -9,10 +9,10 @@
 //! same compiler** that the document already contains. It never synthesises
 //! a component (FR-002).
 //!
-//! Every boot library gets C245 `waybill:boot-library-dependencies`, saying
+//! Every boot library gets C247 `waybill:boot-library-dependencies`, saying
 //! where its dependencies came from and which of them are not components of
 //! the document (`rts` and `ghc-internal` never are; research R3). The
-//! completeness pass reads C245 to count boot libraries whose edges are
+//! completeness pass reads C247 to count boot libraries whose edges are
 //! incomplete or unknown (FR-005).
 //!
 //! Keyed by (compiler, name): measured on all five goldens, no compiler has
@@ -26,7 +26,7 @@ use waybill_common::resolution::{EnrichmentProvenance, Relationship, Relationshi
 
 use crate::scan_fs::package_db::nix::haskell_packages::{boot_dependencies, ANN_BOOT_LIBRARY_COMPILER};
 
-/// C245 — per boot library: where its dependencies came from.
+/// C247 — per boot library: where its dependencies came from.
 pub(crate) const ANN_BOOT_LIBRARY_DEPENDENCIES: &str = "waybill:boot-library-dependencies";
 
 /// The provenance recorded on each edge this pass adds.
@@ -53,7 +53,7 @@ fn release_of(compiler: &str) -> &str {
         .unwrap_or(compiler)
 }
 
-/// Draw boot-library edges and stamp C245 (FR-002 to FR-004).
+/// Draw boot-library edges and stamp C247 (FR-002 to FR-004).
 pub(crate) fn apply(components: &mut [ResolvedComponent], relationships: &mut Vec<Relationship>) -> BootEdgeSummary {
     apply_with(boot_dependencies::table(), components, relationships)
 }

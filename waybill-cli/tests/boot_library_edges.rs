@@ -23,7 +23,7 @@ use serde_json::Value;
 
 const BOOT_CONFIG: &str = "self: super: {\n  base = null;\n  process = null;\n  Win32 = null;\n  stm = null;\n  os-string = null;\n  ghc-prim = null;\n}\n";
 const C218: &str = "waybill:boot-library-compiler";
-const C245: &str = "waybill:boot-library-dependencies";
+const C247: &str = "waybill:boot-library-dependencies";
 const ROOT: &[&str] = &["--root-name", "waybill-fixture-root"];
 
 fn dir() -> PathBuf {
@@ -240,7 +240,7 @@ fn base_depends_on_ghc_prim_in_every_format() {
     assert!(spdx3_edges(&run.scan.spdx3).contains(&edge), "SPDX 3: {base} -> {prim}");
 }
 
-/// Every boot library carries C245; 9.10.3's `base` names `ghc-internal`,
+/// Every boot library carries C247; 9.10.3's `base` names `ghc-internal`,
 /// which is not a component, as absent.
 #[test]
 fn every_boot_library_carries_c245() {
@@ -249,12 +249,12 @@ fn every_boot_library_carries_c245() {
     let boots: Vec<&Value> = components(&run.scan.cdx).into_iter().filter(|c| prop(c, C218).is_some()).collect();
     assert!(!boots.is_empty());
     for c in &boots {
-        let v: Value = serde_json::from_str(&prop(c, C245).unwrap_or_else(|| panic!("no C245 on {c}"))).unwrap();
+        let v: Value = serde_json::from_str(&prop(c, C247).unwrap_or_else(|| panic!("no C247 on {c}"))).unwrap();
         assert!(v.get("source").is_some() || v.get("reason").is_some(), "{v}");
     }
     let (base, _) = base_and_prim(&run.scan.cdx);
     let base_c = components(&run.scan.cdx).into_iter().find(|c| c["purl"] == base.as_str()).unwrap();
-    let v: Value = serde_json::from_str(&prop(base_c, C245).unwrap()).unwrap();
+    let v: Value = serde_json::from_str(&prop(base_c, C247).unwrap()).unwrap();
     assert_eq!(v["absent"], serde_json::json!(["ghc-internal"]), "{v}");
 }
 
@@ -292,18 +292,18 @@ fn a_present_store_output_changes_nothing() {
     let with_store = scan_with(&p.path().join("project"), &closure_flags(), Some(store.path().to_path_buf()));
     assert_eq!(cdx_edges(&plain.scan.cdx), cdx_edges(&with_store.scan.cdx));
     let c245 = |cdx: &Value| -> BTreeMap<String, Option<String>> {
-        components(cdx).into_iter().filter(|c| prop(c, C218).is_some()).map(|c| (c["purl"].as_str().unwrap().to_string(), prop(c, C245))).collect()
+        components(cdx).into_iter().filter(|c| prop(c, C218).is_some()).map(|c| (c["purl"].as_str().unwrap().to_string(), prop(c, C247))).collect()
     };
     assert_eq!(c245(&plain.scan.cdx), c245(&with_store.scan.cdx));
 }
 
-/// FR-007: without `--nix-closure` there is no C245 and no boot-library edge
+/// FR-007: without `--nix-closure` there is no C247 and no boot-library edge
 /// source.
 #[test]
 fn without_the_closure_nothing_changes() {
     let run = scan_with(&dir().join("project"), ROOT, None);
     for c in components(&run.scan.cdx) {
-        assert!(prop(c, C245).is_none(), "C245 without --nix-closure: {c}");
+        assert!(prop(c, C247).is_none(), "C247 without --nix-closure: {c}");
     }
 }
 

@@ -11,7 +11,7 @@ All of them happen only on `--nix-closure` scans, on components carrying C218. E
 
 **Where they run:** from a boot library to a boot library of the same compiler, as the dependency table records for that compiler's release, and only when the target is a component of the document. No component is added.
 
-## C245 `waybill:boot-library-dependencies` (new row)
+## C247 `waybill:boot-library-dependencies` (new row)
 
 | Format | Carrier |
 |---|---|

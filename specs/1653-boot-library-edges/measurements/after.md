@@ -14,7 +14,7 @@
 
 **The 116 lines are only:**
 - the new `dependsOn` entries (`process` and `stm` → `base`);
-- four C245 properties;
+- four C247 properties;
 - C105, gaining `boot-library-edges-incomplete: 4 hackage boot librar(ies), 4 with dependencies not in the document, 0 without dependency data` after the existing `transitive-edges-unresolvable: hackage`.
 
 **Not demonstrated:** the non-closure document carries no C218 at all. So it does not exercise the `matches!(nix_closure, Some(Ok(_)))` gate in `scan_cmd`, which stops the pass if milestone 926 ever stamps C218 without the closure. No input available here produces that, and the gate is kept as defence.
@@ -32,20 +32,20 @@
 | M2 | compiler key ignored (names matched across compilers) | yes | `edges_stay_within_a_compiler` | `edges_stay_within_a_compiler`, `a_dependency_absent_from_the_document_is_listed_not_synthesised` |
 | M3 | classifier never pushes | yes | `incomplete_boot_library_edges_are_reported` | `boot_library_edges_incomplete_counts_absent_and_unknown` |
 | M4 | `compositions` arm removed | yes | — (hackage is already degraded by `transitive-edges-unresolvable` on this fixture) | `incomplete_boot_library_edges_degrade_hackage` |
-| M5 | C245 not emitted in SPDX 3 | yes, after the parity fix below | 5 of 6 | — |
+| M5 | C247 not emitted in SPDX 3 | yes, after the parity fix below | 5 of 6 | — |
 | M6 | `absent` never filled | yes | `every_boot_library_carries_c245`, `incomplete_boot_library_edges_are_reported` | 2 |
 | M7 | the pass reads a present store output | yes | `a_present_store_output_changes_nothing` | — |
 
 ### M5's first run survived, and why
 
-**What happened:** removing C245 from SPDX 3 alone failed no test, although every scan runs `waybill sbom parity-check`.
+**What happened:** removing C247 from SPDX 3 alone failed no test, although every scan runs `waybill sbom parity-check`.
 
 **Why:**
 - The tests' parity helper, copied from `tests/closure_resolved_tier.rs`, asserted on each row's `universal_parity` field.
 - That field says whether the catalog *expects* a row in every format. It is not the result.
 - The verdict exists only as `summary.parity_gaps`.
 
-**Measured with that SPDX 3 document:** C245 reads `cdx present 4, spdx23 present 4, spdx3 absent`, with `universal_parity: true`, and `parity_gaps` goes from 3 to 4.
+**Measured with that SPDX 3 document:** C247 reads `cdx present 4, spdx23 present 4, spdx3 absent`, with `universal_parity: true`, and `parity_gaps` goes from 3 to 4.
 
 **This repository's helper now:**
 - requires every universal row that any format carries to have the same presence and count in all three;
@@ -88,7 +88,7 @@ ALL CHECKS PASS
 **The counts equal research R2's prediction exactly.**
 
 **Everything else that changed in CycloneDX:**
-- C245 on each boot library;
+- C247 on each boot library;
 - C104 → `partial`;
 - C105 gaining `boot-library-edges-incomplete`, with 14 (moat), 21 (shellcheck), 17 (slack-web), 8 (openai) and 16 (slacklinker) incomplete boot libraries and 0 unknown. These are the per-compiler sums of `baseline.md`'s "some deps absent" column.
 

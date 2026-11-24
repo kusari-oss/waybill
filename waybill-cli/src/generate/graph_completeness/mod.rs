@@ -467,11 +467,11 @@ pub fn apply_scope_drop(
 }
 
 /// Spec 1653 (FR-005) — boot libraries whose dependency edges the document
-/// cannot carry, read from their own C245. Like
+/// cannot carry, read from their own C247. Like
 /// [`classify_go_transitive_coverage_degraded`], it reads what each component
 /// says about itself, so no fact is threaded in from the scan.
 ///
-/// Only on the classified path: a C245 is carried by a boot library, which is
+/// Only on the classified path: a C247 is carried by a boot library, which is
 /// never a file-tier component, so an empty set has none to count.
 fn classify_boot_library_edges_incomplete(components: &[ResolvedComponent]) -> Option<ReasonCode> {
     let (mut incomplete, mut unknown) = (0usize, 0usize);

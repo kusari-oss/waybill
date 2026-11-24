@@ -120,7 +120,7 @@ pub enum ReasonCode {
     /// Spec 1653 (FR-005) — GHC boot libraries whose dependency edges the
     /// document cannot carry: `incomplete` ones depend on a library that is
     /// not a component (`rts`, `ghc-internal`); `unknown` ones are not in the
-    /// committed table. Read from each boot library's C245
+    /// committed table. Read from each boot library's C247
     /// `waybill:boot-library-dependencies`.
     BootLibraryEdgesIncomplete {
         incomplete: usize,

@@ -111,7 +111,7 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   Every boot library was a leaf: `base` had no edges on any of the five closure corpus targets, and nix-closure-shellcheck read `complete`.
   - **Now:** a boot library depends on the boot libraries its compiler release records, between components of the same compiler that the document already has. The data is a new committed table, `ghc_boot_dependencies.tsv`, built by `scripts/ghc-boot-dependencies.py` from each GHC release's own bindist. It covers the same 36 releases as milestone 966's version table, and matches it in every library and version. It also matches nixpkgs' installed package databases in 5 of 5 releases checked. No scan reads a package database.
   - **Measuring corrected the issue:** GHC 9.10's `base` depends on `ghc-internal` and `ghc-prim`, not `ghc-bignum`.
-  - **New row C245 `waybill:boot-library-dependencies`:** per boot library, where its dependencies came from, and which are not components of the document.
+  - **New row C247 `waybill:boot-library-dependencies`:** per boot library, where its dependencies came from, and which are not components of the document.
   - **New completeness reason `boot-library-edges-incomplete`:** counts boot libraries with absent dependencies or no table entry. CycloneDX `compositions[]` agrees. Because `rts` and `ghc-internal` are never components, **every closure document now reads `partial`**, which is the true answer.
   - **Unchanged:** scans without `--nix-closure`, components, versions, tiers and scopes.
 

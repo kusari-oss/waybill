@@ -847,8 +847,10 @@ spdx3_anno!(c242_spdx3, "waybill:fingerprint-also-matched", component);
 spdx3_anno!(c243_spdx3, "waybill:retiered-from", component);
 // Spec 1652: C244 — what `--project-discovery` dropped.
 spdx3_anno!(c244_spdx3, "waybill:project-discovery-dropped", document);
-// Spec 1653: C245 — where a boot library's dependency edges came from.
-spdx3_anno!(c245_spdx3, "waybill:boot-library-dependencies", component);
+spdx3_anno!(c245_spdx3, "waybill:cmake-build-settlement", component);
+spdx3_anno!(c246_spdx3, "waybill:cmake-build-tree-coverage", document);
+// Spec 1653: C247 — where a boot library's dependency edges came from.
+spdx3_anno!(c247_spdx3, "waybill:boot-library-dependencies", component);
 spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);

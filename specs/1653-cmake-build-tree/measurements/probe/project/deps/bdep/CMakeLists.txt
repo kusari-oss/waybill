@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.24)
+project(bdep LANGUAGES CXX)
+add_library(bdep STATIC bdep.cpp)
+target_include_directories(bdep PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS bdep)
+install(FILES bdep.hpp DESTINATION include)

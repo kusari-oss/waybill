@@ -26,7 +26,7 @@
 - `releases() -> BTreeSet<&str>`.
 - `depends(release, library) -> Option<&[String]>`: `None` when the release or library is absent, `Some(&[])` for a known leaf.
 
-## C245 `waybill:boot-library-dependencies` (new, per boot library)
+## C247 `waybill:boot-library-dependencies` (new, per boot library)
 
 A canonical JSON string, with sorted keys. It is present on every component carrying C218 in a closure scan.
 
@@ -41,7 +41,7 @@ A canonical JSON string, with sorted keys. It is present on every component carr
 ## `ReasonCode::BootLibraryEdgesIncomplete { incomplete: usize, unknown: usize }` (new)
 
 - **Fires** when `incomplete + unknown > 0`.
-  - `incomplete` counts C245 values with a non-empty `absent`.
+  - `incomplete` counts C247 values with a non-empty `absent`.
   - `unknown` counts values with a `reason`.
 - **Renders:** `boot-library-edges-incomplete: <N> hackage boot librar(ies), <incomplete> with dependencies not in the document, <unknown> without dependency data`.
 - **In `degraded_ecosystems`:** it adds `hackage`.

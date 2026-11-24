@@ -362,7 +362,7 @@ spec 1653 every boot library was a leaf.
   closure corpus has present in CI.
 - **Edges:** only between boot libraries of the same compiler (C218), and only
   to components the document already has. None is synthesised.
-- **Provenance:** C245 `waybill:boot-library-dependencies` on each boot
+- **Provenance:** C247 `waybill:boot-library-dependencies` on each boot
   library names the table and its date, and lists the dependencies that are
   not components (`rts` and `ghc-internal` never are).
 - **Verdict:** a boot library with absent dependencies, or one the table does
