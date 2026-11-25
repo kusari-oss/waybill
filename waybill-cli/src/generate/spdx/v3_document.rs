@@ -776,7 +776,7 @@ pub fn build_document(
             .filter_map(|c| {
                 package_iri_by_purl
                     .get(c.purl.as_str())
-                    .map(|iri| (iri.as_str(), c.lifecycle_scope))
+                    .map(|iri| (iri.as_str(), crate::scan_fs::synthesized_edge_scope(c)))
             })
             .filter(|(iri, _)| *iri != root_iri.as_str() && !reached.contains(*iri))
             .collect();

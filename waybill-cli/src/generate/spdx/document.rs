@@ -761,7 +761,7 @@ pub fn build_document(
                 artifacts.spdx2_relationship_compat,
                 root_id,
                 &target_id,
-                c.lifecycle_scope,
+                crate::scan_fs::synthesized_edge_scope(c),
             );
             relationships.push(super::relationships::SpdxRelationship {
                 source,

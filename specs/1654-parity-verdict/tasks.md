@@ -118,7 +118,7 @@
   - R8 and A7 as found.
 
   Refs #1695.
-- [ ] T021 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm `GATE_RESULT=pass`, the expected line, and every per-target `test result: ok. N passed; 0 failed`. Then push, and dispatch the corpus with `regen_goldens=true`. Enumerate every job, and confirm the scanned SHA is the branch head.
+- [X] T021 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm `GATE_RESULT=pass`, the expected line, and every per-target `test result: ok. N passed; 0 failed`. Then push, and dispatch the corpus with `regen_goldens=true`. Enumerate every job, and confirm the scanned SHA is the branch head.
 - [ ] T022 Download the regenerated goldens, then:
   - list every changed file;
   - trace each change with a normalised, sorted diff to R4(b), R7, R8 or T013 (SC-005);

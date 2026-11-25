@@ -89,6 +89,22 @@ A12 (CPE) and D1 (identity evidence) differ in counts on many goldens but **fail
 
 **Alternative:** SPDX typing by either endpoint. Rejected: an SPDX dependency type describes the target, so typing an edge into a runtime library as a build dependency, because its consumer is build-only, would be false.
 
+### R4, the first CI regeneration (T022, run 45518589278 at `b3cf7ece`)
+
+**What changed.** Exactly 10 goldens: the five closures' SPDX 2.3 and SPDX 3 documents. No CycloneDX golden and no non-closure golden changed.
+
+**SPDX 2.3, traced per document.** The `compositions` annotation is removed (R6), and `DEPENDS_ON` edges became `BUILD_DEPENDENCY_OF`: moat 5,442, openai 5,826, shellcheck 9,546, slack-web 5,578, slacklinker 9,225. After undoing that retyping, every edge set equals `main`'s and the rest of each document is identical. The one exception is slack-web's new row below.
+
+**Parity after regeneration.**
+- E1 is fixed on all five closures.
+- moat, openai and slacklinker are down to A7 (and G1, masking).
+- shellcheck and slack-web still failed B1/B2, for two reasons pass 3 did not reach:
+  - **shellcheck, 494 edges, all from the document root** (`--root-name`) into members CycloneDX excludes. Both SPDX emitters synthesize the root's edges after the typing passes, and typed them from `lifecycle_scope` alone (`relationships::synthesized_root_edge`, `v3_document.rs`). **Fix:** both call `scan_fs::synthesized_edge_scope`, which gives the pass-1-then-pass-3 answer. Pass 2 is not added there; that is pre-existing and outside this spec.
+  - **slack-web, 14 edges** into members that are both `optional` (lifecycle) and absent from the artifact. Pass 1 typed them `OPTIONAL_DEPENDENCY_OF`, which is in neither SPDX 2.3 bucket, and SPDX 3 gives `optional` no scope, while CycloneDX excludes the member. **Fix:** absence wins over `optional`. Pass 3 also re-types `OptionalDependsOn`, and `synthesized_edge_scope` does the same. The target keeps `waybill:lifecycle-scope: optional`.
+- **slack-web's one new row**, `hspec-discover DEV_DEPENDENCY_OF slack-web`, is the manifest's dev edge. On `main`, #1444's rule dropped it because the closure's plain `DEPENDS_ON` for the same pair shadowed it. Pass 3 made that edge `BUILD_DEPENDENCY_OF`, so both typed observations now remain, as SPDX 3 keeps each scope as its own set. It is not a parity gap; the B sets are keyed by pair.
+
+These two fixes are checked by the second regeneration.
+
 ## R5. Non-closure B1/B2: the dev-inclusion gate (out of scope)
 
 **What differs:** on haskell-aeson, the 7 differing edges are test and bench dependencies (`tasty-bench`, `QuickCheck`). SPDX types them dev. CycloneDX gives the target no `scope` at all, because `builder.rs` emits `scope: excluded` for a lifecycle scope only when `include_dev` is set.

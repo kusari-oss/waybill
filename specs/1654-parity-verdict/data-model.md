@@ -24,9 +24,11 @@ Otherwise the edge is runtime (B1).
 |---|---|---|
 | 1 (milestone 052) | `lifecycle_scope` non-runtime | Dev / Build / Test / Optional |
 | 2 (milestone 179) | `build_inclusion == NotNeeded` | Test |
-| **3 (new)** | `artifact_presence.is_absent_from_artifact()` | **Build** |
+| **3 (new)** | `artifact_presence.is_absent_from_artifact()` | **Build** (also from `OptionalDependsOn`, T022) |
 
-Each pass rewrites only edges still `DependsOn`, so the passes take precedence in order.
+Each pass rewrites only edges still `DependsOn`, so the passes take precedence in order. The one exception: pass 3 also re-types `OptionalDependsOn`, because `optional` is in neither SPDX bucket while CycloneDX excludes the absent member.
+
+The document root's synthesized edges, added by both SPDX emitters after these passes, take the same scope from `scan_fs::synthesized_edge_scope` (T022).
 
 Pass 3 only has an effect when the function runs after `closure_role_scope::assign_role_scope` has set `artifact_presence`, so it is called again there (research R4).
 
