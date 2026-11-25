@@ -1,0 +1,30 @@
+nix-closure-moat	ghc-9.10.3	reachable-absent=9	held-under-other-label=0	no-component=9
+		held: 
+		new:  ghc-bignum@1.3 ghc-boot@9.10.3 ghc-boot-th@9.10.3 ghc-internal@9.1003.0 ghc-platform@0.1.0.0 ghci@9.10.3 hpc@0.7.0.2 rts@1.0.2 semaphore-compat@1.0.0
+nix-closure-moat	ghc-binary-9.8.4	reachable-absent=10	held-under-other-label=6	no-component=4
+		held: array@0.5.8.0 directory@1.3.8.5 mtl@2.3.1 pretty@1.1.3.6 stm@2.5.3.1 time@1.12.2
+		new:  ghc-bignum@1.3 ghc-boot-th@9.8.4 ghc-prim@0.11.0 rts@1.0.2
+nix-closure-openai	ghc-9.6.6	reachable-absent=5	held-under-other-label=0	no-component=5
+		held: 
+		new:  ghc-boot@9.6.6 ghc-boot-th@9.6.6 ghci@9.6.6 hpc@0.6.2.0 rts@1.0.2
+nix-closure-openai	ghc-binary-9.2.4	reachable-absent=5	held-under-other-label=1	no-component=4
+		held: pretty@1.1.3.6
+		new:  ghc-bignum@1.2 ghc-boot-th@9.2.4 ghc-prim@0.8.0 rts@1.0.2
+nix-closure-shellcheck	ghc-9.10.3	reachable-absent=8	held-under-other-label=0	no-component=8
+		held: 
+		new:  ghc-boot-th@9.10.3 ghc-internal@9.1003.0 ghc-platform@0.1.0.0 ghci@9.10.3 hpc@0.7.0.2 os-string@2.0.7 rts@1.0.2 semaphore-compat@1.0.0
+nix-closure-shellcheck	ghc-binary-9.8.4	reachable-absent=10	held-under-other-label=7	no-component=3
+		held: array@0.5.8.0 directory@1.3.8.5 ghc-bignum@1.3 mtl@2.3.1 pretty@1.1.3.6 stm@2.5.3.1 time@1.12.2
+		new:  ghc-boot-th@9.8.4 ghc-prim@0.11.0 rts@1.0.2
+nix-closure-slack-web	ghc-9.10.3	reachable-absent=8	held-under-other-label=0	no-component=8
+		held: 
+		new:  ghc-boot@9.10.3 ghc-boot-th@9.10.3 ghc-internal@9.1003.0 ghc-platform@0.1.0.0 ghci@9.10.3 hpc@0.7.0.2 rts@1.0.2 semaphore-compat@1.0.0
+nix-closure-slack-web	ghc-binary-9.8.4	reachable-absent=12	held-under-other-label=7	no-component=5
+		held: array@0.5.8.0 directory@1.3.8.5 ghc-bignum@1.3 mtl@2.3.1 pretty@1.1.3.6 stm@2.5.3.1 time@1.12.2
+		new:  ghc-boot-th@9.8.4 ghc-prim@0.11.0 parsec@3.1.17.0 rts@1.0.2 text@2.1.1
+nix-closure-slacklinker	ghc-9.10.3	reachable-absent=7	held-under-other-label=0	no-component=7
+		held: 
+		new:  ghc-boot-th@9.10.3 ghc-internal@9.1003.0 ghc-platform@0.1.0.0 ghci@9.10.3 hpc@0.7.0.2 rts@1.0.2 semaphore-compat@1.0.0
+nix-closure-slacklinker	ghc-binary-9.8.4	reachable-absent=10	held-under-other-label=7	no-component=3
+		held: array@0.5.8.0 directory@1.3.8.5 ghc-bignum@1.3 mtl@2.3.1 pretty@1.1.3.6 stm@2.5.3.1 time@1.12.2
+		new:  ghc-boot-th@9.8.4 ghc-prim@0.11.0 rts@1.0.2

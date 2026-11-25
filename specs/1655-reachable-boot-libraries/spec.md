@@ -9,7 +9,7 @@
 
 Spec 1653 draws dependency edges between the GHC boot libraries a closure document contains, from the committed per-release table `ghc_boot_dependencies.tsv`. It never adds a component. When a boot library depends on one the document lacks, that name goes into the library's C247 `absent` list, no edge is drawn, and C105 reports `boot-library-edges-incomplete`. Every closure document reads `partial` for this reason.
 
-**What following the dependencies adds.** For each compiler a document names (C218), take the boot libraries present, follow their dependencies through the table to a fixed point, and count the libraries reached that are not present. Probe: `measurements/reach.py`; output: `measurements/reach-before.txt`.
+**What following the dependencies adds.** For each compiler a document names (C218), take the boot libraries present, follow their dependencies through the table to a fixed point, and count the libraries reached that are not present. Probe: `measurements/reach.py`; output: `measurements/reach-before.txt`. The table below counts (compiler, library) pairs; the plan's measurement corrects it to components (see **Corrected at plan time** below).
 
 | target | runtime compiler | added | bootstrap compiler | added | total | C105 count today |
 |---|---|---|---|---|---|---|
@@ -23,6 +23,10 @@ Spec 1653 draws dependency edges between the GHC boot libraries a closure docume
 - The most common additions are `rts` (every compiler), `ghc-boot-th`, `ghc-prim`, `ghc-internal` and `ghc-bignum`.
 - Emitting each compiler's whole set instead would add 35 to 42 libraries per compiler.
 - On shellcheck, `boot-library-edges-incomplete` is C105's only reason, so that document would become `complete`. The other four keep their other reasons: orphans on four of them, and `transitive-edges-unresolvable` on moat and slacklinker.
+
+**Corrected at plan time** (`measurements/shared_purls.py`, `shared-purls-before.txt`; research R1). One version of a library is one component, whichever compilers ship it: the closure labels a shared PURL with the project's compiler in C218. Spec 1653's edge pass looks dependencies up by (C218 compiler, name), so a bootstrap compiler's library never finds a dependency held under the project compiler's label at the identical PURL, and lists it `absent`. Of the pairs above:
+- **Already components, held under the other label** (an edge-lookup defect, not a missing component): moat 6, openai 1, shellcheck 7, slack-web 7, slacklinker 7, all on the bootstrap compiler (`array`, `directory`, `ghc-bignum`, `mtl`, `pretty`, `stm`, `time`).
+- **Not components, as distinct PURLs** (both compilers' needs merged, so `rts@1.0.2` counts once): moat 11, openai 8, shellcheck 10, slack-web 12, slacklinker 9.
 
 **No present boot library is an orphan.** None of the 36 to 40 boot libraries in each golden has a `waybill:orphan-reason`. An added library is reached only through edges from present ones, so it cannot be an orphan either (`measurements/identity-probe.md`).
 
@@ -44,6 +48,7 @@ Spec 1653 draws dependency edges between the GHC boot libraries a closure docume
 
 - Q: Which version does an added library carry when the two tables differ? → A: Milestone 966's. The two never carry two different non-empty versions. Where they differ, 1653's is blank (`rts` on 9.0 and 9.2), and an added component must not be versionless when a committed table knows the version.
 - Q: What identity do `rts` and `ghc-platform` get? → A: `pkg:hackage/<name>@<version>`, the same as every other boot library. See FR-004 for the reasoning.
+- Q: (plan, measured) Is a reachable library that is not labelled with its compiler missing? → A: No, when another compiler's label holds the identical PURL. One version is one component. FR-001 and FR-005 key on the PURL, and SC-002's counts were corrected from (compiler, library) pairs to distinct PURLs (research R1).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -78,7 +83,8 @@ A vulnerability scanner or a reader matches added libraries the same way as the 
 
 - **A compiler not in the table.** When C219 records a compiler as not in the table, or C247 reports `release-not-in-table`, nothing is added for it, and its existing C247 and C105 reasons are unchanged.
 - **A library listed but not in the table.** When a present library's C247 reports `library-not-in-table`, it has no dependencies to follow, nothing is added for it, and its reason is unchanged.
-- **Same name under two compilers.** `rts` reached from ghc-9.10.3 and from ghc-binary-9.8.4 becomes two components, one per compiler, each with its own C218 and version. This is how boot libraries are already keyed.
+- **Same name under two compilers.** One version is one component: `rts@1.0.2`, reached from ghc-9.10.3 and from ghc-binary-9.8.4, is one component whose C218 names the project's compiler, as the closure already labels a shared version. Two different versions (`ghc-prim@0.12.0` and `ghc-prim@0.11.0`) are two components, each with its own C218.
+- **A dependency held under another compiler's label.** A bootstrap compiler's `base@4.19.2.0` depends on `array`; 9.8.4 ships `array@0.5.8.0`, which is already a component labelled ghc-9.10.3. The edge goes to that component, and `array` is not `absent`.
 - **A reached library already present under the same compiler**, whether declared by the project, synthesized by the closure, or added through another path, is not added again. Edges go to the existing component.
 - **No closure.** Without `--nix-closure`, output is byte-identical.
 
@@ -86,7 +92,7 @@ A vulnerability scanner or a reader matches added libraries the same way as the 
 
 ### Functional Requirements
 
-- **FR-001**: Under `--nix-closure`, for each compiler named by C218 whose release is in the table, the document MUST contain every boot library reachable from that compiler's present boot libraries through the table's dependencies. It MUST NOT add any other boot library.
+- **FR-001**: Under `--nix-closure`, for each compiler named by C218 whose release is in the table, the document MUST contain every boot library reachable from that compiler's present boot libraries through the table's dependencies. Identity is the PURL `pkg:hackage/<name>@<that release's version>`: a reachable library whose PURL some component already holds, under any C218 label, is not added. It MUST NOT add any other boot library.
 - **FR-002**: An added library MUST have the same shape as the closure-synthesized boot libraries already present: name, version, C218 naming the compiler, C247, and the same `sbom-tier` (`build`). It MUST get no property that its present peers lack.
 - **FR-003**: An added library's version MUST come from milestone 966's table for its (release, library). Where the 1653 table carries a non-empty version, the two MUST agree, and a test MUST check that across all shared rows.
 - **FR-004**: An added library's purl MUST be `pkg:hackage/<name>@<version>`, including `rts` and `ghc-platform`. Reasons, all measured:
@@ -94,7 +100,7 @@ A vulnerability scanner or a reader matches added libraries the same way as the 
   - **No change in scanner matches.** OSV returns 0 advisories for both names as `pkg:hackage` and as `pkg:generic`.
   - **Feed coverage.** `pkg:generic` would move them to C209's `unaddressable`, under spec 1373's FR-003.
   - **The real gap is elsewhere.** The defects OSV publishes for GHC's runtime are keyed on the compiler (`GHC`/`ghc`), which neither identity reaches.
-- **FR-005**: Spec 1653's existing pass MUST draw the edges to the added libraries. It MUST draw them in all three formats, with the same lifecycle typing as every other boot-library edge.
+- **FR-005**: Spec 1653's pass MUST resolve a boot library's dependency to the component holding `pkg:hackage/<dependency>@<version the depending library's release ships>`, whatever that component's C218 label, and MUST draw the edges to the added libraries. It MUST draw them in all three formats, with the same lifecycle typing as every other boot-library edge.
 - **FR-006**: After this change, no boot library's C247 MAY list `absent` names unless its compiler's release or the library is missing from the table. Where none is missing, C105 MUST NOT report `boot-library-edges-incomplete`.
 - **FR-007**: No added library MAY be an orphan. Each target's C105 orphan count MUST be unchanged.
 - **FR-008**: Parity-check MUST report no failing row (spec 1654's `verdict`) that does not already fail on the same golden today.
@@ -104,7 +110,7 @@ A vulnerability scanner or a reader matches added libraries the same way as the 
 ### Key Entities
 
 - **Present boot library**: a component with C218, there before this feature runs. It was declared by the project or synthesized by the closure.
-- **Reachable boot library**: a (compiler, library) pair the table's dependencies reach from a present boot library of the same compiler.
+- **Reachable boot library**: a (compiler, library) pair the table's dependencies reach from a present boot library of the same compiler, identified by the PURL of the version that compiler's release ships.
 - **Added boot library**: a reachable boot library that was not present, and that this feature emits.
 
 ## Success Criteria *(mandatory)*
@@ -112,7 +118,7 @@ A vulnerability scanner or a reader matches added libraries the same way as the 
 ### Measurable Outcomes
 
 - **SC-001**: On the stub fixture and on all five closure goldens, 0 boot libraries list C247 `absent` names, and `boot-library-edges-incomplete` is absent from C105.
-- **SC-002**: Added components per target and compiler are 9/10, 5/5, 8/10, 8/12 and 7/10 (moat, openai, shellcheck, slack-web, slacklinker). Any difference is traced in `measurements/after.md`.
+- **SC-002**: Added components per target are 11, 8, 10, 12 and 9 (moat, openai, shellcheck, slack-web, slacklinker), the distinct PURLs of `measurements/shared-purls-before.txt`; edges to components already held under another label are 6, 1, 7, 7 and 7 distinct dependency names. Any difference is traced in `measurements/after.md`.
 - **SC-003**: The shellcheck golden's C104 reads `complete`. The other four goldens' C105 lose only the `boot-library-edges-incomplete` clause.
 - **SC-004**: The orphan count in C105 is unchanged on every closure golden.
 - **SC-005**: Parity-check's failing rows on each corpus golden are a subset of today's.
