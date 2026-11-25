@@ -381,14 +381,18 @@ fn spdx23_module_edges(doc: &Value) -> BTreeSet<(String, String)> {
         .collect();
     let mut out = BTreeSet::new();
     for r in doc["relationships"].as_array().unwrap() {
-        if r["relationshipType"].as_str() != Some("DEPENDS_ON") {
-            continue;
-        }
-        let (Some(from), Some(to)) = (
+        let (Some(a), Some(b)) = (
             r["spdxElementId"].as_str().and_then(|i| by_id.get(i)),
             r["relatedSpdxElement"].as_str().and_then(|i| by_id.get(i)),
         ) else {
             continue;
+        };
+        // Spec 1654: an edge into a member absent from the artifact is typed,
+        // and the typed kinds read dependency -> dependent.
+        let (from, to) = match r["relationshipType"].as_str() {
+            Some("DEPENDS_ON") => (a, b),
+            Some("DEV_DEPENDENCY_OF" | "BUILD_DEPENDENCY_OF" | "TEST_DEPENDENCY_OF" | "OPTIONAL_DEPENDENCY_OF") => (b, a),
+            _ => continue,
         };
         if is_module(to) {
             out.insert((from.clone(), to.clone()));

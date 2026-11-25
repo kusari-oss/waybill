@@ -72,7 +72,7 @@ fn scan_with(bin: &str, dir: &tempfile::TempDir) -> ([Vec<u8>; 3], String) {
         .unwrap();
     assert!(out.status.success(), "scan failed: {}", String::from_utf8_lossy(&out.stderr));
     let raw = files.clone().map(|f| std::fs::read(f).unwrap());
-    parity(&out_dir);
+    common::parity::assert_parity(out_dir.path());
     unique_bom_refs(&serde_json::from_slice(&raw[0]).unwrap());
     (raw, String::from_utf8_lossy(&out.stderr).into_owned())
 }
@@ -91,26 +91,6 @@ fn cdx_components(cdx: &Value) -> Vec<&Value> {
         stack.extend(c["components"].as_array().into_iter().flatten());
     }
     out
-}
-
-/// `waybill sbom parity-check` over the three documents; a row is a gap
-/// only if some format carries a value (as in spec 1643's harness).
-fn parity(out_dir: &tempfile::TempDir) {
-    let out = Command::new(common::bin())
-        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
-        .arg(out_dir.path())
-        .output()
-        .unwrap();
-    let report: Value = serde_json::from_slice(&out.stdout)
-        .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
-    let gaps: Vec<&Value> = report["rows"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|r| r["universal_parity"] == false)
-        .filter(|r| ["cdx", "spdx23", "spdx3"].iter().any(|f| r[*f]["kind"] == "present"))
-        .collect();
-    assert!(gaps.is_empty(), "parity gaps: {gaps:#?}");
 }
 
 fn unique_bom_refs(cdx: &Value) {

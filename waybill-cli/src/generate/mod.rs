@@ -577,6 +577,15 @@ pub struct ScanArtifacts<'a> {
 }
 
 impl<'a> ScanArtifacts<'a> {
+    /// Milestones 1278 (#1348) and 1378 (#1396): the closure read skipped a
+    /// declaration, or left members' outputs unread, so the root's
+    /// dependency-completeness claim is withheld. CycloneDX's builder computes
+    /// the same from its own fields; spec 1654 routes every SPDX reader of it
+    /// through here.
+    pub(crate) fn closure_read_partial(&self) -> bool {
+        self.nix_closure_summary.is_some_and(|s| s.read_outcome.has_gap()) || self.nix_closure_contents_unread
+    }
+
     /// This same view, with `components` swapped for a filtered slice.
     ///
     /// Issue #964. Three emitters need a components-only view, and all three used

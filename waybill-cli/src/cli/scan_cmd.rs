@@ -5627,6 +5627,35 @@ pub async fn execute(
                 "closure: re-tiered closure-resolved components from design to build (#1681)",
             );
         }
+        // Spec 1653 (#1688): edges between the boot libraries of one compiler,
+        // from the committed per-release table, and C247 on each. After the
+        // scope passes above, so no scope moves; before orphan classification,
+        // which then sees the new edges.
+        //
+        // Only when the closure tier ran: this block runs for every scan, and
+        // milestone 926 can stamp C218 on a flake-pinned Haskell project
+        // scanned without `--nix-closure`, whose documents must stay
+        // byte-identical (FR-007).
+        let boot_edges = if matches!(nix_closure, Some(Ok(_))) {
+            crate::resolve::boot_library_edges::apply(&mut components, &mut relationships)
+        } else {
+            crate::resolve::boot_library_edges::BootEdgeSummary::default()
+        };
+        if boot_edges != crate::resolve::boot_library_edges::BootEdgeSummary::default() {
+            tracing::info!(
+                edges = boot_edges.edges,
+                complete = boot_edges.complete,
+                incomplete = boot_edges.incomplete,
+                unknown = boot_edges.unknown,
+                "closure: GHC boot-library dependency edges drawn (#1688)",
+            );
+        }
+        // Spec 1654 (#1695, R4b) — pass 3 of the edge typing, now that the
+        // role pass has set `artifact_presence` and the boot-library edges
+        // exist: edges into members absent from the artifact become build
+        // dependencies, as CycloneDX marks those members `scope: excluded`.
+        // The reader-side call above ran before presence was known.
+        crate::scan_fs::type_artifact_absent_edges(&components, &mut relationships);
         // #1455 — the members marked only because the runtime closure holds
         // them through documentation outputs alone, counted by the pass after
         // the exemptions and static linking had their say.

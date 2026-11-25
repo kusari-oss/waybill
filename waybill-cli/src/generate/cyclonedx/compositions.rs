@@ -35,14 +35,30 @@ pub fn target_aggregate(integrity: &TraceIntegrity) -> &'static str {
 /// Shared so the SPDX bridges fire on exactly the same condition.
 /// Emitting unconditionally there merely inverted the old asymmetry:
 /// rpm gained an SPDX annotation CDX had no twin for.
+///
+/// Spec 1654 (#1695): `closure_read_partial` is the milestone-1278 input
+/// that withholds the root's claim in [`dependency_claims`]. Without it here
+/// the SPDX annotation claimed a complete record CycloneDX never emitted, on
+/// every closure scan with a read gap.
 pub fn has_complete_record(
     integrity: &TraceIntegrity,
     components: &[ResolvedComponent],
     complete_ecosystems: &[String],
+    closure_read_partial: bool,
 ) -> bool {
-    !complete_ecosystems.is_empty()
-        || (target_aggregate(integrity) == "incomplete_first_party_only"
-            && !components.is_empty())
+    !complete_ecosystems.is_empty() || root_claim_complete(integrity, components, closure_read_partial)
+}
+
+/// The scan root's own dependency claim: trace integrity is clean, there are
+/// components, and (milestone 1278) the closure read consulted every
+/// declaration. One function so [`has_complete_record`] and
+/// [`dependency_claims`] cannot disagree again (spec 1654).
+fn root_claim_complete(
+    integrity: &TraceIntegrity,
+    components: &[ResolvedComponent],
+    closure_read_partial: bool,
+) -> bool {
+    target_aggregate(integrity) == "incomplete_first_party_only" && !components.is_empty() && !closure_read_partial
 }
 
 /// Milestone 1069 (#878) — which components carry a dependency-graph claim.
@@ -91,9 +107,7 @@ pub(crate) fn dependency_claims(
     closure_read_partial: bool,
 ) -> DependencyClaims {
     let mut claims = DependencyClaims {
-        root_complete: target_aggregate(integrity) == "incomplete_first_party_only"
-            && !components.is_empty()
-            && !closure_read_partial,
+        root_complete: root_claim_complete(integrity, components, closure_read_partial),
         ..Default::default()
     };
     for eco in complete_ecosystems {
@@ -153,6 +167,11 @@ pub(crate) fn degraded_ecosystems(
             // arm above: the `_` arm would drop it silently (#892).
             ReasonCode::ProjectDiscoveryScope { ecosystems, .. } => {
                 degraded.extend(ecosystems.iter().cloned());
+            }
+            // Spec 1653 (FR-005) — boot libraries are Hackage packages; their
+            // edges are incomplete, so the ecosystem's graph is not complete.
+            ReasonCode::BootLibraryEdgesIncomplete { .. } => {
+                degraded.insert("hackage".to_string());
             }
             _ => {}
         }
@@ -409,6 +428,37 @@ mod tests {
 
     // ── m1069 (#878): the shared dependency-claims predicate ──
 
+    /// Spec 1654 (#1695, R6): `has_complete_record` is what SPDX keys its
+    /// `compositions` annotation on, so it must say "complete record" exactly
+    /// when `build_compositions` emits one — including when milestone 1278
+    /// withholds the root's claim because the closure read has a gap. It did
+    /// not, and every closure scan carried an SPDX completeness annotation
+    /// CycloneDX had no record for (row E1).
+    #[test]
+    fn s1654_has_complete_record_agrees_with_build_compositions() {
+        let cs = [make_component("pkg:cargo/a@1")];
+        let reach = set(&["pkg:cargo/a@1"]);
+        for (ecos, partial) in [
+            (vec![], false),
+            (vec![], true),
+            (vec!["cargo".to_string()], false),
+            (vec!["cargo".to_string()], true),
+        ] {
+            let emitted = build_compositions(&clean_integrity(), "root", &cs, &ecos, Some(&reach), &set(&[]), partial);
+            let any_complete = emitted
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|r| r["aggregate"] == "complete");
+            assert_eq!(
+                has_complete_record(&clean_integrity(), &cs, &ecos, partial),
+                any_complete,
+                "ecosystems={ecos:?} closure_read_partial={partial}: {emitted}"
+            );
+        }
+    }
+
+
     fn set(items: &[&str]) -> std::collections::HashSet<String> {
         items.iter().map(|s| s.to_string()).collect()
     }
@@ -443,6 +493,15 @@ mod tests {
         let c = dependency_claims(&cs, &["golang".into()], Some(&reach), &degraded, &clean_integrity(), false);
         assert!(c.complete.is_empty());
         assert_eq!(c.unknown.len(), 1);
+    }
+
+    /// Spec 1653 (FR-005): incomplete boot-library edges degrade hackage.
+    #[test]
+    fn incomplete_boot_library_edges_degrade_hackage() {
+        use crate::generate::graph_completeness::{GraphCompletenessResult, ReasonCode};
+        let mut gc = GraphCompletenessResult::trivially_complete();
+        gc.reason_codes.push(ReasonCode::BootLibraryEdgesIncomplete { incomplete: 1, unknown: 0 });
+        assert_eq!(degraded_ecosystems(&gc), set(&["hackage"]));
     }
 
     /// Spec 1652 (FR-005): an ecosystem `--project-discovery` dropped

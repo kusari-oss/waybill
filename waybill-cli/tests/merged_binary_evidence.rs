@@ -110,7 +110,7 @@ fn scan_with_log(dir: tempfile::TempDir, filter: &str) -> Scan {
     assert!(out.status.success(), "scan failed: {}", String::from_utf8_lossy(&out.stderr));
     let read = |p: &std::path::Path| -> Value { serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap() };
     let (cdx, spdx23, spdx3) = (read(&files[0]), read(&files[1]), read(&files[2]));
-    parity(&out_dir);
+    common::parity::assert_parity(out_dir.path());
     unique_bom_refs(&cdx);
     let errors = common::cdx_schema::cdx_validation_errors(&cdx);
     assert!(errors.is_empty(), "CycloneDX 1.6 schema: {errors:#?}");
@@ -198,24 +198,6 @@ fn spdx3_d1(s: &Scan, purl: &str) -> Value {
         .collect();
     assert_eq!(env.len(), 1, "{purl}: {env:#?}");
     env[0]["value"].clone()
-}
-
-fn parity(out_dir: &tempfile::TempDir) {
-    let out = Command::new(common::bin())
-        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
-        .arg(out_dir.path())
-        .output()
-        .unwrap();
-    let report: Value = serde_json::from_slice(&out.stdout)
-        .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
-    let gaps: Vec<&Value> = report["rows"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|r| r["universal_parity"] == false)
-        .filter(|r| ["cdx", "spdx23", "spdx3"].iter().any(|f| r[*f]["kind"] == "present"))
-        .collect();
-    assert!(gaps.is_empty(), "parity gaps: {gaps:#?}");
 }
 
 fn unique_bom_refs(cdx: &Value) {

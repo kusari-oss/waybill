@@ -112,6 +112,9 @@ fn masked(v: &Value) -> Value {
 
 /// One main module: it is already the seed, so the output is `main`'s. The
 /// golden was generated with `main`'s binary before any source change.
+/// Spec 1654 (#1695, R7) regenerated it once: the promoted root's CycloneDX
+/// `metadata.component` gained `waybill:python-lockfile-format`, which both
+/// SPDX goldens already carried on the root package.
 #[test]
 fn p07_one_main_module_is_byte_identical_to_main() {
     let (_p, root) = copied("ctl");

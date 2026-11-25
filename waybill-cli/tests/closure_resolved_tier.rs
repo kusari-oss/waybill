@@ -29,7 +29,6 @@ mod common;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use common::nix_stub::{NixStub, Scan};
 use serde_json::Value;
@@ -84,7 +83,7 @@ fn scan_project(project: &Path, flags: &[&str], bin: Option<PathBuf>) -> Run {
         ..Default::default()
     }
     .scan_to(out.path(), "waybill", &argv);
-    parity(out.path());
+    common::parity::assert_parity(out.path());
     unique_bom_refs(&scan.cdx);
     Run { scan, _out: out }
 }
@@ -99,26 +98,6 @@ fn closure_flags(extra: &[&str]) -> Vec<&'static str> {
         v.push(Box::leak(e.to_string().into_boxed_str()));
     }
     v
-}
-
-/// `waybill sbom parity-check` over the three documents; a row is a gap only
-/// if some format carries a value.
-fn parity(out_dir: &Path) {
-    let out = Command::new(common::bin())
-        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
-        .arg(out_dir)
-        .output()
-        .unwrap();
-    let report: Value = serde_json::from_slice(&out.stdout)
-        .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
-    let gaps: Vec<&Value> = report["rows"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|r| r["universal_parity"] == false)
-        .filter(|r| ["cdx", "spdx23", "spdx3"].iter().any(|f| r[*f]["kind"] == "present"))
-        .collect();
-    assert!(gaps.is_empty(), "parity gaps: {gaps:#?}");
 }
 
 /// Every CycloneDX component, nested ones and `metadata.component` included.

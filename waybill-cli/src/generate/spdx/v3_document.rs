@@ -709,10 +709,7 @@ pub fn build_document(
         // applies — members whose outputs were not read. Adding it to one
         // format and not the other is exactly the disagreement the comment
         // above warns about, and `m1280_t056` caught it when it happened.
-        scan.nix_closure_summary
-            .as_ref()
-            .is_some_and(|s| s.read_outcome.has_gap())
-            || scan.nix_closure_contents_unread,
+        scan.closure_read_partial(),
     );
 
     // 7. Relationship elements — dependency edges, containment edges,
@@ -779,7 +776,7 @@ pub fn build_document(
             .filter_map(|c| {
                 package_iri_by_purl
                     .get(c.purl.as_str())
-                    .map(|iri| (iri.as_str(), c.lifecycle_scope))
+                    .map(|iri| (iri.as_str(), crate::scan_fs::synthesized_edge_scope(c)))
             })
             .filter(|(iri, _)| *iri != root_iri.as_str() && !reached.contains(*iri))
             .collect();

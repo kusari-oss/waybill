@@ -142,6 +142,18 @@ fn assert_holistic_parity(label: &str, scan: &TripleScan) {
         let spdx23_set = (extractor.spdx23)(&scan.spdx23);
         let spdx3_set = (extractor.spdx3)(&scan.spdx3);
 
+        // Spec 1654 (#1695): this test keeps its own per-directionality
+        // checks for their detailed messages, and must agree with the one
+        // rule `parity-check` reports, `parity::verdict::row_verdict`.
+        let verdict = waybill::parity::verdict::row_verdict(
+            Some(extractor.directional),
+            true,
+            &cdx_set,
+            &spdx23_set,
+            &spdx3_set,
+        );
+        let flagged_before = failures.len() + known_gaps_hit.len();
+
         match extractor.directional {
             extractors::Directionality::SymmetricEqual => {
                 let three_way_equal = cdx_set == spdx23_set && spdx23_set == spdx3_set;
@@ -229,6 +241,14 @@ fn assert_holistic_parity(label: &str, scan: &TripleScan) {
                 let _ = (&cdx_set, &spdx23_set, &spdx3_set);
             }
         }
+        let flagged = failures.len() + known_gaps_hit.len() > flagged_before;
+        assert_eq!(
+            flagged,
+            verdict == waybill::parity::verdict::Verdict::Fail,
+            "{label}: row {} ({}): holistic_parity and parity-check's row_verdict disagree",
+            row.id,
+            row.label
+        );
     }
 
     assert!(

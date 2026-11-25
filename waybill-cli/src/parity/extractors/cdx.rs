@@ -318,13 +318,9 @@ pub(super) fn cdx_supplier(doc: &Value) -> BTreeSet<String> {
 /// by bom-ref. Milestone 052/part-2: filter dev/non-dev via the
 /// native CDX `scope: "excluded"` field plus the new
 /// `waybill:lifecycle-scope` property (the legacy
-/// `waybill:dev-dependency` annotation was removed). The scope
-/// signal lives on the TARGET component (the dep target), not
-/// the source, in B2's new shape — but for parity-test purposes
-/// (SymmetricEqual against SPDX 2.3 dep types and SPDX 3
-/// lifecycleScope on the target relationship), `dev_only`
-/// remains a source-side filter to match how the SPDX side
-/// extractors classify edges.
+/// `waybill:dev-dependency` annotation was removed). An edge is
+/// dev when its TARGET is `scope: "excluded"` (spec 1654), as the
+/// SPDX side types it.
 fn cdx_dependency_edges(doc: &Value, dev_only: bool) -> BTreeSet<String> {
     // Build bom-ref → component lookup. Milestone 053: include
     // metadata.component-when-main-module so its outgoing
@@ -364,23 +360,16 @@ fn cdx_dependency_edges(doc: &Value, dev_only: bool) -> BTreeSet<String> {
         // Milestone 052/part-2: dev classification via native CDX
         // `scope: "excluded"` (any non-runtime).
         //
-        // Milestone 085: classify per-edge using EITHER endpoint's
-        // scope, not just the source-side. Maven (and any future
-        // ecosystem that puts scope on the target rather than the
-        // source — e.g., pom.xml `<scope>test</scope>` lives on the
-        // dep declaration, attached to the target component) needs
-        // the target-side check or runtime-vs-dev parity against
-        // SPDX 2.3's typed `DEPENDS_ON`/`TEST_DEPENDENCY_OF` shape
-        // produces false positives in CDX's runtime bucket. Pre-085
-        // the source-side-only filter masked this for ecosystems
-        // (cargo etc.) where dev/test deps happened to be excluded
-        // from `dependencies[]` entirely; post-085 the per-edge
-        // check correctly classifies edges where any endpoint
-        // carries scope=excluded as non-runtime.
-        let from_is_dev = from_comp
-            .get("scope")
-            .and_then(|v| v.as_str())
-            == Some("excluded");
+        // Spec 1654 (#1695, R4a): by the TARGET's scope only, which is how
+        // SPDX types an edge (`apply_lifecycle_scope_to_edges` types it from
+        // the target) and what the type means: a build-only consumer of a
+        // runtime library does not make that library a dev dependency.
+        // Milestone 085 added the target side for Maven, where scope lives
+        // on the dependency, and kept milestone 052's source side as well.
+        // Measured over the 28 corpus goldens, dropping the source side
+        // creates no new failure and fixes haskell-security-advisories' B1
+        // and B2; on the closures the source-only edges were 1,257 to 3,192
+        // per target (research R4).
         let Some(targets) = d.get("dependsOn").and_then(|v| v.as_array()) else {
             continue;
         };
@@ -392,8 +381,7 @@ fn cdx_dependency_edges(doc: &Value, dev_only: bool) -> BTreeSet<String> {
             let Some(to_purl) = to_comp.get("purl").and_then(|v| v.as_str()) else {
                 continue;
             };
-            let to_is_dev = to_comp.get("scope").and_then(|v| v.as_str()) == Some("excluded");
-            let edge_is_dev = from_is_dev || to_is_dev;
+            let edge_is_dev = to_comp.get("scope").and_then(|v| v.as_str()) == Some("excluded");
             if dev_only != edge_is_dev {
                 continue;
             }
@@ -1052,6 +1040,8 @@ cdx_anno!(c243_cdx, "waybill:retiered-from", component);
 cdx_anno!(c244_cdx, "waybill:project-discovery-dropped", document);
 cdx_anno!(c245_cdx, "waybill:cmake-build-settlement", component);
 cdx_anno!(c246_cdx, "waybill:cmake-build-tree-coverage", document);
+// Spec 1653: C247 — where a boot library's dependency edges came from.
+cdx_anno!(c247_cdx, "waybill:boot-library-dependencies", component);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);
@@ -1311,4 +1301,51 @@ pub(super) fn g1_cdx(doc: &Value) -> BTreeSet<String> {
                 .collect()
         })
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn doc(from_scope: Option<&str>, to_scope: Option<&str>) -> Value {
+        let mut a = json!({"bom-ref": "a", "purl": "pkg:generic/waybill-fixture-a@1"});
+        let mut b = json!({"bom-ref": "b", "purl": "pkg:generic/waybill-fixture-b@1"});
+        if let Some(s) = from_scope {
+            a["scope"] = json!(s);
+        }
+        if let Some(s) = to_scope {
+            b["scope"] = json!(s);
+        }
+        json!({
+            "components": [a, b],
+            "dependencies": [{"ref": "a", "dependsOn": ["b"]}, {"ref": "b", "dependsOn": []}],
+        })
+    }
+
+    const EDGE: &str = "pkg:generic/waybill-fixture-a@1->pkg:generic/waybill-fixture-b@1";
+
+    /// Spec 1654 (#1695, R4a): an edge is typed by its target, as SPDX types
+    /// it. A build-only consumer of a runtime library is not a dev edge.
+    #[test]
+    fn s1654_excluded_source_runtime_target_is_runtime() {
+        let d = doc(Some("excluded"), None);
+        assert!(cdx_runtime_deps(&d).contains(EDGE), "{:?}", cdx_runtime_deps(&d));
+        assert!(cdx_dev_deps(&d).is_empty(), "{:?}", cdx_dev_deps(&d));
+    }
+
+    #[test]
+    fn s1654_edge_into_excluded_target_is_dev() {
+        let d = doc(None, Some("excluded"));
+        assert!(cdx_dev_deps(&d).contains(EDGE), "{:?}", cdx_dev_deps(&d));
+        assert!(cdx_runtime_deps(&d).is_empty(), "{:?}", cdx_runtime_deps(&d));
+    }
+
+    #[test]
+    fn s1654_plain_edge_is_runtime() {
+        let d = doc(None, None);
+        assert!(cdx_runtime_deps(&d).contains(EDGE));
+        assert!(cdx_dev_deps(&d).is_empty());
+    }
 }

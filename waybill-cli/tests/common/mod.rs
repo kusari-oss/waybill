@@ -44,6 +44,7 @@ pub mod endpoints;
 pub mod git_fixture;
 pub mod installed_lib;
 pub mod normalize;
+pub mod parity;
 pub mod spdx3_validate;
 // Unix-only: the stub is a `#!/bin/sh` script made executable with
 // `PermissionsExt`, and every suite that uses it is `#![cfg(unix)]`.

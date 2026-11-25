@@ -117,6 +117,15 @@ pub enum ReasonCode {
         count: usize,
         ecosystems: Vec<String>,
     },
+    /// Spec 1653 (FR-005) — GHC boot libraries whose dependency edges the
+    /// document cannot carry: `incomplete` ones depend on a library that is
+    /// not a component (`rts`, `ghc-internal`); `unknown` ones are not in the
+    /// committed table. Read from each boot library's C247
+    /// `waybill:boot-library-dependencies`.
+    BootLibraryEdgesIncomplete {
+        incomplete: usize,
+        unknown: usize,
+    },
 }
 
 impl ReasonCode {
@@ -156,6 +165,10 @@ impl ReasonCode {
             ),
             Self::ManifestUnread { ecosystem, count } => format!(
                 "manifest-unread: {count} {ecosystem} manifest(s) found but not read"
+            ),
+            Self::BootLibraryEdgesIncomplete { incomplete, unknown } => format!(
+                "boot-library-edges-incomplete: {} hackage boot librar(ies), {incomplete} with dependencies not in the document, {unknown} without dependency data",
+                incomplete + unknown
             ),
             Self::ProjectDiscoveryScope { count, ecosystems } => format!(
                 "project-discovery-scope: {count} project(s) dropped from {}",
@@ -360,5 +373,16 @@ mod tests {
             "project-discovery-scope: 2 project(s) dropped from golang, hackage"
         );
         assert!(!c.to_reason_string().contains(';'), "the detail must not break join_reason_codes");
+    }
+
+    /// Spec 1653 (FR-005).
+    #[test]
+    fn boot_library_edges_incomplete_renders() {
+        let c = ReasonCode::BootLibraryEdgesIncomplete { incomplete: 2, unknown: 1 };
+        assert_eq!(
+            c.to_reason_string(),
+            "boot-library-edges-incomplete: 3 hackage boot librar(ies), 2 with dependencies not in the document, 1 without dependency data"
+        );
+        assert!(!c.to_reason_string().contains(';'));
     }
 }

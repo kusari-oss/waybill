@@ -1112,12 +1112,17 @@ impl Scan {
             .as_array()
             .unwrap()
             .iter()
-            .filter(|r| r["relationshipType"] == "DEPENDS_ON")
             .filter_map(|r| {
-                Some((
-                    spdx23_name.get(r["spdxElementId"].as_str()?)?.clone(),
-                    spdx23_name.get(r["relatedSpdxElement"].as_str()?)?.clone(),
-                ))
+                let a = spdx23_name.get(r["spdxElementId"].as_str()?)?.clone();
+                let b = spdx23_name.get(r["relatedSpdxElement"].as_str()?)?.clone();
+                // Spec 1654: an edge into a member absent from the artifact is
+                // typed, and the typed kinds read dependency -> dependent.
+                match r["relationshipType"].as_str()? {
+                    "DEPENDS_ON" => Some((a, b)),
+                    "DEV_DEPENDENCY_OF" | "BUILD_DEPENDENCY_OF" | "TEST_DEPENDENCY_OF"
+                    | "OPTIONAL_DEPENDENCY_OF" => Some((b, a)),
+                    _ => None,
+                }
             })
             .collect();
 
@@ -1127,7 +1132,12 @@ impl Scan {
             .filter_map(|e| Some((e["spdxId"].as_str()?.to_string(), e["name"].as_str()?.to_string())))
             .collect();
         let mut spdx3 = std::collections::BTreeSet::new();
-        for r in graph.iter().filter(|e| e["type"] == "Relationship" && e["relationshipType"] == "dependsOn") {
+        // Spec 1654: a scoped edge (into a member absent from the artifact)
+        // is a `LifecycleScopedRelationship`.
+        for r in graph.iter().filter(|e| {
+            (e["type"] == "Relationship" || e["type"] == "LifecycleScopedRelationship")
+                && e["relationshipType"] == "dependsOn"
+        }) {
             let Some(from) = r["from"].as_str().and_then(|f| spdx3_name.get(f)) else { continue };
             for to in r["to"].as_array().into_iter().flatten() {
                 if let Some(t) = to.as_str().and_then(|t| spdx3_name.get(t)) {
