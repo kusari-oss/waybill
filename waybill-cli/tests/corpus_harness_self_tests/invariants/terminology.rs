@@ -5,6 +5,10 @@
 //! This is a source-level gate for the same reason the FR-016 one is:
 //! the claim is about what the names *are*, which no runtime
 //! observation can establish.
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+#[allow(unused_imports)]
+use crate::corpus_harness_195::harness::EmittedSboms;
 
 use std::path::PathBuf;
 
@@ -80,8 +84,8 @@ fn expectations_do_not_borrow_the_catalog_s_number_namespace() {
 /// number.
 #[test]
 fn no_catalogued_invariant_is_named_after_a_corpus_target() {
-    let targets: Vec<&str> = super::super::manifest::TARGETS.iter().map(|t| t.name).collect();
-    for inv in super::REGISTRY {
+    let targets: Vec<&str> = crate::corpus_harness_195::manifest::TARGETS.iter().map(|t| t.name).collect();
+    for inv in crate::corpus_harness_195::invariants::REGISTRY {
         for t in &targets {
             let bare = t.replace('-', "");
             assert!(

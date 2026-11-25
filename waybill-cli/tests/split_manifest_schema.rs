@@ -56,6 +56,9 @@ fn split_manifest_validates_against_v1_schema() {
         .arg("--split")
         .arg("--output-dir")
         .arg(out.path())
+        // Spec 1657 (#1715): not an enrichment test; offline, it took 0.1 s
+        // instead of 7 s per scan of live deps.dev calls.
+        .arg("--offline")
         .arg("--format")
         .arg("cyclonedx-json")
         .env("HOME", home.path())

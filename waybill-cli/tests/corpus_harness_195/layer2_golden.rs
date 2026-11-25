@@ -13,7 +13,7 @@ use super::harness::{AssertionFailure, EmittedSboms, FailureFormat, update_golde
 use super::js_filter;
 
 /// Fixture root under the workspace: `waybill-cli/tests/fixtures/public_corpus/`.
-fn fixtures_root() -> PathBuf {
+pub(crate) fn fixtures_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join("fixtures")
@@ -21,7 +21,7 @@ fn fixtures_root() -> PathBuf {
 }
 
 /// Golden file path for a given target + format.
-fn golden_path(target: &str, format: FailureFormat) -> PathBuf {
+pub(crate) fn golden_path(target: &str, format: FailureFormat) -> PathBuf {
     let filename = match format {
         FailureFormat::Cdx => "cdx.json",
         FailureFormat::Spdx23 => "spdx-2.3.json",
@@ -36,7 +36,7 @@ fn golden_path(target: &str, format: FailureFormat) -> PathBuf {
 /// Pure so it is testable without a gate, an env var, or a real golden — the
 /// defect it fixes was invisible precisely because the regen path had no
 /// observable output to assert on.
-fn regen_verdict(existing: Option<&[u8]>, fresh: &[u8]) -> &'static str {
+pub(crate) fn regen_verdict(existing: Option<&[u8]>, fresh: &[u8]) -> &'static str {
     match existing {
         Some(prev) if prev == fresh => "unchanged",
         Some(_) => "CHANGED",
@@ -187,7 +187,7 @@ pub fn compare_golden(
 /// First `limit` differing lines between two masked JSON documents, as a
 /// unified-ish excerpt. #918: the point is that a CI log alone should answer
 /// "what moved" for the common case.
-fn first_divergences(golden: &[u8], actual: &[u8], limit: usize) -> String {
+pub(crate) fn first_divergences(golden: &[u8], actual: &[u8], limit: usize) -> String {
     let g = String::from_utf8_lossy(golden);
     let a = String::from_utf8_lossy(actual);
     let (gl, al): (Vec<&str>, Vec<&str>) = (g.lines().collect(), a.lines().collect());
@@ -236,7 +236,7 @@ pub fn masked_difference(a: &serde_json::Value, b: &serde_json::Value) -> Option
 
 /// Every leaf of a JSON value as a path with array indices removed, sorted:
 /// equal for two values that differ only in array order.
-fn order_insensitive(v: &serde_json::Value) -> Vec<String> {
+pub(crate) fn order_insensitive(v: &serde_json::Value) -> Vec<String> {
     fn walk(v: &serde_json::Value, path: &str, out: &mut Vec<String>) {
         match v {
             serde_json::Value::Object(m) => m.iter().for_each(|(k, x)| walk(x, &format!("{path}/{k}"), out)),
@@ -285,7 +285,7 @@ pub fn mask_nondeterministic(v: &serde_json::Value) -> serde_json::Value {
     cloned
 }
 
-fn walk_mask(v: &mut serde_json::Value) {
+pub(crate) fn walk_mask(v: &mut serde_json::Value) {
     match v {
         serde_json::Value::Object(map) => {
             let volatile_keys: &[&str] = &[
@@ -433,7 +433,7 @@ fn walk_mask(v: &mut serde_json::Value) {
 /// annotation payloads with a stable placeholder. Preserves the
 /// enclosing structure (field names, paths, JSON braces) — only the
 /// hex payload itself rotates.
-fn mask_content_hashes_in_string(s: &str) -> String {
+pub(crate) fn mask_content_hashes_in_string(s: &str) -> String {
     // Only bother if the string plausibly contains `sha256` or `md5`
     // as a JSON field. Cheap prefilter avoids regex work on 99% of
     // annotations.
@@ -487,7 +487,7 @@ fn mask_content_hashes_in_string(s: &str) -> String {
 /// masked since m865 for the same reason. This is its SPDX 2.3 counterpart,
 /// which that milestone did not cover because SPDX 2.3 was not the format
 /// that motivated it.
-fn mask_document_root_id(s: &str) -> String {
+pub(crate) fn mask_document_root_id(s: &str) -> String {
     static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
     let re = RE.get_or_init(|| {
         #[allow(clippy::unwrap_used)]
@@ -496,7 +496,7 @@ fn mask_document_root_id(s: &str) -> String {
     re.replace_all(s, "SPDXRef-DocumentRoot-<masked>").into_owned()
 }
 
-fn mask_doc_prefix(s: &str) -> String {
+pub(crate) fn mask_doc_prefix(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     let mut rest = s;
     while let Some(idx) = rest.find("/spdx3/doc-") {
@@ -513,256 +513,4 @@ fn mask_doc_prefix(s: &str) -> String {
     }
     out.push_str(rest);
     out
-}
-
-#[cfg(test)]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod m865_masking_tests {
-    use super::*;
-    use serde_json::json;
-
-    /// The sidecar's hash is masked; a package checksum is not.
-    #[test]
-    fn external_document_ref_checksums_are_masked_and_package_checksums_are_not() {
-        let doc = json!({
-            "externalDocumentRefs": [{
-                "externalDocumentId": "DocumentRef-OpenVEX",
-                "checksum": {"algorithm": "SHA256", "checksumValue": "dd6f3de3"},
-                "spdxDocument": "waybill.openvex.json"
-            }],
-            "packages": [{
-                "SPDXID": "SPDXRef-Package-x",
-                "checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}]
-            }]
-        });
-        let m = mask_nondeterministic(&doc);
-        assert_eq!(m["externalDocumentRefs"][0]["checksum"]["checksumValue"], "<masked>");
-        assert_eq!(m["externalDocumentRefs"][0]["spdxDocument"], "waybill.openvex.json");
-        assert_eq!(m["packages"][0]["checksums"][0]["checksumValue"], "abc123");
-    }
-
-    /// #1067: outside regen mode a missing golden fails, and nothing is
-    /// written. It used to be written from whatever machine ran the test,
-    /// and the test passed.
-    #[test]
-    fn a_missing_golden_fails_and_is_not_written_outside_regen_mode() {
-        if update_goldens_gate() {
-            return; // regen mode is the one place a missing golden is written
-        }
-        let target = "no-such-target-1067";
-        let tmp = tempfile::tempdir().unwrap();
-        let sboms = EmittedSboms {
-            cdx: json!({}),
-            spdx_2_3: json!({}),
-            spdx_3: json!({}),
-            paths: super::super::harness::EmittedPaths {
-                cdx: tmp.path().join("cdx.json"),
-                spdx_2_3: tmp.path().join("spdx23.json"),
-                spdx_3: tmp.path().join("spdx3.json"),
-            },
-        };
-        let result = compare_golden(target, FailureFormat::Cdx, &sboms);
-        // Clean up before asserting, so a regression cannot leave a stray
-        // target directory in the committed fixture tree.
-        let dir = fixtures_root().join(target);
-        let written = dir.exists();
-        std::fs::remove_dir_all(&dir).ok();
-        assert!(!written, "no golden may be written outside regen mode");
-        let err = result.expect_err("a missing golden must not compare as a pass");
-        assert_eq!(err.check_name, "layer2-golden-missing");
-    }
-
-    /// The defect: masking keyed on `spdxId`, so every other IRI-bearing
-    /// field kept the real document hash and the stored golden referenced
-    /// identifiers absent from its own document.
-    #[test]
-    fn every_iri_bearing_field_is_masked_not_just_spdx_id() {
-        let doc = json!({
-            "@graph": [
-                { "type": "software_Package", "spdxId": "https://w.dev/spdx3/doc-ABC/pkg-1" },
-                { "type": "Relationship",
-                  "spdxId": "https://w.dev/spdx3/doc-ABC/rel-1",
-                  "from": "https://w.dev/spdx3/doc-ABC/pkg-1",
-                  "to": ["https://w.dev/spdx3/doc-ABC/pkg-2"] },
-                { "type": "Annotation",
-                  "spdxId": "https://w.dev/spdx3/doc-ABC/anno-1",
-                  "subject": "https://w.dev/spdx3/doc-ABC/pkg-1" },
-                { "type": "SpdxDocument",
-                  "spdxId": "https://w.dev/spdx3/doc-ABC",
-                  "rootElement": ["https://w.dev/spdx3/doc-ABC/pkg-1"] }
-            ]
-        });
-        let masked = mask_nondeterministic(&doc);
-        let text = serde_json::to_string(&masked).unwrap();
-        assert!(
-            !text.contains("doc-ABC"),
-            "no field may retain the real document id; got {text}",
-        );
-        assert!(text.contains("doc-<masked>"), "the shape must be preserved");
-    }
-
-    /// #918 — the SPDX 2.3 DocumentRoot id must be masked. It was not, for
-    /// one commit, because the mask lived inside a guard that only matched
-    /// SPDX 3 document IRIs. Without this test that is invisible until a
-    /// release rotates the id and the lane goes red again.
-    #[test]
-    fn spdx23_document_root_id_is_masked() {
-        let mut v = serde_json::json!({
-            "SPDXID": "SPDXRef-DocumentRoot-2Z6INX5CK3NXX4LN",
-            "documentDescribes": ["SPDXRef-DocumentRoot-2Z6INX5CK3NXX4LN"],
-        });
-        walk_mask(&mut v);
-        assert_eq!(v["SPDXID"], "SPDXRef-DocumentRoot-<masked>");
-        assert_eq!(v["documentDescribes"][0], "SPDXRef-DocumentRoot-<masked>");
-    }
-
-    /// A package SPDXID must NOT be masked — only the DocumentRoot one is
-    /// content-addressed over the tool version. Masking package ids would
-    /// leave a gate that cannot see a component identity change.
-    #[test]
-    fn package_spdx_ids_are_left_alone() {
-        let mut v = serde_json::json!({ "SPDXID": "SPDXRef-Package-ABCDEFGH12345678" });
-        walk_mask(&mut v);
-        assert_eq!(v["SPDXID"], "SPDXRef-Package-ABCDEFGH12345678");
-    }
-
-    /// The property the goldens were violating: after masking, every
-    /// relationship endpoint must still resolve to an element of the
-    /// same document. Without this, no structural check on a stored
-    /// golden means anything.
-    #[test]
-    fn masked_document_stays_internally_coherent() {
-        let doc = json!({
-            "@graph": [
-                { "type": "software_Package", "spdxId": "https://w.dev/spdx3/doc-XYZ/pkg-1" },
-                { "type": "software_Package", "spdxId": "https://w.dev/spdx3/doc-XYZ/pkg-2" },
-                { "type": "Relationship",
-                  "spdxId": "https://w.dev/spdx3/doc-XYZ/rel-1",
-                  "from": "https://w.dev/spdx3/doc-XYZ/pkg-1",
-                  "to": ["https://w.dev/spdx3/doc-XYZ/pkg-2"] }
-            ]
-        });
-        let masked = mask_nondeterministic(&doc);
-        let graph = masked["@graph"].as_array().unwrap();
-        let ids: std::collections::BTreeSet<&str> = graph
-            .iter()
-            .filter_map(|e| e["spdxId"].as_str())
-            .collect();
-        for e in graph.iter().filter(|e| e["type"] == "Relationship") {
-            let from = e["from"].as_str().unwrap();
-            assert!(ids.contains(from), "dangling `from` after masking: {from}");
-            for t in e["to"].as_array().unwrap() {
-                let t = t.as_str().unwrap();
-                assert!(ids.contains(t), "dangling `to` after masking: {t}");
-            }
-        }
-    }
-
-    /// The helper masked only the first occurrence, which silently left
-    /// later ones intact inside JSON-in-string values.
-    #[test]
-    fn every_occurrence_in_one_string_is_masked() {
-        let s = "a https://w.dev/spdx3/doc-AAA/pkg-1 b https://w.dev/spdx3/doc-AAA/pkg-2 c";
-        let out = mask_doc_prefix(s);
-        assert!(!out.contains("doc-AAA"), "got {out}");
-        assert_eq!(out.matches("doc-<masked>").count(), 2);
-    }
-
-    /// A bare document IRI with no trailing segment must still mask.
-    #[test]
-    fn trailing_document_iri_is_masked() {
-        assert_eq!(
-            mask_doc_prefix("https://w.dev/spdx3/doc-ZZZ"),
-            "https://w.dev/spdx3/doc-<masked>",
-        );
-    }
-
-    /// A real filesystem path containing `doc-` must survive intact.
-    /// The first version of this fix matched a bare `/doc-` and rewrote
-    /// `/usr/share/doc-base/...` inside the image-postgres16 golden,
-    /// corrupting real data. The regeneration diff caught it: CDX and
-    /// SPDX 2.3 moved when a masking-only change should have touched
-    /// SPDX 3 alone.
-    #[test]
-    fn real_paths_containing_doc_are_not_masked() {
-        for p in [
-            "/usr/share/doc-base/findutils.findutils",
-            "/usr/share/doc-base/base-passwd.users-and-groups",
-            "/etc/doc-something",
-        ] {
-            assert_eq!(mask_doc_prefix(p), p, "must not rewrite the real path {p}");
-        }
-    }
-
-    /// Strings with no document IRI must pass through untouched — the
-    /// leaf rule runs on every string in the document.
-    #[test]
-    fn unrelated_strings_are_untouched() {
-        for s in ["pkg:cargo/serde@1.0.0", "MIT", "", "no slashes here"] {
-            assert_eq!(mask_doc_prefix(s), s, "must not alter {s:?}");
-        }
-    }
-}
-
-#[cfg(test)]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod regen_verdict_tests {
-    use super::regen_verdict;
-
-    #[test]
-    fn an_identical_golden_is_unchanged() {
-        assert_eq!(regen_verdict(Some(b"{}"), b"{}"), "unchanged");
-    }
-
-    #[test]
-    fn a_differing_golden_is_changed() {
-        // The case #1345 is about: a golden that differs by one property
-        // was reported nowhere, because the regen path wrote without
-        // reading and the summary fell back to listing failed tests.
-        assert_eq!(regen_verdict(Some(b"{\"a\":1}"), b"{\"a\":2}"), "CHANGED");
-    }
-
-    #[test]
-    fn an_absent_golden_is_created() {
-        assert_eq!(regen_verdict(None, b"{}"), "CREATED");
-    }
-
-    #[test]
-    fn a_byte_difference_is_enough() {
-        // Goldens are compared as bytes elsewhere in this file, so the
-        // verdict must not be cleverer than the thing it reports on.
-        assert_eq!(regen_verdict(Some(b"{}\n"), b"{}"), "CHANGED");
-    }
-}
-
-#[cfg(test)]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod s1542_difference_tests {
-    use super::*;
-    use serde_json::json;
-
-    /// A masked field differing is not a difference.
-    #[test]
-    fn a_masked_field_is_no_difference() {
-        let a = json!({ "serialNumber": "urn:uuid:1", "components": [{ "purl": "pkg:generic/x" }] });
-        let b = json!({ "serialNumber": "urn:uuid:2", "components": [{ "purl": "pkg:generic/x" }] });
-        assert_eq!(masked_difference(&a, &b), None);
-    }
-
-    /// An unmasked field differing is a content difference, at its path.
-    #[test]
-    fn an_unmasked_field_is_a_content_difference() {
-        let a = json!({ "components": [{ "purl": "pkg:generic/x" }] });
-        let b = json!({ "components": [{ "purl": "pkg:generic/y" }] });
-        let d = masked_difference(&a, &b).unwrap();
-        assert!(d.starts_with("content: /components[0]/purl"), "{d}");
-    }
-
-    /// The same elements in another order is an order-only difference.
-    #[test]
-    fn a_reordered_array_is_an_order_only_difference() {
-        let a = json!({ "components": [{ "purl": "pkg:generic/x" }, { "purl": "pkg:generic/y" }] });
-        let b = json!({ "components": [{ "purl": "pkg:generic/y" }, { "purl": "pkg:generic/x" }] });
-        assert!(masked_difference(&a, &b).unwrap().starts_with("order-only"));
-    }
 }

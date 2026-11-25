@@ -6,8 +6,12 @@
 //! made every entry below an edit churn. A reviewer reading this file's
 //! diff should see exactly which cells were accepted, released or
 //! re-accepted — and nothing else.
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+#[allow(unused_imports)]
+use crate::corpus_harness_195::harness::EmittedSboms;
 
-use super::declarations::{self, Declaration, DeclarationsFile};
+use crate::corpus_harness_195::invariants::declarations::{self, Declaration, DeclarationsFile};
 
 fn render(file: &DeclarationsFile) -> String {
     file.declaration

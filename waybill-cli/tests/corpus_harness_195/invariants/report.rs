@@ -16,7 +16,7 @@ use super::{applicability, Cell, CellOutcome, Verdict};
 // Ecosystem coverage — FR-015
 // -----------------------------------------------------------------------
 
-fn ecosystems_doc_path() -> PathBuf {
+pub(crate) fn ecosystems_doc_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("docs").join("ecosystems.md")
 }
 
@@ -55,7 +55,7 @@ pub fn parse_ecosystem_universe(markdown: &str) -> BTreeSet<String> {
 }
 
 /// `[golang](#golang)` → `golang`; `pants (Python)` → `pants (Python)`.
-fn strip_md_link(cell: &str) -> String {
+pub(crate) fn strip_md_link(cell: &str) -> String {
     let c = cell.trim();
     if let Some(rest) = c.strip_prefix('[') {
         if let Some(end) = rest.find("](") {
@@ -287,7 +287,7 @@ impl MatrixReport {
     }
 }
 
-fn state_name(o: &CellOutcome) -> &'static str {
+pub(crate) fn state_name(o: &CellOutcome) -> &'static str {
     match o {
         CellOutcome::Pass => "pass",
         CellOutcome::Fail(_) => "fail",
@@ -296,7 +296,7 @@ fn state_name(o: &CellOutcome) -> &'static str {
     }
 }
 
-fn describe(o: &CellOutcome) -> String {
+pub(crate) fn describe(o: &CellOutcome) -> String {
     match o {
         CellOutcome::Pass => "holds".to_string(),
         CellOutcome::NotApplicable { reason } => format!("not applicable: {reason}"),
@@ -309,113 +309,5 @@ fn describe(o: &CellOutcome) -> String {
             })
             .collect::<Vec<_>>()
             .join("; "),
-    }
-}
-
-#[cfg(test)]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod tests {
-    use super::*;
-
-    /// T056 — the universe is derived from the document, and the enum is
-    /// gated against it in both directions. Without this, a doc rename
-    /// quietly shrinks the covered set instead of reddening the lane.
-    #[test]
-    fn ecosystem_id_and_the_coverage_matrix_agree() {
-        let universe = load_ecosystem_universe();
-        assert!(!universe.is_empty(), "parsed no rows from docs/ecosystems.md coverage matrix");
-
-        let variants: BTreeSet<String> =
-            EcosystemId::ALL.iter().map(|e| e.doc_row().to_string()).collect();
-
-        let rows_without_variant: Vec<&String> = universe.difference(&variants).collect();
-        assert!(
-            rows_without_variant.is_empty(),
-            "coverage-matrix rows with no EcosystemId variant: {rows_without_variant:?} — \
-             add the variants, or the covered/uncovered statement silently omits them"
-        );
-        let variants_without_row: Vec<&String> = variants.difference(&universe).collect();
-        assert!(
-            variants_without_row.is_empty(),
-            "EcosystemId variants with no coverage-matrix row: {variants_without_row:?}"
-        );
-    }
-
-    /// The second table in the document also has `Ecosystem` as its
-    /// first column; a parser keying on that alone reads it too.
-    #[test]
-    fn only_the_coverage_matrix_is_parsed() {
-        let md = "\
-| Ecosystem | Detection source | X |\n\
-|---|---|---|\n\
-| [apk](#apk) | a | b |\n\
-\n\
-| Ecosystem | Design-tier fallback? | Y |\n\
-|---|---|---|\n\
-| [zzz](#zzz) | a | b |\n";
-        let u = parse_ecosystem_universe(md);
-        assert!(u.contains("apk"));
-        assert!(!u.contains("zzz"), "read rows from the design-tier table: {u:?}");
-    }
-
-    /// SC-005 — the uncovered set is non-empty and names gem, which is
-    /// why #1211 was unobservable from this corpus.
-    #[test]
-    fn uncovered_ecosystems_are_named_and_include_gem() {
-        let (covered, uncovered) = coverage();
-        assert!(!covered.is_empty());
-        assert!(
-            !uncovered.is_empty(),
-            "a green matrix must carry a caveat; an empty uncovered set would be the claim \
-             that the corpus sees everything"
-        );
-        assert!(uncovered.contains("gem"), "expected gem uncovered, got {uncovered:?}");
-    }
-}
-
-#[cfg(test)]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod scope_tests {
-    use super::*;
-    use super::super::declarations::DeclarationsFile;
-    use super::super::{Cell, CellOutcome};
-
-    fn na_cells(target: &str) -> Vec<Cell> {
-        super::super::REGISTRY
-            .iter()
-            .map(|i| Cell {
-                invariant: i.id,
-                target: target.to_string(),
-                outcome: CellOutcome::NotApplicable { reason: "precondition unmet".into() },
-            })
-            .collect()
-    }
-
-    /// A single-target report must not report FR-006a unfalsifiability.
-    /// Not-applicable on one target is the ordinary case; the floor is a
-    /// corpus-wide rule. Reporting it per-target made the lane print
-    /// "N lane failure(s)" for targets that had none, on every target.
-    #[test]
-    fn a_single_target_report_does_not_cry_wolf_about_applicability() {
-        let decls = DeclarationsFile::default();
-        let rep = build_for_target(na_cells("go-cobra"), &decls);
-        assert_eq!(rep.scope, Scope::SingleTarget);
-        assert!(rep.unfalsifiable.is_empty(), "{:?}", rep.unfalsifiable);
-        assert!(
-            rep.lane_failures().is_empty(),
-            "a target on which every invariant is n/a fails nothing: {:?}",
-            rep.lane_failures()
-        );
-    }
-
-    /// And the corpus-wide report still enforces it, so the fix did not
-    /// simply delete the rule.
-    #[test]
-    fn a_corpus_report_still_enforces_the_applicability_floor() {
-        let decls = DeclarationsFile::default();
-        let rep = build(na_cells("go-cobra"), &decls);
-        assert_eq!(rep.scope, Scope::Corpus);
-        assert_eq!(rep.unfalsifiable.len(), super::super::REGISTRY.len());
-        assert!(!rep.lane_failures().is_empty());
     }
 }

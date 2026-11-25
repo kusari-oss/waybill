@@ -86,6 +86,9 @@ fn run_split_scan(
         .arg("--split")
         .arg("--output-dir")
         .arg(output_dir)
+        // Spec 1657 (#1715): not an enrichment test; offline, it took 0.1 s
+        // instead of 7 s per scan of live deps.dev calls.
+        .arg("--offline")
         .args(extra_args)
         .env("HOME", home.path())
         .env("XDG_CACHE_HOME", home.path())
