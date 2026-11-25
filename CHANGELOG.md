@@ -7,6 +7,32 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-25
+
+A minor release. It adds surface: `waybill sbom edit --retier`, a per-row `verdict` in `waybill sbom parity-check --format json`, and document rows C231 to C247.
+
+Most of this release is Nix and Haskell closure work, plus binary and CMake identity. Several entries filed as fixes change what a document says on the wire. What a consumer will notice:
+
+- **Under `--nix-closure`, Haskell components are more complete and better labelled:**
+  - GHC boot libraries carry their dependency edges, or the document says which it lacks (C247);
+  - components the closure resolved are no longer `design`;
+  - edges into members absent from the artifact are build dependencies in SPDX: SPDX 2.3 `BUILD_DEPENDENCY_OF`, SPDX 3 `scope: build`. CycloneDX already marked those members `scope: excluded`.
+- **Haskell repositories honour `--project-discovery=root-only` and `strict`**, and record what they dropped (C244). hpack manifests that use `!include` or YAML merge keys are read as hpack reads them.
+- **Libraries found in binaries are versioned and identified more often:**
+  - bzip2, GMP and liblzma, from the version string they embed, and liblzma when statically linked;
+  - bundled zlib, expat and ncurses, whatever precedes their banner;
+  - one component per library when its banner and its pkg-config or CMake file disagree;
+  - labelled `binary-analysis` when a binary's imports or source paths name them.
+- **CMake changes:**
+  - each project a scanned tree builds is a component;
+  - package searches are read from every CMake file;
+  - fetch and link conditions use the values a build configured (#1699).
+- **The three formats agree more often:**
+  - a promoted root keeps its `waybill:*` properties in CycloneDX;
+  - SPDX 2.3 gives a lone component a synthetic root;
+  - SPDX no longer claims a complete composition that CycloneDX withholds.
+- **Output is safer and steadier:** declared URLs no longer carry credentials, and a scan of a fixed input gives the same document every time.
+
 ### Added
 
 - **`waybill sbom edit --retier FROM=TO` relabels `waybill:sbom-tier`, for testing consumers that act on the tier (#1683, kusaridev/iac#3552).**
@@ -8874,7 +8900,8 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.18.0
 [0.17.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.17.0
 [0.16.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.16.0
 [0.15.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.15.0
