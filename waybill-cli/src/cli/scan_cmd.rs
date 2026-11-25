@@ -6238,7 +6238,7 @@ pub async fn execute(
         nix_evaluation_policy: nix_evaluation_policy_json.as_deref(),
         ghc_boot_libraries: ghc_boot_libraries_json.as_deref(),
         nix_closure_contents: closure_contents.as_ref().map(|c| c.wire.as_str()),
-        nix_closure_contents_unread: closure_contents.as_ref().is_some_and(|c| c.unread),
+        nix_closure_contents_unread: closure_contents.as_ref().and_then(|c| c.unread),
         // C192 (m1067): answers served from the disk cache count as online.
         deps_dev_online: enrich_cfg.deps_dev && !offline,
         nixpkgs_haskell_degraded,
@@ -7075,7 +7075,9 @@ async fn run_closure_ecosystem_identity(
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ClosureContentsSummary {
     wire: String,
-    unread: bool,
+    /// Spec 1656: the counts behind C213's unread members, `None` when every
+    /// member was read (`ContentsRecord::has_unread` false).
+    unread: Option<crate::generate::graph_completeness::ContentsUnread>,
     root: scan_fs::package_db::nix::closure::contents::RootState,
     root_label: Option<String>,
 }
@@ -7176,7 +7178,10 @@ async fn run_closure_contents(
     );
     let summary = ClosureContentsSummary {
         wire: record.wire(),
-        unread: record.has_unread(),
+        unread: record.has_unread().then_some(crate::generate::graph_completeness::ContentsUnread {
+            unread: record.absent + record.partial + record.failed,
+            members: record.members,
+        }),
         root: record.root,
         root_label: outcome.root_label.clone(),
     };
@@ -12148,7 +12153,7 @@ mod closure_contents_tests {
         assert_eq!(run.relationships.len(), 3, "goa, stdlib, cratea");
         assert_eq!(run.summary.root, RootState::Member(ReadState::Read));
         assert_eq!(run.summary.root_label.as_deref(), Some("waybill-fixture-app 1.2.3"));
-        assert!(run.summary.unread, "the library's outputs are absent");
+        assert!(run.summary.unread.is_some(), "the library's outputs are absent");
 
         let app = by_name(&components, "waybill-fixture-app");
         assert_eq!(app.purl.as_str(), "pkg:generic/waybill-fixture-app@1.2.3");
@@ -12253,7 +12258,7 @@ mod closure_contents_tests {
     fn summary(root: RootState) -> ClosureContentsSummary {
         ClosureContentsSummary {
             wire: String::new(),
-            unread: true,
+            unread: Some(crate::generate::graph_completeness::ContentsUnread { unread: 1, members: 1 }),
             root,
             root_label: Some("waybill-fixture-app 1.2.3".to_string()),
         }

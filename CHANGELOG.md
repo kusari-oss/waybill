@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Under `--nix-closure`, graph completeness (C104) no longer reads `complete` when the closure read was partial (#1720, spec 1656).**
+  CycloneDX `compositions[]` and SPDX already withheld their root claim when the closure reader left store-path declarations unconsulted or members' contents unread. C104 had no reason for either, so `nix-closure-shellcheck` read `complete` beside native fields that said otherwise.
+  - **Two new C105 codes, counts only:** `closure-declarations-unconsulted: <N> declaration(s) in <M> derivation(s)` and `closure-contents-unread: <U> of <T> member(s)`. They are appended after every other code and degrade no ecosystem.
+  - **One predicate:** the native root claims and the two codes now read the same function, so they cannot disagree again.
+  - **Effect:** every closure corpus target gains both clauses, and `nix-closure-shellcheck` reads `partial`.
+
 - **Under `--nix-closure`, every GHC boot library a boot library depends on is a component, so its dependency edges have targets (#1696, spec 1655).**
   Spec 1653 drew boot-library edges only to libraries the document already held, listing the rest in C247 `absent`, so every closure document read `partial`.
   - **Libraries reached are added:** `rts`, `ghc-prim`, `ghc-internal`, `ghc-bignum`, `ghc-boot-th` and the like, at the version the release ships (milestone 966's table), with C218, C247 and tier `build`, the shape of the boot libraries the closure already synthesised. Only libraries a present one reaches are added, not the compiler's whole set: 8 to 12 per closure corpus target.

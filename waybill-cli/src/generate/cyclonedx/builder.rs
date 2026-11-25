@@ -228,7 +228,7 @@ pub struct CycloneDxBuilder {
     /// C213 (m1378) — the closure contents read record, pre-rendered, and
     /// whether it has unread members.
     nix_closure_contents: Option<String>,
-    nix_closure_contents_unread: bool,
+    nix_closure_contents_unread: Option<crate::generate::graph_completeness::ContentsUnread>,
     /// C195/C196 (#1154) — the `go mod why` pass's outcome.
     go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// C192 (m1067) — the deps.dev pass ran online.
@@ -328,7 +328,7 @@ impl CycloneDxBuilder {
             nix_evaluation_policy: None,
             ghc_boot_libraries: None,
             nix_closure_contents: None,
-            nix_closure_contents_unread: false,
+            nix_closure_contents_unread: None,
             go_mod_why: None,
             deps_dev_online: false,
             vex_statements: Vec::new(),
@@ -440,7 +440,11 @@ impl CycloneDxBuilder {
     }
 
     /// C213 (m1378, #1396) — which closure members had their outputs read.
-    pub fn with_nix_closure_contents(mut self, value: Option<String>, unread: bool) -> Self {
+    pub fn with_nix_closure_contents(
+        mut self,
+        value: Option<String>,
+        unread: Option<crate::generate::graph_completeness::ContentsUnread>,
+    ) -> Self {
         self.nix_closure_contents = value;
         self.nix_closure_contents_unread = unread;
         self
@@ -925,6 +929,11 @@ impl CycloneDxBuilder {
             },
             &m1273_unread,
             self.project_discovery_dropped.as_ref(),
+            // Spec 1656 (#1720): the predicate the root claim below uses.
+            Some(&crate::generate::graph_completeness::closure_read_gaps(
+                self.nix_closure_summary.as_ref().map(|s| &s.read_outcome),
+                self.nix_closure_contents_unread,
+            )),
         );
         let effective_components: &[ResolvedComponent] = document_graph.effective(components);
         let retained_main_module_purls: Vec<String> = document_graph.retained_main_module_purls.clone();
@@ -1115,10 +1124,13 @@ impl CycloneDxBuilder {
             // Milestone 1378 (#1396): so does a closure with members whose
             // outputs were not read. What is compiled into an unread member
             // is exactly a dependency that may exist and is not known.
-            self.nix_closure_summary
-                .as_ref()
-                .is_some_and(|s| s.read_outcome.has_gap())
-                || self.nix_closure_contents_unread,
+            // Spec 1656 (#1720): the one predicate, shared with the SPDX
+            // bridges and C105's closure-read codes.
+            crate::generate::graph_completeness::closure_read_gaps(
+                self.nix_closure_summary.as_ref().map(|s| &s.read_outcome),
+                self.nix_closure_contents_unread,
+            )
+            .any(),
         );
         // Milestone 084 — when override has dropped main-module components,
         // closure-invariant fix: relationships whose `from` is one of the

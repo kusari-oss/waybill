@@ -692,6 +692,8 @@ pub fn build_document(
         },
         &m1273_unread,
         scan.project_discovery_dropped,
+        // Spec 1656 (#1720): the predicate the root claim uses.
+        Some(&scan.closure_read_gaps()),
     )
     .completeness;
     let m1069_claims = crate::generate::cyclonedx::compositions::dependency_claims(

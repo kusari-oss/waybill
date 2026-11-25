@@ -510,6 +510,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-25
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`. **Zero new Cargo dependencies.** (1654-parity-verdict)
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (C247), `tracing`; milestone 966's `boot_table`, spec 1653's `boot_dependencies`, the closure's `ClosureCompilers`. **Zero new Cargo dependencies.** (1655-reachable-boot-libraries)
 - N/A. Both tables are already embedded; no scan-time network, store or package-database read (FR-010). (1655-reachable-boot-libraries)
+- Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. **Zero new Cargo dependencies.** (1656-closure-read-completeness)
+- N/A. The inputs are already computed in process. (1656-closure-read-completeness)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -742,9 +744,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1656-closure-read-completeness: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. **Zero new Cargo dependencies.**
 - 1655-reachable-boot-libraries: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (C247), `tracing`; milestone 966's `boot_table`, spec 1653's `boot_dependencies`, the closure's `ClosureCompilers`. **Zero new Cargo dependencies.**
 - 1654-parity-verdict: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`. **Zero new Cargo dependencies.**
-- 1653-cmake-build-tree: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
 
 
 <!-- MANUAL ADDITIONS START -->

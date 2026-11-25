@@ -438,6 +438,87 @@ pub fn compute_graph_completeness(
 }
 
 /// Milestone 866 (FR-003) — did Go transitive resolution actually
+/// Spec 1656 (#1720) — closure members whose contents (C213) this scan
+/// cannot vouch for: absent, partial or failed, out of all members. Carried
+/// as counts, not a flag, so the reason code can say how many without the
+/// rendered C213 record being parsed back.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ContentsUnread {
+    pub unread: usize,
+    pub members: usize,
+}
+
+/// Spec 1656 — a closure read that left dependency declarations unconsulted
+/// (`waybill:nix-closure-read`, milestone 1278).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DeclarationGap {
+    pub declarations: usize,
+    pub derivations: usize,
+    pub carrier_disagreements: usize,
+}
+
+/// Spec 1656 — both ways a closure read can be partial. The one predicate
+/// behind CycloneDX's root claim, the SPDX bridges' claim and C105's
+/// closure-read codes, so the native fields and C104 cannot disagree again.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ClosureReadGaps {
+    pub declarations: Option<DeclarationGap>,
+    pub contents: Option<ContentsUnread>,
+}
+
+impl ClosureReadGaps {
+    /// Whether the closure read was partial in either way.
+    pub fn any(&self) -> bool {
+        self.declarations.is_some() || self.contents.is_some()
+    }
+}
+
+/// Build [`ClosureReadGaps`] from what the closure reader recorded.
+pub(crate) fn closure_read_gaps(
+    read_outcome: Option<&crate::scan_fs::package_db::nix::closure::derivation::ReadOutcome>,
+    contents: Option<ContentsUnread>,
+) -> ClosureReadGaps {
+    ClosureReadGaps {
+        declarations: read_outcome.filter(|r| r.has_gap()).map(|r| DeclarationGap {
+            declarations: r.declarations_unconsulted,
+            derivations: r.derivations_affected,
+            carrier_disagreements: r.carrier_disagreements.len(),
+        }),
+        contents,
+    }
+}
+
+/// Spec 1656 (#1720) — a partial closure read makes the verdict not
+/// `complete`, as it already withholds CycloneDX's and SPDX's root claim.
+///
+/// Applied after classification and after [`apply_scope_drop`], for the
+/// reason that one is: it changes the verdict and its reasons, never the
+/// reachable set. Declarations before contents, both after every other code.
+/// The value follows the same rule as the scope drop: codes present means
+/// `partial`, except an empty set already `unknown` stays `unknown`. Neither
+/// code degrades an ecosystem: which ecosystem an unread declaration or
+/// member would have touched is unknown (milestone 1278).
+pub fn apply_closure_read(mut result: GraphCompletenessResult, gaps: Option<&ClosureReadGaps>) -> GraphCompletenessResult {
+    let Some(gaps) = gaps.filter(|g| g.any()) else {
+        return result;
+    };
+    if let Some(d) = gaps.declarations {
+        result.reason_codes.push(ReasonCode::ClosureDeclarationsUnconsulted {
+            declarations: d.declarations,
+            derivations: d.derivations,
+            carrier_disagreements: d.carrier_disagreements,
+        });
+    }
+    if let Some(c) = gaps.contents {
+        result.reason_codes.push(ReasonCode::ClosureContentsUnread { unread: c.unread, members: c.members });
+    }
+    let empty_and_unread = result.total_count == 0 && result.value == GraphCompletenessValue::Unknown;
+    if !empty_and_unread {
+        result.value = GraphCompletenessValue::Partial;
+    }
+    result
+}
+
 /// Spec 1652 (FR-005, contracts/wire.md) — what `--project-discovery`
 /// dropped makes the document's verdict not `complete`.
 ///
@@ -1486,5 +1567,126 @@ mod s1653_boot_library_edges_tests {
         let cs = vec![boot_with(r#"{"source":"ghc-boot-dependencies/2026-11-24"}"#)];
         assert_eq!(classify_boot_library_edges_incomplete(&cs), None);
         assert_eq!(classify_boot_library_edges_incomplete(&[]), None);
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1656_closure_read_tests {
+    //! Spec 1656 (#1720): the closure-read reason codes and the shared
+    //! predicate (FR-001 to FR-003).
+    use super::*;
+    use crate::scan_fs::package_db::nix::closure::derivation::ReadOutcome;
+
+    fn decl(declarations: usize, derivations: usize, carrier: usize) -> DeclarationGap {
+        DeclarationGap { declarations, derivations, carrier_disagreements: carrier }
+    }
+
+    fn contents(unread: usize, members: usize) -> ContentsUnread {
+        ContentsUnread { unread, members }
+    }
+
+    #[test]
+    fn the_wire_text_is_counts_only() {
+        let d = |a, b, c| {
+            ReasonCode::ClosureDeclarationsUnconsulted { declarations: a, derivations: b, carrier_disagreements: c }
+                .to_reason_string()
+        };
+        assert_eq!(d(211, 16, 0), "closure-declarations-unconsulted: 211 declaration(s) in 16 derivation(s)");
+        assert_eq!(
+            d(211, 16, 2),
+            "closure-declarations-unconsulted: 211 declaration(s) in 16 derivation(s), 2 carrier disagreement(s)"
+        );
+        // Spec edge case: a gap made only of carrier disagreements.
+        assert_eq!(
+            d(0, 0, 2),
+            "closure-declarations-unconsulted: 0 declaration(s) in 0 derivation(s), 2 carrier disagreement(s)"
+        );
+        assert_eq!(
+            ReasonCode::ClosureContentsUnread { unread: 1284, members: 2045 }.to_reason_string(),
+            "closure-contents-unread: 1284 of 2045 member(s)"
+        );
+    }
+
+    #[test]
+    fn neither_gap_changes_nothing() {
+        for gaps in [None, Some(ClosureReadGaps::default())] {
+            let r = apply_closure_read(GraphCompletenessResult::trivially_complete(), gaps.as_ref());
+            assert_eq!(r.value, GraphCompletenessValue::Complete);
+            assert!(r.reason_codes.is_empty());
+        }
+    }
+
+    #[test]
+    fn each_gap_alone_names_only_itself() {
+        let g = ClosureReadGaps { declarations: Some(decl(1, 1, 0)), contents: None };
+        let r = apply_closure_read(GraphCompletenessResult::trivially_complete(), Some(&g));
+        assert_eq!(r.value, GraphCompletenessValue::Partial);
+        assert_eq!(
+            join_reason_codes(&r.reason_codes),
+            "closure-declarations-unconsulted: 1 declaration(s) in 1 derivation(s)"
+        );
+
+        let g = ClosureReadGaps { declarations: None, contents: Some(contents(4, 4)) };
+        let r = apply_closure_read(GraphCompletenessResult::trivially_complete(), Some(&g));
+        assert_eq!(r.value, GraphCompletenessValue::Partial);
+        assert_eq!(join_reason_codes(&r.reason_codes), "closure-contents-unread: 4 of 4 member(s)");
+    }
+
+    /// Declarations before contents, both after every other code, including
+    /// a `project-discovery-scope` the scope drop appended.
+    #[test]
+    fn both_gaps_follow_every_other_code() {
+        let drop = crate::generate::project_discovery::ProjectDiscoveryDrop {
+            main_modules: vec!["pkg:hackage/waybill-fixture-a@0.1.0".to_string()],
+            ecosystems: vec!["hackage".to_string()],
+        };
+        let base = apply_scope_drop(GraphCompletenessResult::trivially_complete(), Some(&drop));
+        let g = ClosureReadGaps { declarations: Some(decl(211, 16, 0)), contents: Some(contents(1284, 2045)) };
+        let r = apply_closure_read(base, Some(&g));
+        assert_eq!(r.value, GraphCompletenessValue::Partial);
+        assert!(matches!(r.reason_codes[0], ReasonCode::ProjectDiscoveryScope { .. }));
+        assert!(matches!(r.reason_codes[1], ReasonCode::ClosureDeclarationsUnconsulted { .. }));
+        assert!(matches!(r.reason_codes[2], ReasonCode::ClosureContentsUnread { .. }));
+        assert_eq!(r.reason_codes.len(), 3);
+    }
+
+    /// The scope drop's rule: an empty set already `unknown` stays `unknown`.
+    #[test]
+    fn an_empty_unknown_set_stays_unknown() {
+        let unread = GraphCompletenessResult::unknown(
+            0,
+            vec![ReasonCode::ManifestUnread { ecosystem: "haskell".into(), count: 1 }],
+        );
+        let g = ClosureReadGaps { declarations: None, contents: Some(contents(1, 1)) };
+        let r = apply_closure_read(unread, Some(&g));
+        assert_eq!(r.value, GraphCompletenessValue::Unknown);
+        assert!(matches!(r.reason_codes[1], ReasonCode::ClosureContentsUnread { .. }));
+    }
+
+    /// FR-003: for every combination, the predicate the native claims use is
+    /// true exactly when a code is appended.
+    #[test]
+    fn the_predicate_and_the_codes_agree() {
+        let gap = ReadOutcome {
+            fields_unconsulted: ["defaultNativeBuildInputs".to_string()].into_iter().collect(),
+            declarations_unconsulted: 211,
+            derivations_affected: 16,
+            ..Default::default()
+        };
+        let none = ReadOutcome::default();
+        for (read, c) in [
+            (None, None),
+            (Some(&none), None),
+            (Some(&gap), None),
+            (None, Some(contents(4, 4))),
+            (Some(&gap), Some(contents(4, 4))),
+        ] {
+            let g = closure_read_gaps(read, c);
+            let r = apply_closure_read(GraphCompletenessResult::trivially_complete(), Some(&g));
+            assert_eq!(g.any(), !r.reason_codes.is_empty(), "{read:?} {c:?}");
+        }
+        let g = closure_read_gaps(Some(&gap), None);
+        assert_eq!(g.declarations, Some(decl(211, 16, 0)));
     }
 }
