@@ -137,7 +137,10 @@ impl std::fmt::Display for CorpusInfraError {
                 writeln!(f, "invariant: nix-realise")?;
                 writeln!(f, "target:    {target}")?;
                 writeln!(f, "next:      build the pinned output by hand (`nix build --no-link .#<attr>` in the cached repo) and read nix's error")?;
-                writeln!(f, "underlying error: {}", truncate_stderr(stderr))?;
+                // The prewarm reports the TAIL of nix's output (#1704): with
+                // build logs on, the error is at the end, and the head-keeping
+                // `truncate_stderr` would show only the start of the build.
+                writeln!(f, "underlying error: {stderr}")?;
             }
             CorpusInfraError::OciPull { target, stderr } => {
                 writeln!(f, "invariant: oci-pull")?;
@@ -275,8 +278,13 @@ pub fn scan_target(target: &CorpusTarget) -> Result<EmittedSboms, CorpusInfraErr
     // subject so goldens don't hard-code the tempdir path.
     cmd.arg("--root-name").arg(target.name);
     cmd.arg("--root-version").arg(pinned_ref_short(&target.pinned));
-    let output = cmd
-        .output()
+    // #1704: per-target scan time in the job log, so a slow or hung run says
+    // which phase it was in.
+    let scan_started = std::time::Instant::now();
+    eprintln!("corpus: {}: scan started", target.name);
+    let output = cmd.output();
+    eprintln!("corpus: {}: scan finished after {}s", target.name, scan_started.elapsed().as_secs());
+    let output = output
         .map_err(|e| CorpusInfraError::SbomEmission {
             target: target.name,
             stderr: format!("spawn failed: {e}"),
