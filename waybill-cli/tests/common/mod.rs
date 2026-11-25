@@ -174,3 +174,4 @@ pub fn local_fixture_path(rel: &str) -> PathBuf {
 pub fn case_fixture_path(case: &EcosystemCase) -> PathBuf {
     fixture_path(case.fixture_subpath)
 }
+pub mod synthetic_image;

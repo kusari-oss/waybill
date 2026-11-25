@@ -1,0 +1,4 @@
+binaries=422 tests=3054 corpus_harness_195=0 dual_format_perf=2
+binaries with corpus_harness_195 tests: 0
+binaries with dual_format_perf tests: 1
+  tests/holistic_parity.rs	total=13	harness=0	dual=2

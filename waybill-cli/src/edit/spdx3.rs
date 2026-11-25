@@ -78,6 +78,28 @@ impl Spdx3 {
         self.document().and_then(sid).map(str::to_string)
     }
 
+    /// Spec 1657 (#1711): every waybill annotation value in `@graph`, keyed by
+    /// `(subject, field)`, built in one pass. `annotations_about` walked the
+    /// whole graph and re-parsed every statement per call, and `components`
+    /// called it up to six times per component: 79 s to edit the moat SPDX 3
+    /// golden against 4 s for SPDX 2.3. Values keep graph order, so every
+    /// lookup returns exactly what `annotations_about` returned. Built per
+    /// read, never held across a mutation.
+    fn annotation_index(&self) -> BTreeMap<(String, String), Vec<String>> {
+        let mut index: BTreeMap<(String, String), Vec<String>> = BTreeMap::new();
+        for e in self.graph().iter().filter(|e| ty(e) == "Annotation") {
+            let (Some(subject), Some(statement)) =
+                (e.get("subject").and_then(Value::as_str), e.get("statement").and_then(Value::as_str))
+            else {
+                continue;
+            };
+            let Some(field) = envelope_field(statement) else { continue };
+            let Some(value) = envelope_value(statement) else { continue };
+            index.entry((subject.to_string(), field)).or_default().extend(string_values(&value));
+        }
+        index
+    }
+
     fn annotations_about(&self, subject: &str, field: &str) -> Vec<String> {
         self.graph()
             .iter()
@@ -135,28 +157,30 @@ impl SbomAdapter for Spdx3 {
             })
             .flat_map(|e| strs(e.get("to")))
             .collect();
+        let index = self.annotation_index();
+        let about = |id: &str, field: &str| -> Vec<String> {
+            index.get(&(id.to_string(), field.to_string())).cloned().unwrap_or_default()
+        };
         self.graph()
             .iter()
             .filter(|e| is_component(e))
             .filter_map(|e| {
                 let id = sid(e)?.to_string();
-                let mut scopes: BTreeSet<Scope> = self
-                    .annotations_about(&id, "waybill:lifecycle-scope")
+                let mut scopes: BTreeSet<Scope> = about(&id, "waybill:lifecycle-scope")
                     .iter()
                     .filter_map(|s| Scope::parse(s))
                     .collect();
                 // SPDX 3 has no optional scope; the signal rides this
                 // annotation (milestone 179).
-                if !self.annotations_about(&id, "waybill:optional-derivation").is_empty() {
+                if !about(&id, "waybill:optional-derivation").is_empty() {
                     scopes.insert(Scope::Optional);
                 }
                 if scopes.is_empty() {
                     scopes = rel_scopes.get(&id).cloned().unwrap_or_default();
                 }
-                let mut roles: BTreeSet<String> = self
-                    .annotations_about(&id, "waybill:component-role")
+                let mut roles: BTreeSet<String> = about(&id, "waybill:component-role")
                     .into_iter()
-                    .chain(self.annotations_about(&id, "waybill:closure-role"))
+                    .chain(about(&id, "waybill:closure-role"))
                     .collect();
                 if let Some(p) = e.get("software_primaryPurpose").and_then(Value::as_str) {
                     roles.insert(p.to_string());
@@ -168,10 +192,9 @@ impl SbomAdapter for Spdx3 {
                     purl: e.get("software_packageUrl").and_then(Value::as_str).map(str::to_string),
                     name: e.get("name").and_then(Value::as_str).unwrap_or("").to_string(),
                     scopes,
-                    tier: self
-                        .annotations_about(&id, "waybill:sbom-tier")
+                    tier: about(&id, "waybill:sbom-tier")
                         .into_iter()
-                        .chain(self.annotations_about(&id, "waybill:component-tier"))
+                        .chain(about(&id, "waybill:component-tier"))
                         .next(),
                     roles,
                     id,

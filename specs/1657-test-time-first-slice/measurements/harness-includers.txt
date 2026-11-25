@@ -1,0 +1,17 @@
+tests/also_detected_via.rs
+tests/cmake_build_tree.rs
+tests/cmake_conditional_scope.rs
+tests/cmake_project_components.rs
+tests/cmake_unresolved_github_fetch.rs
+tests/declared_url_credentials.rs
+tests/installed_record_scope.rs
+tests/orphan_explanations.rs
+tests/propagation_seeds.rs
+tests/public_corpus.rs
+tests/requirements_owner.rs
+tests/scan_cmake_tree_finds.rs
+tests/scan_determinism.rs
+tests/scan_dot_directory_manifests.rs
+tests/scan_nested_req_scope.rs
+tests/scan_therock_last_orphans.rs
+tests/version_string_boundary.rs

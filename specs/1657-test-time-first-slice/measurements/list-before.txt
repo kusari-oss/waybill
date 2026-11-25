@@ -1,0 +1,21 @@
+binaries=421 tests=5358 corpus_harness_195=2448 dual_format_perf=2
+binaries with corpus_harness_195 tests: 17
+binaries with dual_format_perf tests: 1
+  tests/also_detected_via.rs	total=156	harness=144	dual=0
+  tests/cmake_build_tree.rs	total=160	harness=144	dual=0
+  tests/cmake_conditional_scope.rs	total=175	harness=144	dual=0
+  tests/cmake_project_components.rs	total=172	harness=144	dual=0
+  tests/cmake_unresolved_github_fetch.rs	total=164	harness=144	dual=0
+  tests/declared_url_credentials.rs	total=180	harness=144	dual=0
+  tests/holistic_parity.rs	total=13	harness=0	dual=2
+  tests/installed_record_scope.rs	total=157	harness=144	dual=0
+  tests/orphan_explanations.rs	total=158	harness=144	dual=0
+  tests/propagation_seeds.rs	total=151	harness=144	dual=0
+  tests/public_corpus.rs	total=182	harness=144	dual=0
+  tests/requirements_owner.rs	total=164	harness=144	dual=0
+  tests/scan_cmake_tree_finds.rs	total=169	harness=144	dual=0
+  tests/scan_determinism.rs	total=152	harness=144	dual=0
+  tests/scan_dot_directory_manifests.rs	total=155	harness=144	dual=0
+  tests/scan_nested_req_scope.rs	total=160	harness=144	dual=0
+  tests/scan_therock_last_orphans.rs	total=164	harness=144	dual=0
+  tests/version_string_boundary.rs	total=163	harness=144	dual=0

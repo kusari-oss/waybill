@@ -15,7 +15,7 @@ use super::manifest::{CorpusTarget, PinnedRef, SourceKind};
 /// GHC series waybill may ask for, mirroring `KNOWN_GHC_SERIES` in
 /// `scan_fs::package_db::nix::haskell_packages`. Hydration fetches all of
 /// them so any candidate subset is a cache hit.
-const KNOWN_GHC_SERIES: &[&str] =
+pub(crate) const KNOWN_GHC_SERIES: &[&str] =
     &["9.16.x", "9.14.x", "9.12.x", "9.10.x", "9.8.x", "9.6.x", "9.4.x", "9.0.x"];
 
 /// Read the nixpkgs input a `flake.lock` pins, as `(owner, repo, rev)`.
@@ -23,7 +23,7 @@ const KNOWN_GHC_SERIES: &[&str] =
 /// `None` when the file is absent, unparseable, names no nixpkgs-shaped
 /// GitHub input, or pins no exact revision — in which case there is nothing
 /// to hydrate and the target simply exercises other readers.
-fn nixpkgs_pin(lock_path: &Path) -> Option<(String, String, String)> {
+pub(crate) fn nixpkgs_pin(lock_path: &Path) -> Option<(String, String, String)> {
     let text = std::fs::read_to_string(lock_path).ok()?;
     let doc: serde_json::Value = serde_json::from_str(&text).ok()?;
     let nodes = doc.get("nodes")?.as_object()?;
@@ -447,7 +447,7 @@ impl CorpusCacheDir {
 /// name the derivation that hung but do not bound the whole build; the
 /// wall-clock deadline does. Build logs go to a file whose tail becomes the
 /// error, so a failure says what was building.
-fn prewarm_nix_closure(target: &CorpusTarget, repo_dir: &Path) -> Result<(), CorpusInfraError> {
+pub(crate) fn prewarm_nix_closure(target: &CorpusTarget, repo_dir: &Path) -> Result<(), CorpusInfraError> {
     let super::manifest::ScanMode::NixClosure { attr, allow_ifd } = target.scan_mode else {
         return Ok(());
     };
@@ -513,14 +513,14 @@ fn prewarm_nix_closure(target: &CorpusTarget, repo_dir: &Path) -> Result<(), Cor
 /// for 10 minutes or building for 20 is not making progress. The wall-clock
 /// deadline (25 minutes) fails the test well inside the job's 45, with the
 /// corpus step starting about 5 minutes in.
-const PREWARM_MAX_SILENT_SECS: u64 = 600;
-const PREWARM_DERIVATION_TIMEOUT_SECS: u64 = 1200;
-const PREWARM_WALL_SECS: u64 = 1500;
+pub(crate) const PREWARM_MAX_SILENT_SECS: u64 = 600;
+pub(crate) const PREWARM_DERIVATION_TIMEOUT_SECS: u64 = 1200;
+pub(crate) const PREWARM_WALL_SECS: u64 = 1500;
 
 /// Run `cmd` to completion or kill it at `deadline`. `Ok` on a zero exit;
 /// otherwise `Err` with the last 40 lines of its output, where nix puts the
 /// error and the end of the build log that led to it.
-fn run_with_deadline(
+pub(crate) fn run_with_deadline(
     cmd: &mut std::process::Command,
     deadline: std::time::Duration,
 ) -> Result<(), String> {
@@ -560,108 +560,9 @@ fn run_with_deadline(
     }
 }
 
-fn work_dir_for(cache_dir: &Path, target: &CorpusTarget) -> PathBuf {
+pub(crate) fn work_dir_for(cache_dir: &Path, target: &CorpusTarget) -> PathBuf {
     match &target.source {
         SourceKind::Git { .. } => cache_dir.join("repo"),
         SourceKind::OciImage { .. } => cache_dir.to_path_buf(),
-    }
-}
-
-#[cfg(test)]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod nixpkgs_pin_tests {
-    use super::nixpkgs_pin;
-
-    fn write(text: &str) -> tempfile::TempDir {
-        let d = tempfile::tempdir().unwrap();
-        std::fs::write(d.path().join("flake.lock"), text).unwrap();
-        d
-    }
-
-    /// The real shape of `haskell/haskell-language-server`'s lock, trimmed:
-    /// a `root` node with no `locked` block, then the inputs. An earlier
-    /// draft used `?` on `node.get("locked")`, which returns from the whole
-    /// function at `root` -- hydrating nothing and making every corpus
-    /// assertion pass vacuously.
-    #[test]
-    fn root_node_without_a_locked_block_does_not_abort_the_search() {
-        let d = write(
-            r#"{"nodes":{
-                 "root":{"inputs":{"nixpkgs":"nixpkgs"}},
-                 "flake-utils":{"locked":{"type":"github","owner":"numtide",
-                   "repo":"flake-utils","rev":"1170dc"}},
-                 "nixpkgs":{"locked":{"type":"github","owner":"NixOS",
-                   "repo":"nixpkgs","rev":"cbb5cf35"},
-                   "original":{"owner":"NixOS","repo":"nixpkgs","ref":"nixpkgs-unstable"}}
-               },"root":"root","version":7}"#,
-        );
-        assert_eq!(
-            nixpkgs_pin(&d.path().join("flake.lock")),
-            Some(("NixOS".into(), "nixpkgs".into(), "cbb5cf35".into()))
-        );
-    }
-
-    /// A lock with no nixpkgs input hydrates nothing, rather than erroring.
-    #[test]
-    fn a_lock_without_nixpkgs_yields_nothing() {
-        let d = write(
-            r#"{"nodes":{"root":{"inputs":{}},
-                 "flake-utils":{"locked":{"type":"github","owner":"numtide",
-                   "repo":"flake-utils","rev":"1170dc"}}},"root":"root","version":7}"#,
-        );
-        assert_eq!(nixpkgs_pin(&d.path().join("flake.lock")), None);
-    }
-
-    /// A moving reference pins no revision, so there is nothing to fetch.
-    #[test]
-    fn a_lock_with_no_revision_yields_nothing() {
-        let d = write(
-            r#"{"nodes":{"root":{"inputs":{"nixpkgs":"nixpkgs"}},
-                 "nixpkgs":{"locked":{"type":"github","owner":"NixOS",
-                   "repo":"nixpkgs","rev":""}}},"root":"root","version":7}"#,
-        );
-        assert_eq!(nixpkgs_pin(&d.path().join("flake.lock")), None);
-    }
-
-    /// Absent file: the ordinary case for every non-Nix target.
-    #[test]
-    fn a_missing_lock_yields_nothing() {
-        let d = tempfile::tempdir().unwrap();
-        assert_eq!(nixpkgs_pin(&d.path().join("flake.lock")), None);
-    }
-}
-
-/// #1704: the prewarm's deadline runner.
-#[cfg(all(test, unix))]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod run_with_deadline_tests {
-    use super::run_with_deadline;
-    use std::process::Command;
-    use std::time::{Duration, Instant};
-
-    #[test]
-    fn a_hung_command_is_killed_at_the_deadline() {
-        let started = Instant::now();
-        let err = run_with_deadline(Command::new("sh").args(["-c", "echo building; sleep 30"]), Duration::from_secs(2))
-            .unwrap_err();
-        assert!(started.elapsed() < Duration::from_secs(10), "not killed: {:?}", started.elapsed());
-        assert!(err.contains("killed after the 2s deadline"), "{err}");
-        assert!(err.contains("building"), "the output before the hang is kept: {err}");
-    }
-
-    #[test]
-    fn a_failure_reports_the_tail_of_its_output() {
-        let err = run_with_deadline(
-            Command::new("sh").args(["-c", "for i in $(seq 1 100); do echo line$i; done; echo 'error: the cause' >&2; exit 3"]),
-            Duration::from_secs(30),
-        )
-        .unwrap_err();
-        assert!(err.contains("error: the cause"), "{err}");
-        assert!(err.contains("line100") && !err.contains("line1\n"), "the tail, not the head: {err}");
-    }
-
-    #[test]
-    fn success_is_ok() {
-        assert_eq!(run_with_deadline(Command::new("sh").args(["-c", "echo fine"]), Duration::from_secs(30)), Ok(()));
     }
 }

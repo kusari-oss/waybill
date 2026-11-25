@@ -13,10 +13,14 @@
 //! document so the property is violated, and asserts the cell goes red
 //! with the expected kind. An invariant that cannot be made to fail
 //! checks nothing.
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+#[allow(unused_imports)]
+use crate::corpus_harness_195::harness::EmittedSboms;
 
-use super::checks;
-use super::goldens;
-use super::{CellOutcome, Invariant, REGISTRY};
+use crate::corpus_harness_195::invariants::checks;
+use crate::corpus_harness_195::invariants::goldens;
+use crate::corpus_harness_195::invariants::{CellOutcome, Invariant, REGISTRY};
 
 fn registry_entry(id: &str) -> &'static Invariant {
     REGISTRY.iter().find(|i| i.id == id).expect("invariant in registry")
@@ -337,9 +341,9 @@ fn an_undeclared_regression_fails_the_lane_and_names_the_cell() {
         "type": "library",
         "purl": "pkg:generic/mutation-orphan@1"
     }));
-    let cells = super::evaluate_matrix(&[(target.clone(), sboms)]);
-    let decls = super::declarations::load();
-    let rep = super::report::build(cells, &decls);
+    let cells = crate::corpus_harness_195::invariants::evaluate_matrix(&[(target.clone(), sboms)]);
+    let decls = crate::corpus_harness_195::invariants::declarations::load();
+    let rep = crate::corpus_harness_195::invariants::report::build(cells, &decls);
     let failures = rep.lane_failures();
     let named = failures.iter().find(|f| f.starts_with("I7 /"));
     let named = named.unwrap_or_else(|| {
@@ -366,10 +370,10 @@ fn an_undeclared_regression_fails_the_lane_and_names_the_cell() {
 /// ```
 #[test]
 fn a_matrix_diff_shows_which_targets_a_change_reached() {
-    let decls = super::declarations::load();
+    let decls = crate::corpus_harness_195::invariants::declarations::load();
 
-    let baseline = super::evaluate_matrix(&goldens::load_all());
-    let base_report = super::report::build(baseline, &decls);
+    let baseline = crate::corpus_harness_195::invariants::evaluate_matrix(&goldens::load_all());
+    let base_report = crate::corpus_harness_195::invariants::report::build(baseline, &decls);
     let base_path = base_report.write_artifact("goldens").expect("write baseline artifact");
 
     // Perturb exactly two targets, leaving the other fifteen alone.
@@ -386,8 +390,8 @@ fn a_matrix_diff_shows_which_targets_a_change_reached() {
             }));
         }
     }
-    let mutated = super::evaluate_matrix(&documents);
-    let mut_report = super::report::build(mutated, &decls);
+    let mutated = crate::corpus_harness_195::invariants::evaluate_matrix(&documents);
+    let mut_report = crate::corpus_harness_195::invariants::report::build(mutated, &decls);
     let mut_path = mut_report.write_artifact("goldens-mutated").expect("write mutated artifact");
 
     // The diff: cells whose state changed.

@@ -6,6 +6,10 @@
 //! *can* do, not about what one run happened to do. A run that performs
 //! no network call because a cache was warm looks exactly like a run
 //! that cannot perform one, and only the second is the requirement.
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+#[allow(unused_imports)]
+use crate::corpus_harness_195::harness::EmittedSboms;
 
 use std::path::{Path, PathBuf};
 
