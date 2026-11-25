@@ -34,13 +34,13 @@
 ### Tests for User Story 1 (write first; each must fail before T007/T008)
 
 - [ ] T004 [US1] Unit tests in `waybill-cli/src/resolve/boot_library_edges.rs`, all built on `apply_with` with a `ClosureCompilers` whose project is `ghc-9.10.3`:
-  - **(a) `a_dependency_held_under_another_label_resolves_by_purl`.** `ghc-binary-9.8.4` `base@4.19.2.0` and a `ghc-9.10.3` `array@0.5.8.0`. The edge base→array is drawn, and base's C247 does not list `array`.
+  - **(a) `a_dependency_held_under_another_label_resolves_by_purl`.** `ghc-binary-9.8.4` `containers@0.6.8` and a `ghc-9.10.3` `array@0.5.8.0`, the moat case (research R1). The edge containers→array is drawn, and containers' C247 does not list `array`. (9.8.4's `base` does not depend on `array`: it depends on `ghc-bignum ghc-prim rts`.)
   - **(b) `the_reachable_set_is_closed`.** A 9.10.3 `base` alone gains `ghc-internal`, `ghc-prim`, `ghc-bignum` and `rts`, each with C218 `ghc-9.10.3`, and every C247 is `{"source":…}`.
   - **(c) `a_shared_version_is_one_component`.** 9.10.3 `base` and 9.8.4 `base` both reach `rts@1.0.2`, which is added once, labelled `ghc-9.10.3`.
   - **(d) `an_unreached_library_is_not_added`.** `Cabal`, which nothing present depends on, is absent after the pass.
   - **(e) `a_held_purl_is_never_duplicated`.** A component already holding `pkg:hackage/rts@1.0.2` without C218 is reused, not duplicated.
   - **(f) `a_version_the_table_lacks_stays_absent`.** The `versions` closure returns `None` for `rts`. Nothing is synthesized for it, C247 lists `rts` as absent, and `summary.incomplete > 0`. This is the reason's positive control (research R6).
-  - **(g) `none_compilers_is_todays_behaviour`.** With `None`, case (a) still lists `array` as absent and nothing is added.
+  - **(g) `none_compilers_is_todays_behaviour`.** With `None`, case (a)'s `containers` still lists `array` as absent and nothing is added.
 
   Run and confirm (a) to (f) fail, and (g) passes.
 - [ ] T005 [US1] Rewrite the three tests research R6 names in `waybill-cli/tests/boot_library_edges.rs`, keeping their names' intent:
@@ -48,7 +48,9 @@
   - **`edges_stay_within_a_compiler` → `an_edge_reaches_the_version_its_release_ships`:** for every boot edge a→b, b's version equals the stub's 9.10.3 or 9.8.4 version of b, matching a's release. The bootstrap `base@4.19.2.0` reaches `ghc-prim@0.11.0` and never `ghc-prim@0.12.0`. The precondition assertion that both compilers are present is kept.
   - **`incomplete_boot_library_edges_are_reported` → `boot_library_edges_are_complete`:** C105 lacks `boot-library-edges-incomplete` and still contains `transitive-edges-unresolvable`, so the document stays `partial`. The `compositions[]` check is kept, since `hackage` is still unresolvable.
 - [ ] T006 [US1] New integration tests in `waybill-cli/tests/boot_library_edges.rs`, both through `scan_with`, so `assert_parity` runs:
-  - **`added_counts_match_the_measurement`:** boot components minus those present before (`base`, `ghc-prim@0.12.0` if declared, `process`, `stm`, 9.8.4 `base`) number 18 with ghc-prim and 19 plain.
+  - **`added_purls_match_the_measurement`:** the C218 components minus those present before (`base@4.20.2.0`, `ghc-prim@0.12.0` when declared, `process@1.6.26.1`, `stm@2.5.3.1`, `base@4.19.2.0`) equal, as a set, the PURLs measured in `measurements/stub-before.md`. That is 18 with ghc-prim:
+    `array@0.5.8.0 bytestring@0.12.2.0 deepseq@1.5.0.0 directory@1.3.8.5 exceptions@0.10.9 filepath@1.5.4.0 ghc-bignum@1.3 ghc-boot-th@9.10.3 ghc-internal@9.1003.0 mtl@2.3.1 os-string@2.0.7 pretty@1.1.3.6 rts@1.0.2 template-haskell@2.22.0.0 time@1.12.2 transformers@0.6.1.1 unix@2.8.7.0 ghc-prim@0.11.0`.
+    Plain, it is 19: the same plus `ghc-prim@0.12.0`, all `pkg:hackage/`. The set pins names and versions together, so no table is re-read in the test.
   - **`no_added_boot_library_is_an_orphan`:** no C218 component carries `waybill:orphan-reason`.
 
   Confirm all of T005 and T006 fail on the unchanged code.
@@ -59,8 +61,8 @@
 - [ ] T008 [US1] In `apply_with`, with `Some(cc)`: before the edge loop, close each walkable release's reachable set breadth-first over sorted collections, following plan.md's Design step 2. Synthesize each unheld PURL once with `compiler_supplied_component(name, Some((&release, version)))`, push it, and update the PURL set and the (label, name) index. Add `added` to `BootEdgeSummary`, and print it in the INFO line in `waybill-cli/src/cli/scan_cmd.rs`. Then run T004 to T006 until all pass.
 - [ ] T009 [US1] Mutations. Revert each with `cp` from a backup taken before mutating, then rebuild (`feedback_mutation_revert_with_cp_not_git_checkout`). Record each in `measurements/after.md` with the failing test names:
   - **M1:** disable the PURL lookup; T004 (a) and the T005 version test must fail.
-  - **M2:** skip the synthesis; T004 (b) and (c), T005 `every_boot_library_carries_c245` and T006 counts must fail.
-  - **M3:** synthesize each release's whole table instead of the reached set; T004 (d) and T006 counts must fail.
+  - **M2:** skip the synthesis; T004 (b) and (c), T005 `every_boot_library_carries_c245` and T006 `added_purls_match_the_measurement` must fail.
+  - **M3:** synthesize each release's whole table instead of the reached set; T004 (d) and T006 `added_purls_match_the_measurement` must fail.
   - **M4:** label every synthesized library with the reaching compiler instead of the project rule; T004 (c) must fail.
 
 **Checkpoint**: US1 is complete on the stub.
@@ -79,7 +81,7 @@
   - no CycloneDX `scope`;
   - `waybill:sbom-tier` = `build`;
   - `waybill:*` keys exactly {C218, C247, `waybill:sbom-tier`}, which is the shape of the stub's 9.8.4 `base` today (`measurements/stub-before.md`);
-  - a version equal to the row for (its C218 release, name) in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/ghc_boot_libraries.tsv`, read from the committed file.
+  - versions are pinned by T006's exact PURL set; this test does not read either table (`feedback_never_model_the_reader`).
 
   If the key-set assertion fails, the synthesis is in the wrong place (research R2). Stop and reopen R2 rather than adding properties.
 
@@ -102,6 +104,7 @@
   - **SC-004:** C105 orphan counts are unchanged per target.
   - **SC-005:** run `specs/1654-parity-verdict/measurements/golden_parity.sh` on all goldens; the failing rows are a subset of spec 1654's after-table.
   - **R4:** no shared component's edge set shrinks against the before-golden.
+  - **C209:** per golden, `addressable_without_cpe` rises by exactly the added count, and the five C209 counts still sum to the component total (contract `wire.md`).
   - **Golden diffs:** trace every changed file (a normalized, sorted diff with content-addressed IDs masked) to FR-001 through FR-006.
   - Commit and push.
 - [ ] T015 Close out:

@@ -62,8 +62,8 @@ A consumer of a `--nix-closure` document walks the dependency graph from `base`,
 
 **Acceptance Scenarios**:
 
-1. **Given** a closure document whose `base` (ghc-9.10.3) depends on `ghc-internal`, `ghc-prim` and `rts`, none of them present today, **When** it is scanned, **Then** all three are components with C218 `ghc-9.10.3`, and `base` has an edge to each.
-2. **Given** `ghc-internal` added this way, **When** its own dependencies (`ghc-bignum`, `ghc-prim`, `rts`) are not otherwise present, **Then** they are added too, and its C247 lists no `absent` names.
+1. **Given** a closure document whose `base` (ghc-9.10.3) depends on `ghc-internal` and `ghc-prim`, neither present today, **When** it is scanned, **Then** both are components with C218 `ghc-9.10.3`, and `base` has an edge to each.
+2. **Given** `ghc-internal` added this way, **When** its own dependencies (`ghc-bignum`, `ghc-prim`, `rts`) are not otherwise present, **Then** they are added too (`rts` is reached only this way and through `ghc-prim`, never directly from 9.10.3's `base`), and its C247 lists no `absent` names.
 3. **Given** a library that no present boot library depends on, even transitively, **When** it is scanned, **Then** it is not added. The added set is the reachable set, not the compiler's whole set.
 
 ### User Story 2 - added libraries carry a truthful identity (Priority: P2)
@@ -84,7 +84,7 @@ A vulnerability scanner or a reader matches added libraries the same way as the 
 - **A compiler not in the table.** When C219 records a compiler as not in the table, or C247 reports `release-not-in-table`, nothing is added for it, and its existing C247 and C105 reasons are unchanged.
 - **A library listed but not in the table.** When a present library's C247 reports `library-not-in-table`, it has no dependencies to follow, nothing is added for it, and its reason is unchanged.
 - **Same name under two compilers.** One version is one component: `rts@1.0.2`, reached from ghc-9.10.3 and from ghc-binary-9.8.4, is one component whose C218 names the project's compiler, as the closure already labels a shared version. Two different versions (`ghc-prim@0.12.0` and `ghc-prim@0.11.0`) are two components, each with its own C218.
-- **A dependency held under another compiler's label.** A bootstrap compiler's `base@4.19.2.0` depends on `array`; 9.8.4 ships `array@0.5.8.0`, which is already a component labelled ghc-9.10.3. The edge goes to that component, and `array` is not `absent`.
+- **A dependency held under another compiler's label.** A bootstrap compiler's `containers@0.6.8` depends on `array`; 9.8.4 ships `array@0.5.8.0`, which is already a component labelled ghc-9.10.3 (moat, measured). The edge goes to that component, and `array` is not `absent`.
 - **A reached library already present under the same compiler**, whether declared by the project, synthesized by the closure, or added through another path, is not added again. Edges go to the existing component.
 - **No closure.** Without `--nix-closure`, output is byte-identical.
 

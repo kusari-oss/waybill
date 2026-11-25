@@ -20,7 +20,7 @@ Probes are in `measurements/`. All were run on 2026-11-25 against the committed 
 | slacklinker | ghc-binary-9.8.4 | 10 | 7 | 3 |
 
 - **Every held one carries the project compiler's C218.** This was checked per PURL. `closure_identity::emit_declared_edges` labels a shared version with the project's compiler: "one version is one component, and it names the project's compiler when that compiler ships the same version".
-- **The edge pass misses them.** `resolve::boot_library_edges::apply_with` keys present libraries by (C218, name). So `ghc-binary-9.8.4`'s `base@4.19.2.0` lists `array` as absent, although `pkg:hackage/array@0.5.8.0`, the version 9.8.4 ships, is a component labelled `ghc-9.10.3`.
+- **The edge pass misses them.** `resolve::boot_library_edges::apply_with` keys present libraries by (C218, name). So, on moat, `ghc-binary-9.8.4`'s `containers@0.6.8` and `binary@0.8.9.1` list `array` as absent, although `pkg:hackage/array@0.5.8.0`, the version 9.8.4 ships, is a component labelled `ghc-9.10.3`.
 - **Merging the two compilers' new PURLs** gives distinct components to add: moat 11, openai 8, shellcheck 10, slack-web 12, slacklinker 9. `rts@1.0.2` is shipped by 9.10.3, 9.8.4, 9.6.6 and 9.2.4, and is one component per document.
 
 **Decision:** two changes, both in the spec 1653 pass:
@@ -90,7 +90,7 @@ There is nothing further to research. The GHC-ecosystem gap is #1707.
 
 `tests/boot_library_edges.rs` asserts three things this feature changes:
 - **`every_boot_library_carries_c245`** asserts 9.10.3's `base` lists `ghc-internal` as absent. After the change it lists nothing; the test asserts `ghc-internal` is a component and `base` reaches it.
-- **`edges_stay_within_a_compiler`** asserts no edge crosses C218 labels. After (a), the bootstrap `base@4.19.2.0` → `array@0.5.8.0` edge crosses labels correctly. Its real invariant is unchanged and becomes the assertion: an edge from a library of release R goes to the version R ships, so the bootstrap `base` never reaches `ghc-prim@0.12.0`.
+- **`edges_stay_within_a_compiler`** asserts no edge crosses C218 labels. After (a), an edge such as the bootstrap `containers@0.6.8` → `array@0.5.8.0` crosses labels correctly. The stub has no such pair (its bootstrap compiler holds only `base`), so on the stub the rewritten test checks versions, not crossings. Its real invariant is unchanged and becomes the assertion: an edge from a library of release R goes to the version R ships, so the bootstrap `base` never reaches `ghc-prim@0.12.0`.
 - **`incomplete_boot_library_edges_are_reported`** asserts the reason is present. On the stub it no longer can be, which was measured (`measurements/stub-before.md`):
   - both compilers are `in-table`, and every C218 library is in the dependency table;
   - C218 is only ever stamped from milestone 966's table, which covers the same 36 releases as 1653's (`the_releases_are_milestone_966s`), so `release-not-in-table` cannot arise from a real closure.
