@@ -23,3 +23,38 @@ Causes fixed: R4 (B1/B2), R6 as revised (E1), R7 (C1, C4, C182, C203) and R8 (th
 ## Corpus goldens
 
 Measured after CI regeneration (T022).
+
+## Mutations (T018)
+
+Each mutation was made from a `cp` backup and the tree rebuilt. The targeted tests then ran, the file was restored from the backup and checked identical, and the tree was rebuilt.
+
+**The shared helper, all eleven files (SC-002).**
+- **M1:** SPDX 2.3 drops every `DEPENDS_ON` (row B1). Every file fails, and every failing test fails in `assert_parity`, not in a file's own assertions:
+
+| file | failing tests | via the shared helper |
+|---|---|---|
+| binary_kind_technique | 8 | 8 |
+| boot_library_edges | 7 | 7 |
+| closure_resolved_tier | 8 | 8 |
+| hpack_include_merge | 20 | 20 |
+| library_identity | 10 | 10 |
+| merged_binary_evidence | 7 | 7 |
+| project_discovery_haskell | 15 | 15 |
+| sbom_edit_retier | 10 | 10 |
+| version_string_anchored | 24 | 24 |
+| version_string_boundary | 19 | 19 |
+| version_string_static | 9 | 9 |
+
+- **M2:** SPDX 3 drops `waybill:boot-library-dependencies` (C247), the case spec 1653's M5 could not catch. `boot_library_edges` fails 6 of 7, each with `C247 …: cdx 5, spdx23 5, spdx3 absent`.
+
+**The fixes.**
+
+| mutation | fails |
+|---|---|
+| `row_verdict` returns `pass` for a broken invariant | 4 `parity::verdict` unit tests |
+| `row_verdict` fails every `SymmetricEqual` row (T003) | `holistic_parity`, every fixture: "disagree" |
+| R7: the `metadata.component` merge removed (T011) | `s1654_promoted_main_module_keeps_its_component_properties` |
+| R8: the lone-component arm restored | 6 of 10 `version_string_static` |
+| R4a: the either-endpoint rule restored | 1 cdx extractor unit test; 7 of 8 `closure_resolved_tier` |
+| R4b: the late pass-3 call removed (T009) | `edges_into_excluded_members_are_build_dependencies_in_spdx23` |
+| R6: `has_complete_record` ignores the closure flag | 8 of 8 `closure_resolved_tier` (E1) |

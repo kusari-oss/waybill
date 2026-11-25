@@ -96,7 +96,7 @@
 
 ## Phase 5: User Story 4 and polish
 
-- [ ] T018 Mutations, each via a `cp` backup, rebuild, the targeted test failing, restore and rebuild. Recorded in `measurements/after.md`.
+- [X] T018 Mutations, each via a `cp` backup, rebuild, the targeted test failing, restore and rebuild. Recorded in `measurements/after.md`.
   - **For each of the eleven files (SC-002):** remove, in the emitter, one format's value of a row that file asserts on. For example, C247 from SPDX 3 for `boot_library_edges`; one `waybill:*` row each for the version-string, hpack and discovery files.
   - **For the fixes:**
     - the verdict set to `pass` unconditionally;
