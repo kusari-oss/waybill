@@ -129,4 +129,4 @@ A vulnerability scanner or a reader matches added libraries the same way as the 
 - Emitting each compiler's whole boot-library set (#1696's original direction).
 - The CycloneDX `scope` of boot libraries. None carries one today, including the bootstrap compiler's.
 - The orphan and `transitive-edges-unresolvable` reasons the other four targets keep.
-- The compiler's identity in OSV's `GHC` ecosystem: `ghc` advisories that no Hackage purl reaches (`measurements/identity-probe.md`).
+- The compiler's identity in OSV's `GHC` ecosystem: `ghc` advisories that no Hackage purl reaches (#1707, `measurements/identity-probe.md`).
