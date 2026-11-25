@@ -119,7 +119,7 @@
 
   Refs #1695.
 - [X] T021 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm `GATE_RESULT=pass`, the expected line, and every per-target `test result: ok. N passed; 0 failed`. Then push, and dispatch the corpus with `regen_goldens=true`. Enumerate every job, and confirm the scanned SHA is the branch head.
-- [ ] T022 Download the regenerated goldens, then:
+- [X] T022 Download the regenerated goldens, then:
   - list every changed file;
   - trace each change with a normalised, sorted diff to R4(b), R7, R8 or T013 (SC-005);
   - run `golden_parity.sh` on them, and record the after-table in `measurements/after.md` against `golden-failing-rows-before.md`, with **0 failing rows on the five closure goldens** (SC-003, SC-004).
