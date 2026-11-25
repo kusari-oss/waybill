@@ -5637,7 +5637,7 @@ pub async fn execute(
         // scanned without `--nix-closure`, whose documents must stay
         // byte-identical (FR-007).
         let boot_edges = if matches!(nix_closure, Some(Ok(_))) {
-            crate::resolve::boot_library_edges::apply(&mut components, &mut relationships)
+            crate::resolve::boot_library_edges::apply(&mut components, &mut relationships, closure_compilers.as_ref())
         } else {
             crate::resolve::boot_library_edges::BootEdgeSummary::default()
         };
@@ -5647,7 +5647,8 @@ pub async fn execute(
                 complete = boot_edges.complete,
                 incomplete = boot_edges.incomplete,
                 unknown = boot_edges.unknown,
-                "closure: GHC boot-library dependency edges drawn (#1688)",
+                added = boot_edges.added,
+                "closure: GHC boot-library dependency edges drawn (#1688, #1696)",
             );
         }
         // Spec 1654 (#1695, R4b) — pass 3 of the edge typing, now that the

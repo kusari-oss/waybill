@@ -41,7 +41,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":419,\\\"excluded_files\\\":7,\\\"excluded_members\\\":1518,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":390,\\\"with_candidates\\\":612}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":428,\\\"excluded_files\\\":7,\\\"excluded_members\\\":1518,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":390,\\\"with_candidates\\\":612}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -83,7 +83,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 498 component(s) not reachable from root; transitive-edges-unresolvable: cargo; boot-library-edges-incomplete: 16 hackage boot librar(ies), 16 with dependencies not in the document, 0 without dependency data\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 498 component(s) not reachable from root; transitive-edges-unresolvable: cargo\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -1216,7 +1216,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-internal\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6550,7 +6550,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-boot-th\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -12898,7 +12898,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"rts\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -14098,7 +14098,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-internal\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -163232,7 +163232,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-bignum\\\",\\\"ghc-prim\\\",\\\"rts\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163274,7 +163274,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"array\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163358,7 +163358,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-prim\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163400,7 +163400,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghci\\\",\\\"hpc\\\",\\\"semaphore-compat\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163484,7 +163484,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-boot-th\\\",\\\"ghc-platform\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163610,7 +163610,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-internal\\\",\\\"rts\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163652,7 +163652,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-prim\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163694,7 +163694,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"mtl\\\",\\\"stm\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163736,7 +163736,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-boot-th\\\",\\\"ghc-prim\\\",\\\"pretty\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163778,7 +163778,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"array\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163820,7 +163820,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"directory\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -163862,7 +163862,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"time\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -208257,6 +208257,384 @@
       "versionInfo": "1.0.23"
     },
     {
+      "SPDXID": "SPDXRef-Package-RYJ5ZTCEZHD2CMAN",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/ghc-internal@9.1003.0",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ghc-internal",
+      "versionInfo": "9.1003.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-3C2W6GERRO4EV5WG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/ghci@9.10.3",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ghci",
+      "versionInfo": "9.10.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5FUW42MTCZVGBA7Q",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/hpc@0.7.0.2",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "hpc",
+      "versionInfo": "0.7.0.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-OXDXWHDNQNLD36JY",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/semaphore-compat@1.0.0",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "semaphore-compat",
+      "versionInfo": "1.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ZK3B3E2XKBAO7LDU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/ghc-boot-th@9.10.3",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ghc-boot-th",
+      "versionInfo": "9.10.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-33HKNBFF6BNANWTQ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/ghc-platform@0.1.0.0",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ghc-platform",
+      "versionInfo": "0.1.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5YXAWGSZQS7RWB3Z",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/rts@1.0.2",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "rts",
+      "versionInfo": "1.0.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HX5UB4JR3JHLOFD7",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-binary-9.8.4\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/ghc-prim@0.11.0",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ghc-prim",
+      "versionInfo": "0.11.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-D3OWQBV6AANOBDST",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-binary-9.8.4\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/ghc-boot-th@9.8.4",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ghc-boot-th",
+      "versionInfo": "9.8.4"
+    },
+    {
       "SPDXID": "SPDXRef-Package-SFRUYDYC5FIX2OT3",
       "annotations": [
         {
@@ -210081,7 +210459,22 @@
       "spdxElementId": "SPDXRef-Package-2WPOWKT2G2VVRYMD"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-D3OWQBV6AANOBDST",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2XGIUPKS3427EVIH"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-EL7EE4JSUAJD4UQZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2XGIUPKS3427EVIH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HX5UB4JR3JHLOFD7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2XGIUPKS3427EVIH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-XDEI5FW5B4J5LOGW",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-2XGIUPKS3427EVIH"
     },
@@ -210219,6 +210612,11 @@
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
       "relationshipType": "BUILD_TOOL_OF",
       "spdxElementId": "SPDXRef-Package-336Q3DQL2TZVCWFI"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GQCQYX37YEOQ72ZK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-33HKNBFF6BNANWTQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-4GWGWE7WNCF4U6TL",
@@ -210789,6 +211187,76 @@
       "relatedSpdxElement": "SPDXRef-Package-4GWGWE7WNCF4U6TL",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-3BN6C7XOXLOZYVFQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5WPB47D7D4XY72XQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5YXAWGSZQS7RWB3Z",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-DNRYL7SWPYIIBFZO",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ER2HKNXTU3OASOFC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GQCQYX37YEOQ72ZK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-I25WYOSOMP2P6SEG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IVCUREZVJYFXGSIB",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JGBBVNBWJUFOTOL2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-KN464EDB7OD4E2OP",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RER4NFMH2DTYYAP5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TP6EVEFMISYCCFYP",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-WNLLFDFFD7D5JZFP",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YJZR7SIQ73GMQGH5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Z4TZWRHVMYDQVU5E",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3C2W6GERRO4EV5WG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-4GWGWE7WNCF4U6TL",
@@ -211792,6 +212260,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-O7JLUHFT25IQVHC6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-3ROVWVD3WQWPTGI7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZSP73HPSSZGJ72BN",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-3ROVWVD3WQWPTGI7"
     },
@@ -213641,6 +214114,16 @@
       "spdxElementId": "SPDXRef-Package-4SWEWVMNDA3DGATN"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-FCHWR5GDRQWKRTYX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4SWEWVMNDA3DGATN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OZEJQ6EUOXPOE4ZI",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4SWEWVMNDA3DGATN"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-W5YCRFA7MPTBQCMU",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-4SWEWVMNDA3DGATN"
@@ -215289,6 +215772,36 @@
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
       "relationshipType": "BUILD_TOOL_OF",
       "spdxElementId": "SPDXRef-Package-5FKTRXF3EKABQRHT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-DNRYL7SWPYIIBFZO",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5FUW42MTCZVGBA7Q"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GQCQYX37YEOQ72ZK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5FUW42MTCZVGBA7Q"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-J5OMHF2N5MQH7VI2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5FUW42MTCZVGBA7Q"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-KN464EDB7OD4E2OP",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5FUW42MTCZVGBA7Q"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YJZR7SIQ73GMQGH5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5FUW42MTCZVGBA7Q"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZSP73HPSSZGJ72BN",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5FUW42MTCZVGBA7Q"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-7BAL6JNJWXFDOVHU",
@@ -223846,6 +224359,11 @@
       "spdxElementId": "SPDXRef-Package-7M2PBC3PJ54PN2P2"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-HX5UB4JR3JHLOFD7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7M2PBC3PJ54PN2P2"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-HFLRT3DQIM33VWBV",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-7M552L33HBVHDLMF"
@@ -231866,6 +232384,11 @@
       "spdxElementId": "SPDXRef-Package-D3IGKZHQYU4KLPIG"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-EL7EE4JSUAJD4UQZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-D3OWQBV6AANOBDST"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-WMU4JPPJTFN6V2FW",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-D4DIZ5IUX5NMLHMQ"
@@ -234376,6 +234899,21 @@
       "spdxElementId": "SPDXRef-Package-EJMSYFDKFN2R37AE"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-5YXAWGSZQS7RWB3Z",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-EL7EE4JSUAJD4UQZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HX5UB4JR3JHLOFD7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-EL7EE4JSUAJD4UQZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-T7ISDTU7SEAIZC2E",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-EL7EE4JSUAJD4UQZ"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
       "relationshipType": "BUILD_TOOL_OF",
       "spdxElementId": "SPDXRef-Package-EMDQJ6MCCKGRKFCL"
@@ -234697,6 +235235,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-Z4TZWRHVMYDQVU5E",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ER2HKNXTU3OASOFC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZK3B3E2XKBAO7LDU",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-ER2HKNXTU3OASOFC"
     },
@@ -236477,6 +237020,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EL7EE4JSUAJD4UQZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-FH7NY2JJNRDHIAUC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HX5UB4JR3JHLOFD7",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-FH7NY2JJNRDHIAUC"
     },
@@ -239386,6 +239934,11 @@
       "spdxElementId": "SPDXRef-Package-FTYHMH6PWUFGDRS2"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-I25WYOSOMP2P6SEG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-FTYHMH6PWUFGDRS2"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-TTP5D2S75SJJQGHK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-FTYHMH6PWUFGDRS2"
@@ -241831,6 +242384,11 @@
       "spdxElementId": "SPDXRef-Package-GQ37WRL5M5DZ6PUZ"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-RYJ5ZTCEZHD2CMAN",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-GQCQYX37YEOQ72ZK"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-Z4TZWRHVMYDQVU5E",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-GQCQYX37YEOQ72ZK"
@@ -244214,6 +244772,11 @@
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
       "relationshipType": "BUILD_TOOL_OF",
       "spdxElementId": "SPDXRef-Package-HVXSCD64WPJFUVW4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5YXAWGSZQS7RWB3Z",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HX5UB4JR3JHLOFD7"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-GS567LXEIL3LU7GO",
@@ -247986,6 +248549,11 @@
       "spdxElementId": "SPDXRef-Package-JGATBUQGY4ERW6ID"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-33HKNBFF6BNANWTQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-JGBBVNBWJUFOTOL2"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-5WPB47D7D4XY72XQ",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-JGBBVNBWJUFOTOL2"
@@ -248022,6 +248590,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-YJZR7SIQ73GMQGH5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-JGBBVNBWJUFOTOL2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZK3B3E2XKBAO7LDU",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-JGBBVNBWJUFOTOL2"
     },
@@ -253691,6 +254264,11 @@
       "spdxElementId": "SPDXRef-Package-M7GCIO5PJRR47RIX"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-J5OMHF2N5MQH7VI2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-M7GCIO5PJRR47RIX"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-O7JLUHFT25IQVHC6",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-M7GCIO5PJRR47RIX"
@@ -257526,6 +258104,11 @@
       "spdxElementId": "SPDXRef-Package-OCNOSRUHTEUY3LB2"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-RYJ5ZTCEZHD2CMAN",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-OCNOSRUHTEUY3LB2"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-T7ISDTU7SEAIZC2E",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-OCNOSRUHTEUY3LB2"
@@ -259059,6 +259642,21 @@
       "relatedSpdxElement": "SPDXRef-Package-SVFMYP5YEO2F2SQQ",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-OXDMLPIE6BQ4ODHF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5WPB47D7D4XY72XQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-OXDXWHDNQNLD36JY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ERYII37J2GCEM5AK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-OXDXWHDNQNLD36JY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GQCQYX37YEOQ72ZK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-OXDXWHDNQNLD36JY"
     },
     {
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
@@ -269266,6 +269864,21 @@
       "spdxElementId": "SPDXRef-Package-RYDKJL6F6LQJDXRF"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-5YXAWGSZQS7RWB3Z",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-RYJ5ZTCEZHD2CMAN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-T7ISDTU7SEAIZC2E",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-RYJ5ZTCEZHD2CMAN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Z4TZWRHVMYDQVU5E",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-RYJ5ZTCEZHD2CMAN"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-QDLXHCJEV3TEIL57",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-RYMMSKY6ZC7VHQU4"
@@ -276027,6 +276640,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EL7EE4JSUAJD4UQZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TTP5D2S75SJJQGHK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-I25WYOSOMP2P6SEG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-TTP5D2S75SJJQGHK"
     },
@@ -287976,7 +288594,17 @@
       "spdxElementId": "SPDXRef-Package-WNCIAOY3VQLJBB3Z"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-5YXAWGSZQS7RWB3Z",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-WNLLFDFFD7D5JZFP"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-GQCQYX37YEOQ72ZK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-WNLLFDFFD7D5JZFP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RYJ5ZTCEZHD2CMAN",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-WNLLFDFFD7D5JZFP"
     },
@@ -288696,12 +289324,22 @@
       "spdxElementId": "SPDXRef-Package-WXVVSONUMSILTGXE"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-3C2W6GERRO4EV5WG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-WXYTOVSXFTWEGS6G"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-3XE2WNCDOKWLBJJH",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-WXYTOVSXFTWEGS6G"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-4GWGWE7WNCF4U6TL",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-WXYTOVSXFTWEGS6G"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5FUW42MTCZVGBA7Q",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-WXYTOVSXFTWEGS6G"
     },
@@ -288772,6 +289410,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-NPJV3NCXA7WHMSL3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-WXYTOVSXFTWEGS6G"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXDXWHDNQNLD36JY",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-WXYTOVSXFTWEGS6G"
     },
@@ -294736,6 +295379,11 @@
       "spdxElementId": "SPDXRef-Package-Z4DAA3MKAA3JEM3X"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-5YXAWGSZQS7RWB3Z",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-Z4TZWRHVMYDQVU5E"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6KMU6VOIZSPXL4JX",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-Z53TM54LN667VDJU"
@@ -295414,6 +296062,11 @@
       "relatedSpdxElement": "SPDXRef-Package-EMRONY5ATNNWZPM6",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-ZHZ3KQWZIU3V5WXQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GQCQYX37YEOQ72ZK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZK3B3E2XKBAO7LDU"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-TXTT4VUUEKMGPZS6",

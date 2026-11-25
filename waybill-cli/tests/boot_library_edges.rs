@@ -199,8 +199,9 @@ fn base_depends_on_ghc_prim_in_every_format() {
     assert!(spdx3_edges(&run.scan.spdx3).contains(&edge), "SPDX 3: {base} -> {prim}");
 }
 
-/// Every boot library carries C247; 9.10.3's `base` names `ghc-internal`,
-/// which is not a component, as absent.
+/// Every boot library carries C247 with its source and nothing absent
+/// (spec 1655 FR-006): 9.10.3's `base` reaches `ghc-internal`, which spec
+/// 1653 could only list as absent.
 #[test]
 fn every_boot_library_carries_c245() {
     let p = project_with_ghc_prim();
@@ -209,33 +210,41 @@ fn every_boot_library_carries_c245() {
     assert!(!boots.is_empty());
     for c in &boots {
         let v: Value = serde_json::from_str(&prop(c, C247).unwrap_or_else(|| panic!("no C247 on {c}"))).unwrap();
-        assert!(v.get("source").is_some() || v.get("reason").is_some(), "{v}");
+        assert!(v.get("source").is_some(), "{v}");
+        assert!(v.get("absent").is_none(), "{}: {v}", c["purl"]);
     }
     let (base, _) = base_and_prim(&run.scan.cdx);
-    let base_c = components(&run.scan.cdx).into_iter().find(|c| c["purl"] == base.as_str()).unwrap();
-    let v: Value = serde_json::from_str(&prop(base_c, C247).unwrap()).unwrap();
-    assert_eq!(v["absent"], serde_json::json!(["ghc-internal"]), "{v}");
+    let internal = boot_libraries(&run.scan.cdx)
+        .get(&("ghc-9.10.3".to_string(), "ghc-internal".to_string()))
+        .cloned()
+        .expect("ghc-internal is a component");
+    assert!(cdx_edges(&run.scan.cdx).contains(&(base, internal)));
 }
 
-/// Edges never cross compilers: the bootstrap compiler's boot libraries only
-/// reach their own.
+/// An edge from a boot library of release R reaches the version R ships
+/// (spec 1655 FR-005). Edges may cross C218 labels, because one version is
+/// one component labelled with the project compiler; they may never reach a
+/// version R does not ship.
 #[test]
-fn edges_stay_within_a_compiler() {
+fn an_edge_reaches_the_version_its_release_ships() {
     let p = project_with_ghc_prim();
     let run = scan_with(&p.path().join("project"), &closure_flags(), None);
     let boots = boot_libraries(&run.scan.cdx);
     // The precondition that makes this test able to fail: both compilers are
     // present, and the bootstrap one's `base` shares a name with a 9.10.3
-    // component it must not reach (`ghc-prim`). A name-only lookup would.
+    // component it must not reach (`ghc-prim@0.12.0`). A name-only lookup
+    // would.
     let compilers: BTreeSet<&str> = boots.keys().map(|(c, _)| c.as_str()).collect();
     assert_eq!(compilers, BTreeSet::from(["ghc-9.10.3", "ghc-binary-9.8.4"]), "{boots:?}");
-    assert!(boots.contains_key(&("ghc-binary-9.8.4".to_string(), "base".to_string())));
-    let compiler_of: BTreeMap<&str, &str> = boots.iter().map(|((c, _), p)| (p.as_str(), c.as_str())).collect();
-    for (a, b) in cdx_edges(&run.scan.cdx) {
-        if let (Some(ca), Some(cb)) = (compiler_of.get(a.as_str()), compiler_of.get(b.as_str())) {
-            assert_eq!(ca, cb, "{a} -> {b} crosses compilers");
-        }
-    }
+    let edges = cdx_edges(&run.scan.cdx);
+    let base_98 = "pkg:hackage/base@4.19.2.0".to_string();
+    assert!(edges.contains(&(base_98.clone(), "pkg:hackage/ghc-prim@0.11.0".to_string())));
+    assert!(!edges.contains(&(base_98.clone(), "pkg:hackage/ghc-prim@0.12.0".to_string())));
+    // The 9.8.4 `base` reaches `rts@1.0.2`, which both releases ship and the
+    // document holds once, under the project compiler's label.
+    assert!(edges.contains(&(base_98, "pkg:hackage/rts@1.0.2".to_string())));
+    assert_eq!(boots.get(&("ghc-9.10.3".to_string(), "rts".to_string())).map(String::as_str), Some("pkg:hackage/rts@1.0.2"));
+    assert!(!boots.contains_key(&("ghc-binary-9.8.4".to_string(), "rts".to_string())));
 }
 
 /// SC-002a: a compiler output present in the store, whose package database
@@ -279,15 +288,19 @@ fn doc_prop(cdx: &Value, name: &str) -> Option<String> {
         .map(str::to_string)
 }
 
-/// `rts` and `ghc-internal` are never components, so some boot library's
-/// edges are incomplete and the document is not `complete`.
+/// Spec 1655: every dependency is now a component, so the reason is gone.
+/// The stub stays `partial` for its other reason (`hackage` transitive
+/// edges), so the `compositions[]` check below still has work to do. The
+/// reason's positive control is the unit test
+/// `a_version_the_table_lacks_stays_absent` (research R6).
 #[test]
-fn incomplete_boot_library_edges_are_reported() {
+fn boot_library_edges_are_complete() {
     let p = project_with_ghc_prim();
     let run = scan_with(&p.path().join("project"), &closure_flags(), None);
     assert_eq!(doc_prop(&run.scan.cdx, "waybill:graph-completeness").as_deref(), Some("partial"));
     let reason = doc_prop(&run.scan.cdx, "waybill:graph-completeness-reason").unwrap_or_default();
-    assert!(reason.contains("boot-library-edges-incomplete:"), "{reason}");
+    assert!(!reason.contains("boot-library-edges-incomplete"), "{reason}");
+    assert!(reason.contains("transitive-edges-unresolvable: hackage"), "{reason}");
     let root_ref = run.scan.cdx["metadata"]["component"]["bom-ref"].clone();
     for c in run.scan.cdx["compositions"].as_array().into_iter().flatten() {
         if c["aggregate"] != "complete" {
@@ -349,4 +362,94 @@ fn edges_into_excluded_members_are_build_dependencies_in_spdx23() {
         build_into.insert(purl.to_string());
     }
     assert!(!build_into.is_empty(), "no BUILD_DEPENDENCY_OF into any of {excluded:?}");
+}
+
+// ---------------------------------------------------------------------
+// Spec 1655 (#1696): the reachable boot libraries
+// ---------------------------------------------------------------------
+
+/// The boot libraries present before spec 1655 (`measurements/stub-before.md`).
+/// `ghc-prim@0.12.0` is present only when the project declares it.
+const PRESENT_BEFORE: &[&str] = &[
+    "pkg:hackage/base@4.20.2.0",
+    "pkg:hackage/process@1.6.26.1",
+    "pkg:hackage/stm@2.5.3.1",
+    "pkg:hackage/base@4.19.2.0",
+];
+const DECLARED_PRIM: &str = "pkg:hackage/ghc-prim@0.12.0";
+
+/// What spec 1655 added, measured in `measurements/stub-before.md` with
+/// `shared_purls.py`, with ghc-prim declared. Names and versions together.
+const ADDED_WITH_PRIM: &[&str] = &[
+    "array@0.5.8.0", "bytestring@0.12.2.0", "deepseq@1.5.0.0", "directory@1.3.8.5", "exceptions@0.10.9",
+    "filepath@1.5.4.0", "ghc-bignum@1.3", "ghc-boot-th@9.10.3", "ghc-internal@9.1003.0", "mtl@2.3.1",
+    "os-string@2.0.7", "pretty@1.1.3.6", "rts@1.0.2", "template-haskell@2.22.0.0", "time@1.12.2",
+    "transformers@0.6.1.1", "unix@2.8.7.0", "ghc-prim@0.11.0",
+];
+
+fn added(cdx: &Value, prim_declared: bool) -> BTreeSet<String> {
+    boot_libraries(cdx)
+        .into_values()
+        .filter(|p| !PRESENT_BEFORE.contains(&p.as_str()))
+        .filter(|p| !(prim_declared && p == DECLARED_PRIM))
+        .collect()
+}
+
+fn want(extra: &[&str]) -> BTreeSet<String> {
+    ADDED_WITH_PRIM.iter().chain(extra).map(|s| format!("pkg:hackage/{s}")).collect()
+}
+
+/// SC-002 on the stub: exactly the measured PURLs, 18 with ghc-prim and 19
+/// without it (`ghc-prim@0.12.0` is then added, not declared).
+#[test]
+fn added_purls_match_the_measurement() {
+    let p = project_with_ghc_prim();
+    let with_prim = scan_with(&p.path().join("project"), &closure_flags(), None);
+    assert_eq!(added(&with_prim.scan.cdx, true), want(&[]));
+    let plain = scan_with(&dir().join("project"), &closure_flags(), None);
+    assert_eq!(added(&plain.scan.cdx, false), want(&["ghc-prim@0.12.0"]));
+}
+
+/// FR-007: no boot library is an orphan.
+#[test]
+fn no_added_boot_library_is_an_orphan() {
+    let p = project_with_ghc_prim();
+    let run = scan_with(&p.path().join("project"), &closure_flags(), None);
+    for c in components(&run.scan.cdx).into_iter().filter(|c| prop(c, C218).is_some()) {
+        assert!(prop(c, "waybill:orphan-reason").is_none(), "{} is an orphan", c["purl"]);
+    }
+}
+
+/// FR-002 and FR-004: an added library has exactly the shape of the boot
+/// library the closure synthesised before spec 1655 (the stub's 9.8.4
+/// `base`): a Hackage PURL, no CPE, no CycloneDX scope, `build` tier, and the
+/// `waybill:*` keys C218, C247 and the tier only. Versions are pinned by
+/// `added_purls_match_the_measurement`, so no table is read here.
+#[test]
+fn added_libraries_have_their_peers_shape() {
+    let p = project_with_ghc_prim();
+    let run = scan_with(&p.path().join("project"), &closure_flags(), None);
+    let peer_keys = |c: &Value| -> BTreeSet<String> {
+        c["properties"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|p| p["name"].as_str())
+            .filter(|n| n.starts_with("waybill:"))
+            .map(str::to_string)
+            .collect()
+    };
+    let all = components(&run.scan.cdx);
+    let peer = all.iter().find(|c| c["purl"] == "pkg:hackage/base@4.19.2.0").expect("the 9.8.4 base");
+    let want_keys = BTreeSet::from([C218.to_string(), C247.to_string(), "waybill:sbom-tier".to_string()]);
+    assert_eq!(peer_keys(peer), want_keys, "the peer's shape changed");
+    let added = added(&run.scan.cdx, true);
+    assert!(!added.is_empty());
+    for c in all.iter().filter(|c| c["purl"].as_str().is_some_and(|p| added.contains(p))) {
+        assert!(c["purl"].as_str().unwrap().starts_with("pkg:hackage/"));
+        assert!(c.get("cpe").is_none(), "{}", c["purl"]);
+        assert!(c.get("scope").is_none(), "{}", c["purl"]);
+        assert_eq!(prop(c, "waybill:sbom-tier").as_deref(), Some("build"));
+        assert_eq!(peer_keys(c), want_keys, "{}", c["purl"]);
+    }
 }
