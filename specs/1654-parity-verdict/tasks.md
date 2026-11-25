@@ -125,7 +125,7 @@
   - run `golden_parity.sh` on them, and record the after-table in `measurements/after.md` against `golden-failing-rows-before.md`, with **0 failing rows on the five closure goldens** (SC-003, SC-004).
 
   Commit the goldens.
-- [ ] T023 Dispatch a verification run without regeneration, and confirm every golden passes.
+- [~] T023 Dispatch a verification run without regeneration, and confirm every golden passes.
 - [X] T024 File the out-of-scope gaps, each with its per-row measurement and the public footer (R10):
   - the non-closure B1/B2 causes (R5, corrected at T024, and `optional`);
   - A8 on image-postgres16;
