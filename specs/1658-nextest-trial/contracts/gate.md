@@ -5,7 +5,7 @@
 1. `python3 scripts/check-homoglyphs.py`
 2. `bash scripts/check-walker-audit.sh`
 3. `cargo clippy --workspace --all-targets [features] -- -D warnings` (unchanged)
-4. `cargo nextest run --workspace --no-fail-fast [features]`
+4. `cargo nextest run --workspace --no-fail-fast --color never [features]`. `--color never` is required because CI sets `CARGO_TERM_COLOR=always`, which would put ANSI codes into the `Summary` line and stop C2's anchored pattern from matching.
 5. `cargo test --workspace --doc [features]`
 6. On success, print `>>> all pre-PR checks passed.`
 
@@ -26,7 +26,7 @@
 
 ## C3. Mutation tests (`release_gates.rs`)
 
-Each test builds a scratch crate in a temp directory, runs `gate.sh` with the C2 summary expectation around `cargo nextest run --no-fail-fast`, and reads `GATE_RESULT` from the log.
+These tests live under `release_gates.rs`'s existing file-level `#![cfg(unix)]`; no code outside it. Each test builds a scratch crate in a temp directory, runs `gate.sh` with the C2 summary expectation around `cargo nextest run --no-fail-fast --color never`, and reads `GATE_RESULT` from the log.
 
 | Case | Crate | Expected |
 |---|---|---|
@@ -34,7 +34,8 @@ Each test builds a scratch crate in a temp directory, runs `gate.sh` with the C2
 | failing test | 1 pass, 1 panic | `fail`, and the summary shows both tests ran (no-fail-fast) |
 | non-compiling | an undefined identifier | `fail`, and no `Summary` line appears |
 | zero tests | a filter that matches nothing | `fail` |
-| nextest absent | `PATH` without cargo-nextest | the test fails with a message naming the missing tool, rather than skipping |
+| colour forced | 2 passing tests, `CARGO_TERM_COLOR=always` | `GATE_RESULT=pass` (proves `--color never` wins) |
+| nextest absent | `PATH` is only a temporary directory of links to `cargo`, `rustc` and `bash` | `pre-pr`-style check exits 1, and the message names cargo-nextest |
 
 **Proving the tests have teeth:** delete the `--expect` from a case and its assertion must fail. Recorded in `measurements/`.
 

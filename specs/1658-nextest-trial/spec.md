@@ -97,7 +97,7 @@ A contributor gets a CI verdict and a local pre-PR verdict sooner.
 
 **Measurement and test isolation**
 
-- **FR-006**: Before adoption, the suite MUST be run at least 3 times locally and once per CI lane under nextest. Every test that fails only under nextest MUST be recorded with a reproduced cause, and either fixed or serialised through a named test group in `.config/nextest.toml`, with the reason recorded beside it.
+- **FR-006**: Before adoption, the suite MUST be run at least 3 times locally and once per CI lane under nextest. The CI trial is the first run on the PR, which stays a draft until every lane is green. Every test that fails only under nextest MUST be recorded with a reproduced cause, and either fixed or serialised through a named test group in `.config/nextest.toml`, with the reason recorded beside it.
 - **FR-007**: Per-binary times under both runners MUST be recorded for the files with shared lazy state, and any binary that regresses MUST be listed.
 
 **Tool, scope and reporting**
