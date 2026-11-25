@@ -435,37 +435,61 @@ impl CorpusCacheDir {
 /// The build allows import-from-derivation, as the scan does, and keeps
 /// refusing flake-supplied configuration. Measured on the recall-truth run
 /// (43107760056): 93 s for slack-web, 579 s for openai, 423 s for slacklinker.
+///
+/// **Bounded since #1704.** This build had no timeout and captured nothing
+/// until it exited. Twice in two days (public-corpus runs 45420664778 and
+/// 45530419336) slacklinker was still in its test 37 minutes after starting,
+/// against 8 to 13 minutes in 12 successful runs, and the 45-minute job
+/// timeout cancelled the whole run with no record of where it stopped.
+/// Every `nix` call waybill itself makes is already bounded.
+///
+/// Nix's own `max-silent-time` and `timeout` apply per derivation, so they
+/// name the derivation that hung but do not bound the whole build; the
+/// wall-clock deadline does. Build logs go to a file whose tail becomes the
+/// error, so a failure says what was building.
 fn prewarm_nix_closure(target: &CorpusTarget, repo_dir: &Path) -> Result<(), CorpusInfraError> {
     let super::manifest::ScanMode::NixClosure { attr, allow_ifd } = target.scan_mode else {
         return Ok(());
     };
     if allow_ifd {
         let installable = format!(".#{attr}");
-        let output = std::process::Command::new("nix")
-            .args([
-                "build",
-                "--no-link",
-                "--option",
-                "allow-import-from-derivation",
-                "true",
-                "--option",
-                "accept-flake-config",
-                "false",
-                &installable,
-            ])
-            .current_dir(repo_dir)
-            .output()
-            .map_err(|e| CorpusInfraError::NixRealise {
-                target: target.name,
-                stderr: format!("spawn failed: {e}"),
-            })?;
-        if !output.status.success() {
-            return Err(CorpusInfraError::NixRealise {
-                target: target.name,
-                stderr: String::from_utf8_lossy(&output.stderr).to_string(),
-            });
-        }
-        return Ok(());
+        let max_silent = PREWARM_MAX_SILENT_SECS.to_string();
+        let per_drv = PREWARM_DERIVATION_TIMEOUT_SECS.to_string();
+        let started = std::time::Instant::now();
+        eprintln!("corpus: {}: prewarm `nix build {installable}` started", target.name);
+        let result = run_with_deadline(
+            std::process::Command::new("nix")
+                .args([
+                    "build",
+                    "--no-link",
+                    "--print-build-logs",
+                    "--option",
+                    "allow-import-from-derivation",
+                    "true",
+                    "--option",
+                    "accept-flake-config",
+                    "false",
+                    "--option",
+                    "max-silent-time",
+                    &max_silent,
+                    "--option",
+                    "timeout",
+                    &per_drv,
+                    &installable,
+                ])
+                .current_dir(repo_dir),
+            std::time::Duration::from_secs(PREWARM_WALL_SECS),
+        );
+        eprintln!(
+            "corpus: {}: prewarm `nix build` {} after {}s",
+            target.name,
+            match &result {
+                Ok(_) => "succeeded",
+                Err(_) => "FAILED",
+            },
+            started.elapsed().as_secs()
+        );
+        return result.map_err(|stderr| CorpusInfraError::NixRealise { target: target.name, stderr });
     }
     let output = std::process::Command::new("nix")
         .args(["flake", "archive", "--json", "."])
@@ -482,6 +506,58 @@ fn prewarm_nix_closure(target: &CorpusTarget, repo_dir: &Path) -> Result<(), Cor
         });
     }
     Ok(())
+}
+
+/// The prewarm build's limits (#1704). Measured normal: 423 s for
+/// slacklinker's whole build on the recall-truth run, so a derivation silent
+/// for 10 minutes or building for 20 is not making progress. The wall-clock
+/// deadline (25 minutes) fails the test well inside the job's 45, with the
+/// corpus step starting about 5 minutes in.
+const PREWARM_MAX_SILENT_SECS: u64 = 600;
+const PREWARM_DERIVATION_TIMEOUT_SECS: u64 = 1200;
+const PREWARM_WALL_SECS: u64 = 1500;
+
+/// Run `cmd` to completion or kill it at `deadline`. `Ok` on a zero exit;
+/// otherwise `Err` with the last 40 lines of its output, where nix puts the
+/// error and the end of the build log that led to it.
+fn run_with_deadline(
+    cmd: &mut std::process::Command,
+    deadline: std::time::Duration,
+) -> Result<(), String> {
+    let log = tempfile::NamedTempFile::new().map_err(|e| format!("log file: {e}"))?;
+    // One handle, cloned: two `reopen()`s would each keep their own offset,
+    // and stderr would overwrite the start of stdout.
+    let out = log.reopen().map_err(|e| format!("log file: {e}"))?;
+    let err = out.try_clone().map_err(|e| format!("log file: {e}"))?;
+    let mut child = cmd
+        .stdout(out)
+        .stderr(err)
+        .spawn()
+        .map_err(|e| format!("spawn failed: {e}"))?;
+    let started = std::time::Instant::now();
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break Some(status),
+            Ok(None) if started.elapsed() >= deadline => {
+                let _ = child.kill();
+                let _ = child.wait();
+                break None;
+            }
+            Ok(None) => std::thread::sleep(std::time::Duration::from_secs(1)),
+            Err(e) => return Err(format!("wait failed: {e}")),
+        }
+    };
+    let text = std::fs::read_to_string(log.path()).unwrap_or_default();
+    let lines: Vec<&str> = text.lines().collect();
+    let tail = lines[lines.len().saturating_sub(40)..].join("\n");
+    match status {
+        Some(s) if s.success() => Ok(()),
+        Some(s) => Err(format!("exit {s}; last 40 lines:\n{tail}")),
+        None => Err(format!(
+            "killed after the {}s deadline; last 40 lines:\n{tail}",
+            deadline.as_secs()
+        )),
+    }
 }
 
 fn work_dir_for(cache_dir: &Path, target: &CorpusTarget) -> PathBuf {
@@ -552,5 +628,40 @@ mod nixpkgs_pin_tests {
     fn a_missing_lock_yields_nothing() {
         let d = tempfile::tempdir().unwrap();
         assert_eq!(nixpkgs_pin(&d.path().join("flake.lock")), None);
+    }
+}
+
+/// #1704: the prewarm's deadline runner.
+#[cfg(all(test, unix))]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod run_with_deadline_tests {
+    use super::run_with_deadline;
+    use std::process::Command;
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn a_hung_command_is_killed_at_the_deadline() {
+        let started = Instant::now();
+        let err = run_with_deadline(Command::new("sh").args(["-c", "echo building; sleep 30"]), Duration::from_secs(2))
+            .unwrap_err();
+        assert!(started.elapsed() < Duration::from_secs(10), "not killed: {:?}", started.elapsed());
+        assert!(err.contains("killed after the 2s deadline"), "{err}");
+        assert!(err.contains("building"), "the output before the hang is kept: {err}");
+    }
+
+    #[test]
+    fn a_failure_reports_the_tail_of_its_output() {
+        let err = run_with_deadline(
+            Command::new("sh").args(["-c", "for i in $(seq 1 100); do echo line$i; done; echo 'error: the cause' >&2; exit 3"]),
+            Duration::from_secs(30),
+        )
+        .unwrap_err();
+        assert!(err.contains("error: the cause"), "{err}");
+        assert!(err.contains("line100") && !err.contains("line1\n"), "the tail, not the head: {err}");
+    }
+
+    #[test]
+    fn success_is_ok() {
+        assert_eq!(run_with_deadline(Command::new("sh").args(["-c", "echo fine"]), Duration::from_secs(30)), Ok(()));
     }
 }
