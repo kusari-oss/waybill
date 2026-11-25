@@ -107,7 +107,7 @@ The native fields and C104 decide from one input, and the new codes change nothi
 - **SC-001**: shellcheck's golden reads C104 `partial`. Its C105 is exactly `closure-declarations-unconsulted: 211 declaration(s) in 16 derivation(s); closure-contents-unread: 1284 of 2045 member(s)`.
 - **SC-002**: moat, openai, slack-web and slacklinker each gain exactly those two clauses, with their measured counts (211/16 and 1087/1590; 198/16 and 471/1330; 211/16 and 416/1193; 228/17 and 1153/2351), and nothing else in the document changes.
 - **SC-003**: no non-closure golden changes.
-- **SC-004**: on stub fixtures, a scan with neither gap reads `complete` and a scan with each gap names that gap's code. A mutation feeding `false` to the new input makes the shellcheck-shaped test fail.
+- **SC-004**: on stub fixtures, a scan with neither gap names neither new code, and its C104 is decided by its other reasons alone (`complete` when it has none); a scan with each gap names that gap's code. A mutation feeding `false` to the new input makes the shellcheck-shaped test fail.
 - **SC-005**: parity-check's failing rows on every golden are unchanged.
 
 ## Assumptions

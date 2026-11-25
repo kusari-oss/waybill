@@ -15,6 +15,8 @@
   - **Neither-gap candidate:** for each existing `scan(...)` call over `populated_store()`, record C213's absent, partial and failed counts, whether `waybill:nix-closure-read` is present, and C104 and C105.
   - **Outcome:** either name one scan with neither gap, or state that none exists. In that case T006 adds the missing outputs.
   - **Other two controls:** record the same four values for `closure_structured_attrs.rs`'s `CLOSURE_JSON` scan (declaration gap) and the stub fixture (contents gap only).
+  - **Is the declaration control a declaration gap only?** Record whether the `CLOSURE_JSON` scan also has unread contents. If it does, the "declarations alone" case of FR-003 is covered at unit level only (T004), and `after.md` says so.
+  - **Orphan reasons:** on the `CLOSURE_JSON` scan, dump each component's `waybill:orphan-reason` (PURL → value, sorted) into `controls-before.md`. This is T010's before-state for FR-005's unchanged orphan pass.
 
 ---
 
@@ -42,7 +44,7 @@
 ### Tests (write first; confirm they fail before T007)
 
 - [ ] T004 [P] [US1] Unit tests in `waybill-cli/src/generate/graph_completeness/reason_codes.rs` and `mod.rs`:
-  - **Wire text:** `ClosureDeclarationsUnconsulted { 211, 16, 0 }` renders `closure-declarations-unconsulted: 211 declaration(s) in 16 derivation(s)`; with `carrier_disagreements: 2` it appends `, 2 carrier disagreement(s)`. `ClosureContentsUnread { 1284, 2045 }` renders `closure-contents-unread: 1284 of 2045 member(s)`.
+  - **Wire text:** `ClosureDeclarationsUnconsulted { 211, 16, 0 }` renders `closure-declarations-unconsulted: 211 declaration(s) in 16 derivation(s)`; with `carrier_disagreements: 2` it appends `, 2 carrier disagreement(s)`; `{ 0, 0, 2 }`, a gap made only of carrier disagreements (spec edge case), renders `closure-declarations-unconsulted: 0 declaration(s) in 0 derivation(s), 2 carrier disagreement(s)`. `ClosureContentsUnread { 1284, 2045 }` renders `closure-contents-unread: 1284 of 2045 member(s)`.
   - **`apply_closure_read`:**
     - with neither gap, the result is unchanged;
     - with each gap alone, exactly that code is appended and the value becomes `partial`;
@@ -55,7 +57,7 @@
 
 ### Implementation
 
-- [ ] T006 [US1] The neither-gap control, from T001's finding, in `waybill-cli/tests/closure_binary_contents.rs`: `m1720_a_fully_read_closure_names_neither_gap`. C105 contains neither new code. If C104 has no other reason it is `complete`, and the test asserts whichever value T001 recorded, with that value's reason. Where T001 found no such scan, add the missing outputs to `populated_store()`'s use for this test only.
+- [ ] T006 [US1] The neither-gap control, from T001's finding, in `waybill-cli/tests/closure_binary_contents.rs`: `m1720_a_fully_read_closure_names_neither_gap`. C105 contains neither new code, and C104 and C105 equal the values T001 recorded for that scan (SC-004: decided by its other reasons alone, `complete` when it has none). Where T001 found no such scan, add the missing outputs to `populated_store()`'s use for this test only.
 - [ ] T007 [US1] Implement the two variants and their wire text in `reason_codes.rs`, and `apply_closure_read(result, Option<&ClosureReadGaps>)` in `graph_completeness/mod.rs`, which mirrors `apply_scope_drop`.
   - **`graph_completeness/document.rs`:** `for_document` gains `closure_read: Option<&ClosureReadGaps>` and applies it after `apply_scope_drop`.
   - **Callers:** the CycloneDX builder (`builder.rs:917`), SPDX 2.3 (`spdx/document.rs:707`) and SPDX 3 (`spdx/v3_document.rs:684`) pass `Some(&gaps)`, built from `closure_read_gaps`. `orphan_reason.rs:796` passes `None` with a comment that matches its scope-drop comment.
@@ -75,7 +77,7 @@
 **Goal**: FR-003, FR-004, and the unchanged orphan pass (FR-005).
 
 - [ ] T009 [P] [US2] Unit test in `waybill-cli/src/generate/cyclonedx/compositions.rs`: `the_closure_read_codes_degrade_no_ecosystem`. A `GraphCompletenessResult` carrying both new codes yields an empty `degraded_ecosystems` set. That function ends in a `_ => {}` wildcard, so this test is what stops a future arm from silently degrading an ecosystem (R3).
-- [ ] T010 [US2] Integration test in `waybill-cli/tests/closure_structured_attrs.rs`: `m1720_native_claims_are_unchanged`. On the declaration-gap fixture, CycloneDX `compositions[]` and every SPDX 3 relationship `completeness` value equal those pinned by the existing m1278 test (no claim of `complete`). Per-component `waybill:orphan-reason` values must equal those of a scan before T007; record them in T001 if not already pinned.
+- [ ] T010 [US2] Integration test in `waybill-cli/tests/closure_structured_attrs.rs`: `m1720_native_claims_are_unchanged`. On the declaration-gap fixture, CycloneDX `compositions[]` and every SPDX 3 relationship `completeness` value equal those pinned by the existing m1278 test (no claim of `complete`). Per-component `waybill:orphan-reason` values must equal T001's dump in `controls-before.md`.
 
 ---
 
