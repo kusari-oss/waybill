@@ -418,3 +418,72 @@ fn a_missing_build_tree_is_an_operator_error() {
     assert_eq!(out.status.code(), Some(2), "{}", String::from_utf8_lossy(&out.stderr));
     assert!(String::from_utf8_lossy(&out.stderr).contains("--cmake-build-tree"));
 }
+
+// ---------------------------------------------------------------------
+// US2 (T022): conditions are evaluated against the configuration built.
+// ---------------------------------------------------------------------
+
+/// Replace one cache line in `f`'s build tree.
+fn set_cache(f: &Fixture, from: &str, to: &str) {
+    let cache = f.build.join("CMakeCache.txt");
+    let text = std::fs::read_to_string(&cache).unwrap();
+    assert!(text.contains(from), "fixture cache has {from}");
+    std::fs::write(&cache, text.replace(from, to)).unwrap();
+}
+
+#[test]
+fn a_cache_string_comparison_is_decided_by_the_configured_value() {
+    // #1656: source-only, `BACKEND STREQUAL B` is unknown and bdep is in scope.
+    let f = materialise("fetch");
+    let s = checked(&f, &[&f.build]);
+    let c = named(&s, "bdep");
+    assert_eq!(scope(c), "excluded", "BACKEND=A configured: bdep is optional: {c}");
+    assert_eq!(prop(c, C122), Some("cmake-conditional"), "{c}");
+    assert_eq!(settlement(&s, "bdep")["state"], "no-evidence");
+    let cov = coverage_bt(&s).unwrap();
+    assert!(cov["configured-values-applied"].as_u64().unwrap() >= 1, "{cov}");
+
+    let g = materialise("system");
+    let s = checked(&g, &[&g.build]);
+    assert_eq!(scope(named(&s, "bdep")), "required", "BACKEND=B configured: in scope");
+}
+
+#[test]
+fn a_default_off_option_configured_on_is_in_scope_without_a_population() {
+    let f = materialise("fetch");
+    set_cache(&f, "WITH_EXTRA:BOOL=OFF", "WITH_EXTRA:BOOL=ON");
+    let s = checked(&f, &[&f.build]);
+    let c = named(&s, "extra");
+    assert_eq!(scope(c), "required", "configured ON: in scope: {c}");
+    assert!(prop(c, C122).is_none(), "{c}");
+    assert_eq!(settlement(&s, "extra")["state"], "no-evidence", "decided by the condition, not by a population");
+}
+
+#[test]
+fn builds_that_configured_different_values_leave_the_condition_unknown() {
+    // Two builds of one source, neither populating bdep: BACKEND is A in one
+    // and B in the other, so the comparison is unknown and bdep stays in
+    // scope (spec 1641 FR-004). One build alone (A) makes it optional.
+    let f = materialise("fetch");
+    let second = f.fx.path("build-b");
+    let (b1, b2) = (f.build.to_string_lossy().to_string(), second.to_string_lossy().to_string());
+    copy_tree(&f.build, &second, &|t: &str| t.replace(&b1, &b2).replace("BACKEND:STRING=A", "BACKEND:STRING=B"));
+    let s = checked(&f, &[&f.build, &second]);
+    let c = named(&s, "bdep");
+    assert_eq!(scope(c), "required", "{c}");
+    assert_eq!(settlement(&s, "bdep")["state"], "no-evidence", "decided by the conflict, not by a population");
+}
+
+#[test]
+fn a_package_search_follows_the_configured_value() {
+    let f = materialise("fetch");
+    let lists = f.src.join("CMakeLists.txt");
+    let text = std::fs::read_to_string(&lists).unwrap() + "if(WITH_EXTRA)\n  find_package(WaybillFixtureSearched)\nendif()\n";
+    std::fs::write(&lists, text).unwrap();
+    let s = scan_bt(&f, &[&f.build]);
+    let c = named(&s, "waybillfixturesearched");
+    assert_eq!(scope(c), "excluded", "WITH_EXTRA=OFF configured: {c}");
+    set_cache(&f, "WITH_EXTRA:BOOL=OFF", "WITH_EXTRA:BOOL=ON");
+    let s = scan_bt(&f, &[&f.build]);
+    assert_eq!(scope(named(&s, "waybillfixturesearched")), "required");
+}

@@ -386,14 +386,23 @@ pub(crate) fn mark(entries: &mut [PackageDbEntry], scopes: &BTreeMap<String, Nam
 /// The package searches in one file read on its own: no fetches, no
 /// wrappers. For a narrow-set file the shared walker skipped (a `vendor/`
 /// under `cmake/`), which milestone 156 read and FR-009 keeps.
-pub(crate) fn read_file(path: &std::path::Path, seed: Vec<String>, in_test_dir: bool) -> FileSearches {
+pub(crate) fn read_file(
+    path: &std::path::Path,
+    seed: Vec<String>,
+    in_test_dir: bool,
+    overlay: Option<&super::conditions::ConfiguredOverlay>,
+) -> FileSearches {
     use crate::scan_fs::package_db::installed_lib::cmake_version::{commands_checked, strip_comments};
     let mut out = FileSearches::default();
     let Ok(content) = std::fs::read_to_string(path) else { return out };
     let source_path = path.to_string_lossy();
     // Spec 1641: no tree-wide defaults or reach here, so the seed reads in
     // C232's string form and options are unknown.
-    let d = super::conditions::Defaults::default();
+    // Spec 1653 US2: a build's configured values still apply.
+    let d = match overlay {
+        Some(o) if !o.is_empty() => super::conditions::Defaults::default().with_overlay(o),
+        _ => super::conditions::Defaults::default(),
+    };
     let mut atoms = std::collections::BTreeSet::new();
     let reach = seed.iter().fold(super::conditions::Eval::Holds, |acc, s| acc.and(d.condition_string(s, &mut atoms)));
     let mut blocks = BlockStack::seeded(seed);

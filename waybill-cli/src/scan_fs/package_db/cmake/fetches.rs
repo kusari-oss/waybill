@@ -254,9 +254,20 @@ pub(crate) fn read_declarations(
         let mut blocks = super::blocks::BlockStack::seeded(reach.seed(path));
         // Spec 1641 research R4, R5: the defaults in reach of this file and
         // whether the file itself is reached by default.
-        let defaults = reach.defaults_for(path);
+        let base = reach.defaults_for(path);
+        // Spec 1653 US2 (FR-005): a build's configured values replace the
+        // source defaults. `base` stays for counting what they changed (C246).
+        let overlay = build_tree.map(|ev| ev.overlay_for(path)).unwrap_or_default();
+        let defaults = if overlay.is_empty() { base.clone() } else { base.clone().with_overlay(&overlay) };
         let mut reach_atoms = BTreeSet::new();
         let reach_eval = reach.reach_eval(path, &defaults, &mut reach_atoms);
+        let base_reach = if defaults.has_overlay() { reach.reach_eval(path, &base, &mut BTreeSet::new()) } else { reach_eval };
+        let mut configured_changes = 0usize;
+        let mut changed = |with: super::conditions::Eval, without: super::conditions::Eval| {
+            if with != without {
+                configured_changes += 1;
+            }
+        };
         let mut ordinal = 0usize;
         let mut open: Vec<usize> = Vec::new();
         for (name, args) in cmds.iter() {
@@ -278,6 +289,9 @@ pub(crate) fn read_declarations(
             for s in &mut found.searches[before..] {
                 let mut atoms = reach_atoms.clone();
                 s.eval = defaults.chain(reach_eval, &s.branches, &[], &mut atoms);
+                if defaults.has_overlay() {
+                    changed(s.eval, base.chain(base_reach, &s.branches, &[], &mut BTreeSet::new()));
+                }
                 if !s.conditions.is_empty() && !s.in_test_dir && !super::fallback::build_testing(&s.if_conditions) {
                     census("search", &s.name, false, &atoms, s.eval, &s.conditions);
                 }
@@ -353,6 +367,9 @@ pub(crate) fn read_declarations(
             if shape == Some(FallbackShape::Conditional) {
                 let mut atoms = reach_atoms.clone();
                 let eval = defaults.chain(reach_eval, &blocks.branches(), &body_conditions, &mut atoms);
+                if defaults.has_overlay() {
+                    changed(eval, base.chain(base_reach, &blocks.branches(), &body_conditions, &mut BTreeSet::new()));
+                }
                 let versioned = !entry.version.is_empty() && entry.version != "unknown";
                 census("fetch", entry.purl.as_str(), versioned, &atoms, eval, &conditions);
                 if eval.in_scope() {
@@ -375,6 +392,9 @@ pub(crate) fn read_declarations(
                 }
             }
             decls.push(Declaration { kind, name: decl_name, rel: rel.clone(), entry: Some(entry) });
+        }
+        if let Some(bt) = cov.build_tree.as_mut() {
+            bt.configured_values_applied += configured_changes;
         }
     }
 

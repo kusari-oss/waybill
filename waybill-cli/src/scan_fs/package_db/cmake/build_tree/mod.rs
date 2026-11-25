@@ -214,6 +214,19 @@ impl BuildEvidence {
             .collect()
     }
 
+    /// Spec 1653 US2 (FR-005): the configured values in force for a file:
+    /// its owning build directories' condition inputs, merged. Values that
+    /// differ between owners conflict and read as unknown.
+    pub(crate) fn overlay_for(&self, decl_file: &Path) -> super::conditions::ConfiguredOverlay {
+        let mut o = super::conditions::ConfiguredOverlay::default();
+        for i in self.owners(decl_file) {
+            for (k, v) in self.dirs[i].cache.condition_inputs() {
+                o.add(k, v);
+            }
+        }
+        o
+    }
+
     pub(crate) fn dir_id(&self, i: usize) -> RedactedPath {
         self.redactor.redact(&self.dirs[i].root)
     }

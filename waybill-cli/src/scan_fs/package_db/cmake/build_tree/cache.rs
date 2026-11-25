@@ -92,6 +92,15 @@ impl CacheView {
     }
 
     /// `CMAKE_HOME_DIRECTORY`: the source directory this build was configured from.
+    /// Entries a condition may read (contracts/settlement.md, configured
+    /// values): `BOOL`, `STRING`, `UNINITIALIZED` and untyped.
+    pub(crate) fn condition_inputs(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.entries.iter().filter_map(|(k, e)| {
+            matches!(e.kind, CacheKind::Bool | CacheKind::String | CacheKind::Uninitialized | CacheKind::Untyped)
+                .then_some((k.as_str(), e.value.as_str()))
+        })
+    }
+
     pub(crate) fn home(&self) -> Option<&str> {
         self.get("CMAKE_HOME_DIRECTORY").map(|e| e.value.as_str()).filter(|v| !v.is_empty())
     }
@@ -136,5 +145,13 @@ mod tests {
         assert_eq!(c.get("B").unwrap().value, "x");
         assert_eq!(CacheView::parse("").unwrap_err(), CacheError::NoEntries);
         assert_eq!(CacheView::parse("# only a comment\n").unwrap_err(), CacheError::NoEntries);
+    }
+
+    #[test]
+    fn condition_inputs_exclude_paths_and_internals() {
+        let c = CacheView::parse(PROBE).unwrap();
+        let mut names: Vec<&str> = c.condition_inputs().map(|(k, _)| k).collect();
+        names.sort();
+        assert_eq!(names, ["BACKEND", "WITH_EXTRA"]);
     }
 }

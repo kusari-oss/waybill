@@ -276,7 +276,8 @@ pub(crate) fn read_with_downloads(
             let in_test_dir = f.strip_prefix(scan_root).ok().and_then(Path::parent).is_some_and(|d| {
                 d.components().any(|c| matches!(c, std::path::Component::Normal(s) if fetches::TEST_DIRS.iter().any(|t| s == *t)))
             });
-            let found = searches::read_file(f, Vec::new(), in_test_dir);
+            let overlay = build_tree.map(|ev| ev.overlay_for(f));
+            let found = searches::read_file(f, Vec::new(), in_test_dir, overlay.as_ref());
             decls.searches.extend(found.searches);
             decls.unresolved_searches += found.unresolved;
         }

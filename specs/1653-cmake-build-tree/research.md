@@ -105,6 +105,15 @@ probe run, which is the test that the plumbing is right. `PATH`, `FILEPATH`,
 `INTERNAL` and `STATIC` entries are not condition inputs and are never emitted
 (FR-006).
 
+**Implementation note (US2, T024).** The tokenizer strips quotes, so the
+evaluator cannot tell `"B"` from `B`. An operand that names a configured
+variable is read as that variable, even if it was quoted in the source,
+which CMake's CMP0054 would not dereference. This needs a configured
+variable whose name equals a quoted literal it is compared with. It is
+accepted as a narrow edge. A comparison is decided only when at least one
+operand comes from a configured value, so a scan without a build tree is
+unchanged: two literals stay *unknown*, as in spec 1641.
+
 ## R6. compile_commands.json and the file API *(measured)*
 
 - `CMAKE_EXPORT_COMPILE_COMMANDS ON` wrote `compile_commands.json` in all 24

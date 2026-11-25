@@ -111,6 +111,8 @@ pub(crate) enum Atom {
     OptionOn,
     OptionOff,
     Literal,
+    /// Spec 1653 (US2): a value configured in a build's `CMakeCache.txt`.
+    Configured,
     Unknown,
 }
 
@@ -122,6 +124,7 @@ impl Atom {
             Atom::OptionOn => "option-on",
             Atom::OptionOff => "option-off",
             Atom::Literal => "literal",
+            Atom::Configured => "configured",
             Atom::Unknown => "unknown",
         }
     }
@@ -149,6 +152,44 @@ pub(crate) enum Source {
 #[derive(Debug, Clone, Default)]
 pub(crate) struct Defaults {
     values: HashMap<String, (Eval, Source)>,
+    /// Spec 1653 (FR-005): values a build configured, which replace source
+    /// defaults of the same name. Empty without `--cmake-build-tree`, so every
+    /// evaluation is then exactly spec 1641's.
+    configured: HashMap<String, Configured>,
+}
+
+/// One configured value (data-model `ConfiguredOverlay`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Configured {
+    Known(String),
+    /// Build directories owning the file configured different values.
+    Conflicting,
+}
+
+/// The configured values for one declaring file: the condition inputs of
+/// every build directory that owns it (contracts/settlement.md, configured
+/// values), merged. Only `BOOL`, `STRING`, `UNINITIALIZED` and untyped cache
+/// entries are inputs; paths and internals never are.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct ConfiguredOverlay {
+    pub(crate) values: HashMap<String, Configured>,
+}
+
+impl ConfiguredOverlay {
+    pub(crate) fn add(&mut self, name: &str, value: &str) {
+        self.values
+            .entry(name.to_string())
+            .and_modify(|v| {
+                if *v != Configured::Known(value.to_string()) {
+                    *v = Configured::Conflicting;
+                }
+            })
+            .or_insert_with(|| Configured::Known(value.to_string()));
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
 }
 
 /// `cmake_dependent_option` before its dependencies are evaluated.
@@ -231,7 +272,7 @@ impl Defaults {
             }
             dependents.extend(f.dependent.iter());
         }
-        let plain = Defaults { values: values.clone() };
+        let plain = Defaults { values: values.clone(), configured: HashMap::new() };
         for d in dependents {
             let deps = d.depends.iter().fold(Eval::Holds, |acc, c| acc.and(plain.evaluate(c, &mut BTreeSet::new())));
             let v = match deps {
@@ -241,10 +282,42 @@ impl Defaults {
             };
             put(&mut values, &d.name, v, Source::Option);
         }
-        Defaults { values }
+        Defaults { values, configured: HashMap::new() }
+    }
+
+    /// These defaults with a build's configured values over them (FR-005).
+    pub(crate) fn with_overlay(mut self, overlay: &ConfiguredOverlay) -> Defaults {
+        self.configured = overlay.values.clone();
+        self
+    }
+
+    /// Whether any configured value is in force.
+    pub(crate) fn has_overlay(&self) -> bool {
+        !self.configured.is_empty()
+    }
+
+    /// A configured value, when one is known for `name`.
+    fn configured_value(&self, name: &str) -> Option<&str> {
+        match self.configured.get(name)? {
+            Configured::Known(v) => Some(v.as_str()),
+            Configured::Conflicting => None,
+        }
     }
 
     fn lookup(&self, name: &str, atoms: &mut BTreeSet<Atom>) -> Eval {
+        // A configured value is CMake's `if(<variable>)`: a false constant
+        // does not hold, any other defined value does.
+        match self.configured.get(name) {
+            Some(Configured::Known(v)) => {
+                atoms.insert(Atom::Configured);
+                return constant(v).unwrap_or(Eval::Holds);
+            }
+            Some(Configured::Conflicting) => {
+                atoms.insert(Atom::Unknown);
+                return Eval::Unknown;
+            }
+            None => {}
+        }
         match self.values.get(name) {
             Some((v, s)) => {
                 atoms.insert(match (s, v) {
@@ -347,6 +420,35 @@ fn is_platform_var(name: &str) -> bool {
 /// `X`, or `X` out of `${X}`.
 fn var_name(t: &str) -> &str {
     t.strip_prefix("${").and_then(|r| r.strip_suffix('}')).unwrap_or(t)
+}
+
+/// Spec 1653 (FR-005): one decided comparison, or `None` for an operator
+/// this does not evaluate (`STRLESS`, `IN_LIST`, paths, a regex the `regex`
+/// crate does not accept, a non-numeric `EQUAL`).
+fn compare_values(l: &str, op: &str, r: &str) -> Option<Eval> {
+    let b = |x: bool| if x { Eval::Holds } else { Eval::DoesNotHold };
+    let version = |s: &str| -> Option<Vec<u64>> {
+        s.split('.').map(|c| c.parse::<u64>().ok()).collect::<Option<Vec<u64>>>()
+    };
+    let cmp_versions = || -> Option<std::cmp::Ordering> {
+        let (mut a, mut c) = (version(l)?, version(r)?);
+        let n = a.len().max(c.len());
+        a.resize(n, 0);
+        c.resize(n, 0);
+        Some(a.cmp(&c))
+    };
+    use std::cmp::Ordering::*;
+    Some(match op {
+        "STREQUAL" => b(l == r),
+        "EQUAL" => b(l.trim().parse::<i64>().ok()? == r.trim().parse::<i64>().ok()?),
+        "MATCHES" => b(regex::Regex::new(r).ok()?.is_match(l)),
+        "VERSION_EQUAL" => b(cmp_versions()? == Equal),
+        "VERSION_LESS" => b(cmp_versions()? == Less),
+        "VERSION_GREATER" => b(cmp_versions()? == Greater),
+        "VERSION_LESS_EQUAL" => b(cmp_versions()? != Greater),
+        "VERSION_GREATER_EQUAL" => b(cmp_versions()? != Less),
+        _ => return None,
+    })
 }
 
 fn is_dir_var(t: &str) -> Option<&'static str> {
@@ -480,8 +582,34 @@ impl<'a> Parser<'a, '_> {
                 _ => {}
             }
         }
+        // Spec 1653 (FR-005): with a configured value on at least one side,
+        // the comparison is decided. Without one it stays unknown, exactly as
+        // spec 1641 has it, so a scan without a build tree is unchanged.
+        if let (Some((lv, lc)), Some((rv, rc))) = (self.operand(left), self.operand(right)) {
+            if lc || rc {
+                if let Some(v) = compare_values(&lv, op, &rv) {
+                    self.atoms.insert(Atom::Configured);
+                    return Val::E(v);
+                }
+            }
+        }
         self.atoms.insert(Atom::Unknown);
         Val::E(Eval::Unknown)
+    }
+
+    /// An operand's string value, and whether it came from a configured
+    /// value. `${X}` and a bare name with a configured value read it; a
+    /// configured name that conflicts, or `${X}` without one, is unknown; any
+    /// other token is the literal itself.
+    fn operand(&self, t: &str) -> Option<(String, bool)> {
+        let name = var_name(t);
+        if self.d.configured.contains_key(name) {
+            return self.d.configured_value(name).map(|v| (v.to_string(), true));
+        }
+        if t.starts_with("${") || t.contains("${") {
+            return None;
+        }
+        Some((t.to_string(), false))
     }
 
     fn atom(&mut self, t: &str) -> Val {
@@ -523,6 +651,55 @@ mod tests {
 
     fn top(e: Eval) -> bool {
         e.in_scope()
+    }
+
+    fn overlay(pairs: &[(&str, &str)]) -> ConfiguredOverlay {
+        let mut o = ConfiguredOverlay::default();
+        for (k, v) in pairs {
+            o.add(k, v);
+        }
+        o
+    }
+
+    #[test]
+    fn spec1653_configured_values_replace_source_defaults() {
+        let d = defaults("option(WITH_EXTRA \"\" OFF)\nset(BACKEND A CACHE STRING \"\")");
+        assert_eq!(eval(&d, "WITH_EXTRA"), Eval::DoesNotHold);
+        let c = d.clone().with_overlay(&overlay(&[("WITH_EXTRA", "ON"), ("BACKEND", "B")]));
+        assert_eq!(eval(&c, "WITH_EXTRA"), Eval::Holds, "configured ON beats the OFF default");
+        assert_eq!(eval(&c, "BACKEND"), Eval::Holds, "a defined non-false string holds");
+        for falsy in ["OFF", "0", "NO", "FALSE", "N", "IGNORE", "NOTFOUND", "X-NOTFOUND", ""] {
+            let c = Defaults::default().with_overlay(&overlay(&[("V", falsy)]));
+            assert_eq!(eval(&c, "V"), Eval::DoesNotHold, "{falsy:?}");
+        }
+    }
+
+    #[test]
+    fn spec1653_comparisons_need_a_configured_operand() {
+        // #1656: without a build, a cache-string comparison stays unknown.
+        assert_eq!(eval(&Defaults::default(), "BACKEND STREQUAL \"B\""), Eval::Unknown);
+        assert_eq!(eval(&Defaults::default(), "\"B\" STREQUAL \"B\""), Eval::Unknown, "two literals: unchanged from spec 1641");
+        let c = Defaults::default().with_overlay(&overlay(&[("BACKEND", "B"), ("N", "3"), ("V", "1.10.2")]));
+        assert_eq!(eval(&c, "BACKEND STREQUAL \"B\""), Eval::Holds);
+        assert_eq!(eval(&c, "${BACKEND} STREQUAL \"A\""), Eval::DoesNotHold);
+        assert_eq!(eval(&c, "NOT BACKEND STREQUAL \"A\""), Eval::Holds);
+        assert_eq!(eval(&c, "N EQUAL 3"), Eval::Holds);
+        assert_eq!(eval(&c, "BACKEND MATCHES \"^[AB]$\""), Eval::Holds);
+        assert_eq!(eval(&c, "V VERSION_GREATER 1.9"), Eval::Holds, "component-wise, not lexical");
+        assert_eq!(eval(&c, "V VERSION_LESS 1.10.2"), Eval::DoesNotHold);
+        assert_eq!(eval(&c, "V VERSION_EQUAL 1.10.2.0"), Eval::Holds);
+        assert_eq!(eval(&c, "V VERSION_LESS_EQUAL 1.10.2"), Eval::Holds);
+        assert_eq!(eval(&c, "V VERSION_GREATER_EQUAL 2"), Eval::DoesNotHold);
+        assert_eq!(eval(&c, "BACKEND STRLESS C"), Eval::Unknown, "an operator not evaluated stays unknown");
+        assert_eq!(eval(&c, "BACKEND STREQUAL ${OTHER}"), Eval::Unknown, "an unconfigured variable is unknown");
+        assert_eq!(eval(&c, "CMAKE_SYSTEM_NAME STREQUAL Linux"), Eval::Platform, "platform checks are unchanged");
+    }
+
+    #[test]
+    fn spec1653_conflicting_builds_are_unknown() {
+        let c = Defaults::default().with_overlay(&overlay(&[("BACKEND", "A"), ("BACKEND", "B")]));
+        assert_eq!(eval(&c, "BACKEND STREQUAL \"B\""), Eval::Unknown);
+        assert_eq!(eval(&c, "BACKEND"), Eval::Unknown);
     }
 
     #[test]
