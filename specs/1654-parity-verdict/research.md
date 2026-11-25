@@ -134,6 +134,11 @@ The two documents agree; the extractors don't.
   - `--component-id` identifiers are still counted and attached only for `components[]` (`match_counts: None`).
   - After the fix, `hpack_include_merge` and `project_discovery_haskell` have 0 failing rows, and `closure_resolved_tier` keeps only B1, B2 and E1 (R4, R6).
   - A unit test pins the four properties. Removing the merge fails it.
+- **Found by the first full gate (T021), six failures:**
+  - **A twin.** With several main modules, milestone 860 also keeps the promoted one in `components[]`, where it already has every property. The merge then made `metadata.component` a second full copy. `scala_tier_fallbacks::sc009` counted it as a fifth main module, and `closure_binary_contents::us2` saw its properties change. **The merge now applies only when the subject has no twin**, the case R7 was traced on, and the twin case is byte-identical to `main`.
+  - **`propagation_seeds::p07`** pins a local golden for a single main module (no twin). Its CycloneDX root gains `waybill:python-lockfile-format`, which both SPDX goldens already carried on the root package (5 occurrences each, against CycloneDX's 4). That is R7's intended change, and the golden was regenerated through the test's own switch.
+  - **`scala_edge_cases::q3`** was blind until R7. Its scan of a directory holding only an unparseable `*.sbt.lock` emitted a root main module, `pkg:maven/unknown/<dir>_2.13`, "declared in build.sbt" with no build.sbt. The test reads `waybill:source-type`, which CycloneDX dropped from that root. Both SPDX formats always carried it. Fixed in the reader: its no-op gate is checked again after parsing, counting only locks that parsed.
+  - **`closure_binary_contents::us1` and `closure_members::s1492`** (R4b): their SPDX helpers read only `DEPENDS_ON`, or only `type == "Relationship"` for SPDX 3. Edges into artifact-absent members are now `BUILD_DEPENDENCY_OF` and `LifecycleScopedRelationship`, so both helpers read every dependency kind. Neither assertion was weakened: each still requires the same edge set in every format.
 
 ## R8. The binary tests' B1
 

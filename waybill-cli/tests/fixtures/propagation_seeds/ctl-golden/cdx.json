@@ -390,6 +390,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:waybill-fixture-uv-root:waybill-fixture-uv-root:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-uv-root:waybill-fixture-uv-root:1.0.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:python-lockfile-format",
+          "value": "uv"
         }
       ],
       "purl": "pkg:pypi/waybill-fixture-uv-root@1.0.0",

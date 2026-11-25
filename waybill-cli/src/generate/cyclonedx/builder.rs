@@ -1057,12 +1057,22 @@ impl CycloneDxBuilder {
         // `waybill:closure-role` (C182) and the scope source (C203) that both
         // SPDX formats carry on the same package. Append what `components[]`
         // would emit for it, keeping the list's own entries first.
+        //
+        // Only when the subject has no twin in `components[]`. With several
+        // main modules, milestone 860 keeps the promoted one there too, and
+        // that entry already carries every property; the document then stays
+        // as it was.
         if let Some(subject) = document_graph
             .subject_main_module
             .as_deref()
             .and_then(|p| effective_components.iter().find(|c| c.purl.as_str() == p))
         {
-            merge_subject_properties(&mut metadata, self.component_properties(subject, None));
+            let has_twin = cdx_components
+                .as_array()
+                .is_some_and(|cs| cs.iter().any(|c| c["bom-ref"].as_str() == Some(subject.purl.as_str())));
+            if !has_twin {
+                merge_subject_properties(&mut metadata, self.component_properties(subject, None));
+            }
         }
         for (idx, count) in &match_counts {
             if *count == 0 {
