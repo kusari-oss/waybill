@@ -747,7 +747,6 @@ Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard
 ## Recent Changes
 - 1657-test-time-first-slice: Added Rust stable 1.98.1 (pinned); no `+toolchain`. **Dependencies**: none new.
 - 1656-closure-read-completeness: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. **Zero new Cargo dependencies.**
-- 1655-reachable-boot-libraries: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (C247), `tracing`; milestone 966's `boot_table`, spec 1653's `boot_dependencies`, the closure's `ClosureCompilers`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
