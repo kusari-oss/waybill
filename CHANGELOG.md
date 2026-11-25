@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed
+
+- **Under `--nix-closure`, every GHC boot library a boot library depends on is a component, so its dependency edges have targets (#1696, spec 1655).**
+  Spec 1653 drew boot-library edges only to libraries the document already held, listing the rest in C247 `absent`, so every closure document read `partial`.
+  - **Libraries reached are added:** `rts`, `ghc-prim`, `ghc-internal`, `ghc-bignum`, `ghc-boot-th` and the like, at the version the release ships (milestone 966's table), with C218, C247 and tier `build`, the shape of the boot libraries the closure already synthesised. Only libraries a present one reaches are added, not the compiler's whole set: 8 to 12 per closure corpus target.
+  - **Dependencies resolve by PURL.** One version is one component, labelled with the project's compiler. A bootstrap compiler's library now reaches it, where it listed it `absent` before: 1 to 7 names per target.
+  - **Effect:** `boot-library-edges-incomplete` no longer appears on any closure corpus target, and `nix-closure-shellcheck` reads `complete`. `rts` and `ghc-platform`, which Hackage does not host, keep `pkg:hackage` like every other boot library; OSV returns no advisories for either identity (measured).
+
 ## [0.18.0] - 2026-11-25
 
 A minor release. It adds surface: `waybill sbom edit --retier`, a per-row `verdict` in `waybill sbom parity-check --format json`, and document rows C231 to C247.

@@ -1299,7 +1299,11 @@ fn emit_declared_edges(
 /// Milestone 966: with `shipped`, the compiler that built the depending member
 /// is known and the boot-library table has its version, so the component
 /// carries that version and C218 naming the compiler, and no C170.
-fn compiler_supplied_component(
+///
+/// Spec 1655 (#1696) is the second caller: `resolve::boot_library_edges`
+/// builds every boot library a present one reaches through this function, so
+/// the added ones have exactly their peers' shape.
+pub(crate) fn compiler_supplied_component(
     name: &str,
     shipped: Option<(&super::closure_compilers::GhcRelease, &str)>,
 ) -> Option<ResolvedComponent> {
