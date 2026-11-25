@@ -133,6 +133,12 @@ unchanged: two literals stay *unknown*, as in spec 1641.
     waybill writes no query. Whether to document the query step for operators
     is a docs task. The probe shows the reply is cheap and complete, but no
     real-world build in this research had one.
+  - **US4 (implemented):** the query step is documented for operators in
+    `docs/user-guide/cli-reference.md` (`--cmake-build-tree`), not automated.
+    A reply's `cache-v2` replaces `CMakeCache.txt` and its codemodel targets'
+    `compileGroups[].includes[]` and `sources[]` replace
+    `compile_commands.json`, per build directory; a malformed reply is
+    counted and not used at all.
 
 ## R7. TheRock's build layout *(read from source at `b1cae390`, not observed)*
 

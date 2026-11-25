@@ -20,7 +20,7 @@ pub(crate) enum CacheKind {
 }
 
 impl CacheKind {
-    fn parse(s: &str) -> Self {
+    pub(crate) fn parse(s: &str) -> Self {
         match s {
             "BOOL" => Self::Bool,
             "STRING" => Self::String,
@@ -71,6 +71,17 @@ impl CacheView {
             }
             entries.insert(name.to_string(), CacheEntry { kind, value: value.to_string() });
         }
+        if entries.is_empty() {
+            return Err(CacheError::NoEntries);
+        }
+        Ok(Self { entries })
+    }
+
+    /// A view from (name, kind, value) triples, as a file-API `cache-v2`
+    /// reply lists them (spec 1653 US4).
+    pub(crate) fn from_entries(entries: impl IntoIterator<Item = (String, CacheKind, String)>) -> Result<Self, CacheError> {
+        let entries: HashMap<String, CacheEntry> =
+            entries.into_iter().filter(|(n, _, _)| !n.is_empty()).map(|(n, kind, value)| (n, CacheEntry { kind, value })).collect();
         if entries.is_empty() {
             return Err(CacheError::NoEntries);
         }

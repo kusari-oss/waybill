@@ -234,12 +234,18 @@
 **Goal**: a file-API reply, when present, is preferred over `CMakeCache.txt` and the compile database.
 **Independent test**: `FX/system` (it has a reply) gives the same settlement and edges with the reply as without it, and C246 `file-api-replies` = 1.
 
-- [ ] T031 [US4] Add to `IT`:
+- [X] T031 [US4] Add to `IT`:
   - `FX/system` with the reply: C246 `file-api-replies` = 1.
   - The reply's `cache-v2` value differs from `CMakeCache.txt` (edit the reply copy, setting `BACKEND` to `A`): the reply wins.
   - Link edges match `codemodel-v2` target `dependencies`/`link` data.
-- [ ] T032 [P] [US4] **Reading the reply.** In `BT/file_api.rs`: `FileApiReply::load(build_dir)` reads the newest `index-*.json`, then the referenced `cache-v2` and `codemodel-v2` JSON files. Malformed files are counted in `unreadable-files`. Expose `cache_entries()` and `target_includes()` (per target, from `compileGroups[].includes[].path`).
-- [ ] T033 [US4] **Preference.** In `BT/mod.rs`, when a reply is present, `CacheView` is built from `cache_entries()` and `compile_includes` from `target_includes()`; the files are the fallback. waybill writes no query (FR-010).
+- [X] T032 [P] [US4] **Reading the reply.** In `BT/file_api.rs`: `FileApiReply::load(build_dir)` reads the newest `index-*.json`, then the referenced `cache-v2` and `codemodel-v2` JSON files. Malformed files are counted in `unreadable-files`. Expose `cache_entries()` and `target_includes()` (per target, from `compileGroups[].includes[].path`).
+- [X] T033 [US4] **Preference.** In `BT/mod.rs`, when a reply is present, `CacheView` is built from `cache_entries()` and `compile_includes` from `target_includes()`; the files are the fallback. waybill writes no query (FR-010).
+
+**US4 implementation notes** (where the code differs from the task text):
+- **T032** `file_api::load(build_root) -> Loaded { Absent, Read(FileApiReply), Malformed }`. `FileApiReply` carries `cache: Option<CacheView>` (built with the new `CacheView::from_entries`) and `units: Option<Vec<Unit>>`, the same per-unit shape as `compile_commands.json`, instead of separate `cache_entries()`/`target_includes()`. Objects are found in the index's `objects[]` by kind at major version 2, so a client-specific query works as well as a shared one. A `jsonFile` naming anything but a file in the reply directory makes the reply malformed. Units are taken over every configuration.
+- **T033** A malformed reply is not used at all: one `unreadable-files`, then the files. `file-api-replies` counts only build directories of the scanned source, not sub-builds.
+- **T031's third bullet** (link edges matching `codemodel-v2` `dependencies`/`link`) is not implemented: this spec emits no link edges, only include edges (FR-009). Instead, `the_reply_codemodel_gives_compile_edges_without_a_database` shows the reply alone gives the compile edges.
+- **Mutation (run):** with the reply's units ignored, that test fails and the others pass.
 
 ## Phase 7: Polish & cross-cutting
 
