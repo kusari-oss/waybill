@@ -68,6 +68,9 @@ pub(crate) struct FetchCoverage {
     /// Spec 1543 (#1602): link declarations read from the same files, for
     /// `scan_fs::cmake_link_attach`. Not part of C231.
     pub(crate) links: Vec<super::links::LinkDeclaration>,
+    /// Spec 1653 US3: (a build's `CMakeLists.txt`, PURL it compiled
+    /// against), for `scan_fs::cmake_fetch_attach::attach_compile`.
+    pub(crate) compile_edges: Vec<(std::path::PathBuf, String)>,
     /// Spec 1614 (C237): the package-search accounting, finished by
     /// `scan_fs::cmake_search_pair` once every reader has run.
     pub(crate) finds: super::searches::FindCoverage,

@@ -489,6 +489,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // Spec 1537: submodule directories, for the declared-requirements pass.
     let mut git_submodule_dirs = package_db::git_submodule::SubmoduleDirs::new();
     let mut cmake_links: Vec<package_db::cmake::links::LinkDeclaration> = Vec::new();
+    let mut cmake_compile_edges: Vec<(std::path::PathBuf, String)> = Vec::new();
     let mut declared_downloads: Option<String> = None;
     let mut cmake_fetch_coverage: Option<String> = None;
     let mut cmake_build_tree_coverage: Option<String> = None;
@@ -577,6 +578,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         git_submodule_coverage = scan_result.diagnostics.git_submodule_coverage.as_ref().map(|c| c.wire());
         git_submodule_dirs = std::mem::take(&mut scan_result.diagnostics.git_submodule_dirs);
         cmake_links = std::mem::take(&mut scan_result.diagnostics.cmake_links);
+        cmake_compile_edges = std::mem::take(&mut scan_result.diagnostics.cmake_compile_edges);
         declared_downloads = scan_result.diagnostics.cmake_declared_downloads.clone();
         cmake_fetch_coverage = scan_result.diagnostics.cmake_fetch_coverage.clone();
         cmake_build_tree_coverage = scan_result.diagnostics.cmake_build_tree_coverage.clone();
@@ -1625,6 +1627,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // project whose tree declares it, by the same owner rule.
         let fetches = cmake_fetch_attach::attach(&components, &relationships, &index, root);
         relationships.extend(fetches.edges);
+        // Spec 1653 US3 (FR-009): what a build's own units compiled against,
+        // from the same owner. Deduplicated against the edges above.
+        relationships.extend(cmake_fetch_attach::attach_compile(&relationships, &cmake_compile_edges, &index, root));
         // Spec 1543 (#1602): a vendored library linked by link directory
         // is a dependency of the project that links it, the same way. Its
         // scope is set here, before the rewrite below types the edge.

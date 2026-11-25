@@ -91,7 +91,11 @@ impl CacheView {
         self.entries.iter().filter(move |(k, _)| k.eq_ignore_ascii_case(name)).map(|(_, e)| e.value.as_str())
     }
 
-    /// `CMAKE_HOME_DIRECTORY`: the source directory this build was configured from.
+    /// Every entry whose name `pick` accepts, as (name, value).
+    pub(crate) fn entries_named<'a>(&'a self, pick: impl Fn(&str) -> bool + 'a) -> impl Iterator<Item = (&'a str, &'a str)> + 'a {
+        self.entries.iter().filter(move |(k, _)| pick(k)).map(|(k, e)| (k.as_str(), e.value.as_str()))
+    }
+
     /// Entries a condition may read (contracts/settlement.md, configured
     /// values): `BOOL`, `STRING`, `UNINITIALIZED` and untyped.
     pub(crate) fn condition_inputs(&self) -> impl Iterator<Item = (&str, &str)> {
@@ -101,6 +105,7 @@ impl CacheView {
         })
     }
 
+    /// `CMAKE_HOME_DIRECTORY`: the source directory this build was configured from.
     pub(crate) fn home(&self) -> Option<&str> {
         self.get("CMAKE_HOME_DIRECTORY").map(|e| e.value.as_str()).filter(|v| !v.is_empty())
     }

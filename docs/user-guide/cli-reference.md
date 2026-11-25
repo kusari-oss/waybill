@@ -1151,6 +1151,14 @@ waybill sbom scan --path . --cmake-build-tree build --output project.cdx.json
   are decided. A fetch under `if(BLAS STREQUAL MKL)` is in scope only if the
   build configured `BLAS=MKL`. Builds that configured different values
   leave the condition undecided, and it stays in scope.
+- **Compile evidence.** With `CMAKE_EXPORT_COMPILE_COMMANDS=ON`, the
+  build's `compile_commands.json` shows what the project's own sources
+  compiled against. An include directory inside a FetchContent population,
+  an ExternalProject's source, a found package's install prefix or a git
+  submodule gives an edge from the project to that component, and
+  `compile-include` in its C245 `basis`. This is the only trace a header-only
+  library leaves. It never changes scope. Other include directories are
+  counted in C246 `include-dirs-unresolved` and not emitted.
 - **Configure is enough for FetchContent**, which populates during configure.
   ExternalProject downloads happen at build time.
 - **Read-only.** Nothing is written into the build tree, and no host path from

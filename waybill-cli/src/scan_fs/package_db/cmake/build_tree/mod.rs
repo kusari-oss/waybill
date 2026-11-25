@@ -10,6 +10,7 @@
 //! Contracts: `specs/1653-cmake-build-tree/contracts/`.
 
 pub(crate) mod cache;
+pub(crate) mod compile_db;
 pub(crate) mod discover;
 pub(crate) mod redact;
 pub(crate) mod settle;
@@ -40,6 +41,15 @@ pub(crate) struct BuildDir {
     pub(crate) downloads: BTreeSet<String>,
     /// ExternalProject names with a `<name>-stamp` directory.
     pub(crate) stamp_dirs: BTreeSet<String>,
+    /// US3: each ExternalProject's default source directory, the sibling of
+    /// its stamp directory (`<prefix>/src/<name>`), canonical → name.
+    pub(crate) ep_sources: BTreeMap<PathBuf, String>,
+    /// US3: `<name>_DIR` cache entries that name a package configuration
+    /// directory, name as cached → canonical value.
+    pub(crate) package_dirs: BTreeMap<String, PathBuf>,
+    /// US3: the translation units of `compile_commands.json`. Empty when
+    /// there is none, or it is empty or malformed.
+    pub(crate) units: Vec<compile_db::Unit>,
 }
 
 /// C246, filled while reading and settling.
@@ -90,6 +100,9 @@ pub(crate) struct BuildEvidence {
     pub(crate) dirs: Vec<BuildDir>,
     pub(crate) redactor: Redactor,
     pub(crate) coverage: BuildTreeCoverage,
+    /// Git submodule directories (canonical) → PURL, for compile-edge
+    /// resolution rule 4. Set by the caller; empty without submodules.
+    pub(crate) submodules: BTreeMap<PathBuf, String>,
 }
 
 fn canonical(p: &Path) -> PathBuf {
@@ -136,6 +149,14 @@ impl BuildEvidence {
                 if home.as_deref().is_some_and(|h| !h.starts_with(&canonical_root)) {
                     coverage.source_mismatch += 1;
                 }
+                let units = match read_units(&root.join("compile_commands.json")) {
+                    Ok(u) => u,
+                    Err(()) => {
+                        coverage.unreadable_files += 1;
+                        Vec::new()
+                    }
+                };
+                let package_dirs = package_dirs(&cache);
                 dirs.push(BuildDir {
                     root: canonical(root),
                     home,
@@ -143,6 +164,9 @@ impl BuildEvidence {
                     populations: BTreeSet::new(),
                     downloads: BTreeSet::new(),
                     stamp_dirs: BTreeSet::new(),
+                    ep_sources: BTreeMap::new(),
+                    package_dirs,
+                    units,
                 });
             }
             pending.extend(found.populations.into_iter().map(|p| (p, Kind::Population)));
@@ -170,6 +194,11 @@ impl BuildEvidence {
             // `<lc>-populate` inside its `-subbuild`: not a declaration.
             let Some(name) = name.filter(|n| !n.is_empty() && !n.ends_with("-populate")) else { continue };
             let d = &mut dirs[i];
+            if matches!(kind, Kind::StampDir) {
+                if let Some(src) = cp.parent() {
+                    d.ep_sources.insert(src.join(&name), name.clone());
+                }
+            }
             match kind {
                 Kind::Population => d.populations.insert(name),
                 Kind::Download => d.downloads.insert(name),
@@ -179,7 +208,7 @@ impl BuildEvidence {
         dirs.sort_by(|a, b| a.root.cmp(&b.root));
         coverage.build_dirs = dirs.len();
         let redactor = Redactor::new(trees, scan_root);
-        let ev = Self { dirs, redactor, coverage };
+        let ev = Self { dirs, redactor, coverage, submodules: BTreeMap::new() };
         tracing::info!(
             target: "waybill::cmake_build_tree",
             build_trees = ev.coverage.build_trees,
@@ -233,8 +262,37 @@ impl BuildEvidence {
 
     #[cfg(test)]
     pub(crate) fn for_tests(dirs: Vec<BuildDir>) -> Self {
-        Self { dirs, redactor: Redactor::new(&[PathBuf::from("/b")], Path::new("/src")), coverage: BuildTreeCoverage::default() }
+        Self {
+            dirs,
+            redactor: Redactor::new(&[PathBuf::from("/b")], Path::new("/src")),
+            coverage: BuildTreeCoverage::default(),
+            submodules: BTreeMap::new(),
+        }
     }
+}
+
+/// `compile_commands.json`'s units. Absent or 0 bytes is none
+/// (measurements/therock.md); unreadable or malformed is `Err`.
+fn read_units(p: &Path) -> Result<Vec<compile_db::Unit>, ()> {
+    match std::fs::read_to_string(p) {
+        Ok(text) => compile_db::units(&text).map_err(|_| ()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
+        Err(_) => Err(()),
+    }
+}
+
+/// `<name>_DIR` entries that hold a package configuration directory:
+/// not FetchContent's `_SOURCE_DIR`/`_BINARY_DIR`, not CMake's own, not
+/// unset, and not a FetchContent redirect (research R2).
+fn package_dirs(cache: &CacheView) -> BTreeMap<String, PathBuf> {
+    cache
+        .entries_named(|k| {
+            k.ends_with("_DIR") && !k.ends_with("_SOURCE_DIR") && !k.ends_with("_BINARY_DIR") && !k.starts_with("CMAKE_") && !k.starts_with("FETCHCONTENT_")
+        })
+        .filter(|(_, v)| !v.is_empty() && !v.ends_with("-NOTFOUND") && !v.ends_with("CMakeFiles/pkgRedirects"))
+        .filter_map(|(k, v)| Some((k.strip_suffix("_DIR")?.to_string(), compile_db::canonical_lenient(Path::new(v)))))
+        .filter(|(k, _)| !k.is_empty())
+        .collect()
 }
 
 enum Kind {

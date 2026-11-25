@@ -68,6 +68,39 @@ pub(crate) fn attach(
     out
 }
 
+/// Spec 1653 US3 (FR-009): an edge from the owner of each build's
+/// `CMakeLists.txt` to each component its units compiled against. No
+/// self-edge, no duplicate; a file with no owner gives no edge (the
+/// declaration edges already anchor the target).
+pub(crate) fn attach_compile(
+    relationships: &[Relationship],
+    compile_edges: &[(std::path::PathBuf, String)],
+    index: &OwnerIndex,
+    scan_root: &Path,
+) -> Vec<Relationship> {
+    let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let mut seen: HashSet<(String, String)> = relationships.iter().map(|r| (r.from.clone(), r.to.clone())).collect();
+    let mut out = Vec::new();
+    for (file, to) in compile_edges {
+        let p = file.to_string_lossy();
+        let Some(rel) = relative(&p, scan_root, &canonical_root) else { continue };
+        let Some(owner) = index.owner_of(&rel) else { continue };
+        if owner != to && seen.insert((owner.to_string(), to.clone())) {
+            out.push(Relationship {
+                from: owner.to_string(),
+                to: to.clone(),
+                relationship_type: RelationshipType::DependsOn,
+                provenance: EnrichmentProvenance {
+                    source: rel.to_string_lossy().into_owned(),
+                    data_type: "cmake-compile-include".to_string(),
+                },
+            });
+        }
+    }
+    tracing::debug!(edges = out.len(), "cmake compile includes: attached");
+    out
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {

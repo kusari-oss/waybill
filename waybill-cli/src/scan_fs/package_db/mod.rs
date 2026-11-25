@@ -417,6 +417,9 @@ pub struct ScanDiagnostics {
     pub git_submodule_dirs: git_submodule::SubmoduleDirs,
     /// Spec 1543 (#1602): CMake link declarations, for the link pass.
     pub cmake_links: Vec<cmake::links::LinkDeclaration>,
+    /// Spec 1653 US3: (a build's `CMakeLists.txt`, PURL it compiled
+    /// against). Absolute; not a wire field.
+    pub cmake_compile_edges: Vec<(PathBuf, String)>,
     /// #1154: the `go mod why` pass's outcome (C195/C196). `None` when no
     /// Go main module was found.
     pub go_mod_why: Option<GoModWhyStatus>,
@@ -2507,6 +2510,7 @@ pub fn read_all(
     let finds = std::mem::take(&mut cmake_fetches.finds);
     diagnostics.cmake_find_coverage = (finds.read > 0).then_some(finds);
     diagnostics.cmake_links = std::mem::take(&mut cmake_fetches.links);
+    diagnostics.cmake_compile_edges = std::mem::take(&mut cmake_fetches.compile_edges);
     Ok(DbScanResult {
         entries: out,
         claimed_paths: claimed,
@@ -3174,7 +3178,7 @@ fn run_shared_walker_pilot(
         .find(|r| r.reader_id == ReaderId::CMAKE)
         .map(|reg| {
             let marker = cmake::extract_marker(reg);
-            cmake::finalize(marker, rootfs, include_vendored, exclude_set)
+            cmake::finalize(marker, rootfs, include_vendored, exclude_set, &git_submodule_dirs)
         })
         .unwrap_or_default();
     let cmake_declared_downloads = cmake_downloads.wire();
