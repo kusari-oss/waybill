@@ -8,7 +8,7 @@
 - [ ] T001 Build the main binary and record the before-state in `specs/1657-test-time-first-slice/measurements/before.md`:
   - **Affected binaries:** wall time for each one, run alone, min/median/max over 3 runs, on an idle machine (`sbom_edit_filter`, `holistic_parity`, the 17 harness includers, and the `scan-without-offline.txt` binaries).
   - **Edit times:** the moat SPDX 2.3 and SPDX 3 edit times (debug and release, 3 runs each).
-  - **Test counts:** `--list` counts per binary.
+  - **Test counts:** `--list` counts per binary. Explain the 145 `corpus_harness_195::` entries against the 56 `#[test]` attributes in the harness files.
   - **Whole suite:** one full `cargo test --workspace --no-fail-fast` log, with its per-binary durations.
   - **Reference binary:** keep a copy of the before-binary as `measurements/waybill-before` for T005. It is not committed.
 - [ ] T002 Measure the R3 enforcement point. Run one split scan without `--offline` and with `HTTPS_PROXY=http://127.0.0.1:9` / `HTTP_PROXY` set. Record:
@@ -37,7 +37,7 @@
 
 ## Phase 3: User Story 2, each test runs once (P2)
 
-- [ ] T007 [US2] Create `waybill-cli/tests/corpus_harness_self_tests.rs`. It includes the harness with `#[path]` and holds the `#[cfg(test)]` test modules moved out of `tests/corpus_harness_195/{js_filter,cache,expectations,layer2_golden}.rs`. Items those tests reach become `pub(crate)` within the harness only.
+- [ ] T007 [US2] Create `waybill-cli/tests/corpus_harness_self_tests.rs`. It includes the harness with `#[path]` and holds the `#[cfg(test)]` test modules moved out of `tests/corpus_harness_195/{cache,expectations,harness,js_filter,layer2_golden,manifest}.rs` (every file holding a `#[test]`). Items those tests reach become `pub(crate)` within the harness only.
 - [ ] T008 [P] [US2] Move `build_benchmark_fixture` and `ImageFile` into `waybill-cli/tests/common/`. Drop `mod dual_format_perf;` from `waybill-cli/tests/holistic_parity.rs`, and point both files at the common helpers.
 - [ ] T009 [US2] Write `measurements/list_counts.sh`. It checks `--list` across all test binaries:
   - `corpus_harness_195::` tests appear in exactly one binary, with 145 of them;

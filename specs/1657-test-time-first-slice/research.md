@@ -17,7 +17,7 @@ Read against `main` 60102ff5.
 
 ## R2: The harness self-tests (#1712)
 
-**Where the tests live.** `#[cfg(test)]` modules sit in four harness files: `js_filter.rs` (1), `cache.rs` (1), `expectations.rs` (3) and `layer2_golden.rs` (3). The 17 consumers include the whole module through `#[path]`.
+**Where the tests live.** `#[test]` functions sit in six harness files (grep count of `#[test]`): `cache.rs` 7, `expectations.rs` 13, `harness.rs` 1, `js_filter.rs` 12, `layer2_golden.rs` 17, `manifest.rs` 6, so 56 attributes. The `--list` count of 145 per consumer binary is the authority; the gap to 56 is explained in T001, for example by nested or generated tests. (Corrected at analyze: R2 first named four files.) The 17 consumers include the whole module through `#[path]`.
 
 **Decision.** Move those test modules into one new integration test file, `tests/corpus_harness_self_tests.rs`. It includes the harness through the same `#[path]` and holds the tests. Any private item the tests reach is made `pub(crate)` within the harness. The consumers are unchanged except that they no longer compile the tests.
 
