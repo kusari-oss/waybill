@@ -301,6 +301,8 @@ fn boot_library_edges_are_complete() {
     let reason = doc_prop(&run.scan.cdx, "waybill:graph-completeness-reason").unwrap_or_default();
     assert!(!reason.contains("boot-library-edges-incomplete"), "{reason}");
     assert!(reason.contains("transitive-edges-unresolvable: hackage"), "{reason}");
+    // Spec 1656 (#1720): the stub's members' contents are not in the store.
+    assert!(reason.contains("closure-contents-unread: 4 of 4 member(s)"), "{reason}");
     let root_ref = run.scan.cdx["metadata"]["component"]["bom-ref"].clone();
     for c in run.scan.cdx["compositions"].as_array().into_iter().flatten() {
         if c["aggregate"] != "complete" {
@@ -452,4 +454,17 @@ fn added_libraries_have_their_peers_shape() {
         assert_eq!(prop(c, "waybill:sbom-tier").as_deref(), Some("build"));
         assert_eq!(peer_keys(c), want_keys, "{}", c["purl"]);
     }
+}
+
+/// Spec 1656 (#1720), the contents-only control: the stub has no
+/// `waybill:nix-closure-read` row and 4 of its 4 members' contents unread
+/// (`specs/1656-closure-read-completeness/measurements/controls-before.md`).
+#[test]
+fn m1720_unread_contents_are_a_completeness_reason() {
+    let run = scan_with(&dir().join("project"), &closure_flags(), None);
+    let reason = doc_prop(&run.scan.cdx, "waybill:graph-completeness-reason").unwrap_or_default();
+    assert!(doc_prop(&run.scan.cdx, "waybill:nix-closure-read").is_none(), "CONTROL: no declaration gap");
+    assert!(reason.contains("closure-contents-unread: 4 of 4 member(s)"), "{reason}");
+    assert!(!reason.contains("closure-declarations-unconsulted"), "{reason}");
+    assert_eq!(doc_prop(&run.scan.cdx, "waybill:graph-completeness").as_deref(), Some("partial"));
 }

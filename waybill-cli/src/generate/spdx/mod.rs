@@ -452,7 +452,7 @@ mod tests {
             nix_evaluation_policy: None,
             ghc_boot_libraries: None,
             nix_closure_contents: None,
-            nix_closure_contents_unread: false,
+            nix_closure_contents_unread: None,
             deps_dev_online: false,
             nix_eval_system: None,
             nixpkgs_haskell_resolution: None,

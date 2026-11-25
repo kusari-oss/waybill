@@ -23,6 +23,8 @@ use std::process::Command;
 
 use serde_json::Value;
 
+mod common;
+
 /// The revision the fixture `flake.lock` pins.
 const REV: &str = "a799d3e3886da994fa307f817a6bc705ae538eeb";
 
@@ -693,4 +695,80 @@ fn m1278_the_disclosure_is_identical_in_all_three_formats() {
     // SPDX 2.3 has no native completeness field, so there the annotation's
     // PRESENCE is the fact. Nothing is added to its payload to compensate:
     // an unequal payload would cost exactly the check above.
+}
+
+// ---------------------------------------------------------------------
+// Spec 1656 (#1720): a partial closure read is a completeness reason
+// ---------------------------------------------------------------------
+
+/// The three documents, written where `parity-check` looks for them.
+fn trio(s: &Scan) -> tempfile::TempDir {
+    let dir = tempfile::tempdir().unwrap();
+    for (name, doc) in [("waybill.cdx.json", &s.cdx), ("waybill.spdx.json", &s.spdx23), ("waybill.spdx3.json", &s.spdx3)] {
+        std::fs::write(dir.path().join(name), serde_json::to_vec(doc).unwrap()).unwrap();
+    }
+    dir
+}
+
+/// FR-001, SC-004: the declaration gap this fixture records is a C105
+/// reason with the read row's own counts, and C104 is `partial`, in all three
+/// formats. This fixture also has every member's contents unread (6 of 6,
+/// `measurements/controls-before.md`), so both codes appear; the
+/// declarations-alone case is covered by the unit tests.
+#[test]
+fn m1720_a_declaration_gap_is_a_completeness_reason() {
+    let s = scan_closure(CLOSURE_JSON);
+    let ro = s.read_outcome().expect("CONTROL: this closure records a declaration gap");
+    let n = ro["declarations-unconsulted"].as_u64().unwrap();
+    let m = ro["derivations-affected"].as_u64().unwrap();
+    assert_eq!(s.doc_prop("waybill:graph-completeness"), Some("partial"));
+    let reason = s.doc_prop("waybill:graph-completeness-reason").unwrap_or_default().to_string();
+    let declarations = format!("closure-declarations-unconsulted: {n} declaration(s) in {m} derivation(s)");
+    assert!(reason.contains(&declarations), "{reason}");
+    assert!(reason.contains("closure-contents-unread: 6 of 6 member(s)"), "{reason}");
+    assert!(
+        reason.find(&declarations) < reason.find("closure-contents-unread"),
+        "declarations before contents: {reason}"
+    );
+    for (label, doc) in [("SPDX 2.3", &s.spdx23), ("SPDX 3", &s.spdx3)] {
+        assert!(doc.to_string().contains(&reason), "{label} does not carry C105 `{reason}`");
+    }
+    // The rows this feature writes are at parity in all three formats. The
+    // fixture's other gaps (A7, B1, B2) fail identically before this change
+    // (`measurements/controls-before.md`) and are filed as #1700 and #1701.
+    let dir = trio(&s);
+    common::parity::assert_rows_pass(dir.path(), &["C104", "C105"]);
+}
+
+/// FR-004, FR-005: the native claims are what milestone 1278 made them (no
+/// `complete`), and the orphan pass is unchanged: its per-component reasons
+/// equal the before-state in `measurements/controls-before.md`.
+#[test]
+fn m1720_native_claims_and_orphan_reasons_are_unchanged() {
+    let s = scan_closure(CLOSURE_JSON);
+    assert!(!s.dependency_aggregates().contains(&"complete"), "{:?}", s.cdx["compositions"]);
+    let complete_rel = s.spdx3["@graph"]
+        .as_array()
+        .is_some_and(|g| g.iter().any(|e| e["completeness"].as_str() == Some("complete")));
+    assert!(!complete_rel, "an SPDX 3 relationship claims complete");
+    let mut orphans: Vec<(String, String)> = s
+        .components()
+        .iter()
+        .filter_map(|c| {
+            let r = c["properties"].as_array()?.iter().find(|p| p["name"] == "waybill:orphan-reason")?;
+            Some((c["purl"].as_str()?.to_string(), r["value"].as_str()?.to_string()))
+        })
+        .collect();
+    orphans.sort();
+    let want: Vec<(String, String)> = [
+        "pkg:generic/waybill-fixture-flatdep@1.0",
+        "pkg:generic/waybill-fixture-flattool@1.0",
+        "pkg:generic/waybill-fixture-typeddep@2.0",
+        "pkg:generic/waybill-fixture-typedidentity@7.0",
+        "pkg:generic/waybill-fixture-typedtool@2.0",
+    ]
+    .iter()
+    .map(|p| (p.to_string(), "reachable-only-through-unemitted-package".to_string()))
+    .collect();
+    assert_eq!(orphans, want);
 }

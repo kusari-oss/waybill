@@ -74,3 +74,26 @@ pub fn assert_parity(out_dir: &Path) {
         failing.join("\n  ")
     );
 }
+
+/// Spec 1656 (#1720): assert that each named catalog row's verdict is `pass`
+/// on the three documents in `out_dir`, for a fixture whose other rows carry
+/// gaps filed elsewhere (A7 #1700, B1/B2 #1701). A positive signal: a row
+/// that is `not-checked` (absent from every format) fails here, so the
+/// assertion cannot pass by the row never being emitted.
+pub fn assert_rows_pass(out_dir: &Path, row_ids: &[&str]) {
+    let out = Command::new(super::bin())
+        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
+        .arg(out_dir)
+        .output()
+        .unwrap_or_else(|e| panic!("parity-check did not run: {e}"));
+    let report: Value = serde_json::from_slice(&out.stdout)
+        .unwrap_or_else(|e| panic!("parity-check output is not JSON ({e}): {}", String::from_utf8_lossy(&out.stderr)));
+    let rows = report["rows"].as_array().unwrap_or_else(|| panic!("parity-check JSON has no rows: {report}"));
+    for id in row_ids {
+        let row = rows
+            .iter()
+            .find(|r| r["row_id"] == *id)
+            .unwrap_or_else(|| panic!("parity-check has no row {id}"));
+        assert_eq!(row["verdict"], "pass", "row {id} in {}: {row}", out_dir.display());
+    }
+}

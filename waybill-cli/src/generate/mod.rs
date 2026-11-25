@@ -222,7 +222,7 @@ pub struct ScanArtifacts<'a> {
     /// Whether that record has members whose contents this scan cannot
     /// vouch for. Carried beside the rendered record so the CycloneDX
     /// builder can withhold a completeness claim without parsing it back.
-    pub nix_closure_contents_unread: bool,
+    pub nix_closure_contents_unread: Option<graph_completeness::ContentsUnread>,
     /// Milestone 1067 (#1058; C192) — the deps.dev enrichment pass ran
     /// online. Gates the document-scope outcome counts, which are computed
     /// in each emitter from the components it emits so they always agree
@@ -583,7 +583,16 @@ impl<'a> ScanArtifacts<'a> {
     /// the same from its own fields; spec 1654 routes every SPDX reader of it
     /// through here.
     pub(crate) fn closure_read_partial(&self) -> bool {
-        self.nix_closure_summary.is_some_and(|s| s.read_outcome.has_gap()) || self.nix_closure_contents_unread
+        self.closure_read_gaps().any()
+    }
+
+    /// Spec 1656 (#1720): the gaps behind [`Self::closure_read_partial`], with
+    /// their counts, for C105.
+    pub(crate) fn closure_read_gaps(&self) -> graph_completeness::ClosureReadGaps {
+        graph_completeness::closure_read_gaps(
+            self.nix_closure_summary.map(|s| &s.read_outcome),
+            self.nix_closure_contents_unread,
+        )
     }
 
     /// This same view, with `components` swapped for a filtered slice.

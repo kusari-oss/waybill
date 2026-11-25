@@ -22,6 +22,10 @@
 | `go-workspace-mode-anomaly` | Go workspace-mode false edges detected (issue #494) | `K anomalous edge(s) detected in go.work mode` |
 | `orphaned-components-detected` | Components emitted but not reachable from any per-ecosystem root (Q2) | `K component(s) not reachable from root` |
 | `multi-ecosystem-partial-root` | Per-ecosystem root identification failed for one or more ecosystems (Q3) | `<comma-separated ecosystem names>` |
+| `closure-declarations-unconsulted` | Spec 1656 (#1720): under `--nix-closure`, the closure reader left store-path declarations unconsulted (`waybill:nix-closure-read`) | `N declaration(s) in M derivation(s)[, K carrier disagreement(s)]` |
+| `closure-contents-unread` | Spec 1656 (#1720): under `--nix-closure`, members whose contents were not read (C213 absent, partial or failed) | `U of T member(s)` |
+
+Codes added between milestone 158 and spec 1656 (`transitive-edges-unresolvable`, `manifest-unread`, `project-discovery-scope`, `boot-library-edges-incomplete`) are listed with their templates in the C105 row of `docs/reference/sbom-format-mapping.md`, which is the current authority for the vocabulary.
 
 ## Value combinations
 

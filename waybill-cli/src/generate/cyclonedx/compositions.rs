@@ -504,6 +504,22 @@ mod tests {
         assert_eq!(degraded_ecosystems(&gc), set(&["hackage"]));
     }
 
+    /// Spec 1656 (#1720, FR-004): a partial closure read degrades no
+    /// ecosystem. `degraded_ecosystems` ends in a wildcard, so this test is
+    /// what stops a future arm from silently naming one (research R3).
+    #[test]
+    fn the_closure_read_codes_degrade_no_ecosystem() {
+        use crate::generate::graph_completeness::{GraphCompletenessResult, ReasonCode};
+        let mut gc = GraphCompletenessResult::trivially_complete();
+        gc.reason_codes.push(ReasonCode::ClosureDeclarationsUnconsulted {
+            declarations: 211,
+            derivations: 16,
+            carrier_disagreements: 0,
+        });
+        gc.reason_codes.push(ReasonCode::ClosureContentsUnread { unread: 1284, members: 2045 });
+        assert!(degraded_ecosystems(&gc).is_empty());
+    }
+
     /// Spec 1652 (FR-005): an ecosystem `--project-discovery` dropped
     /// projects from is degraded, so no record claims it complete.
     #[test]
