@@ -11,14 +11,14 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Re-run `specs/1655-reachable-boot-libraries/measurements/shared_purls.py` on `main`'s goldens and `cmp` the output against `measurements/shared-purls-before.txt`. Identical means the before-state still holds; any difference is recorded in `measurements/after.md` before code changes.
+- [X] T001 Re-run `specs/1655-reachable-boot-libraries/measurements/shared_purls.py` on `main`'s goldens and `cmp` the output against `measurements/shared-purls-before.txt`. Identical means the before-state still holds; any difference is recorded in `measurements/after.md` before code changes.
 
 ---
 
 ## Phase 2: Foundational (blocks both stories)
 
-- [ ] T002 Make `compiler_supplied_component` `pub(crate)` in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure_identity.rs`. No other change; its doc comment gains one line naming spec 1655 as a second caller.
-- [ ] T003 In `waybill-cli/src/resolve/boot_library_edges.rs`, change the signatures. Behaviour must stay exactly today's when `compilers` is `None`.
+- [X] T002 Make `compiler_supplied_component` `pub(crate)` in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure_identity.rs`. No other change; its doc comment gains one line naming spec 1655 as a second caller.
+- [X] T003 In `waybill-cli/src/resolve/boot_library_edges.rs`, change the signatures. Behaviour must stay exactly today's when `compilers` is `None`.
   - `apply(components, relationships, compilers: Option<&ClosureCompilers>)`.
   - `apply_with(table, versions: &dyn Fn(&str, &str) -> Option<String>, compilers, components, relationships)`. `versions` is (release, name) → milestone 966's version; `apply` passes `|r, n| boot_table::table().version_of(r, n, &cc.system).map(str::to_string)`.
   - Update the call in `waybill-cli/src/cli/scan_cmd.rs` to pass `closure_compilers.as_ref()`, and the existing unit tests to pass `None`.
@@ -33,7 +33,7 @@
 
 ### Tests for User Story 1 (write first; each must fail before T007/T008)
 
-- [ ] T004 [US1] Unit tests in `waybill-cli/src/resolve/boot_library_edges.rs`, all built on `apply_with` with a `ClosureCompilers` whose project is `ghc-9.10.3`:
+- [X] T004 [US1] Unit tests in `waybill-cli/src/resolve/boot_library_edges.rs`, all built on `apply_with` with a `ClosureCompilers` whose project is `ghc-9.10.3`:
   - **(a) `a_dependency_held_under_another_label_resolves_by_purl`.** `ghc-binary-9.8.4` `containers@0.6.8` and a `ghc-9.10.3` `array@0.5.8.0`, the moat case (research R1). The edge containers→array is drawn, and containers' C247 does not list `array`. (9.8.4's `base` does not depend on `array`: it depends on `ghc-bignum ghc-prim rts`.)
   - **(b) `the_reachable_set_is_closed`.** A 9.10.3 `base` alone gains `ghc-internal`, `ghc-prim`, `ghc-bignum` and `rts`, each with C218 `ghc-9.10.3`, and every C247 is `{"source":…}`.
   - **(c) `a_shared_version_is_one_component`.** 9.10.3 `base` and 9.8.4 `base` both reach `rts@1.0.2`, which is added once, labelled `ghc-9.10.3`.
@@ -43,11 +43,11 @@
   - **(g) `none_compilers_is_todays_behaviour`.** With `None`, case (a)'s `containers` still lists `array` as absent and nothing is added.
 
   Run and confirm (a) to (f) fail, and (g) passes.
-- [ ] T005 [US1] Rewrite the three tests research R6 names in `waybill-cli/tests/boot_library_edges.rs`, keeping their names' intent:
+- [X] T005 [US1] Rewrite the three tests research R6 names in `waybill-cli/tests/boot_library_edges.rs`, keeping their names' intent:
   - **`every_boot_library_carries_c245`:** every C218 component's C247 has `source` and no `absent`; `ghc-internal` is a component, and 9.10.3 `base` → `ghc-internal` exists.
   - **`edges_stay_within_a_compiler` → `an_edge_reaches_the_version_its_release_ships`:** for every boot edge a→b, b's version equals the stub's 9.10.3 or 9.8.4 version of b, matching a's release. The bootstrap `base@4.19.2.0` reaches `ghc-prim@0.11.0` and never `ghc-prim@0.12.0`. The precondition assertion that both compilers are present is kept.
   - **`incomplete_boot_library_edges_are_reported` → `boot_library_edges_are_complete`:** C105 lacks `boot-library-edges-incomplete` and still contains `transitive-edges-unresolvable`, so the document stays `partial`. The `compositions[]` check is kept, since `hackage` is still unresolvable.
-- [ ] T006 [US1] New integration tests in `waybill-cli/tests/boot_library_edges.rs`, both through `scan_with`, so `assert_parity` runs:
+- [X] T006 [US1] New integration tests in `waybill-cli/tests/boot_library_edges.rs`, both through `scan_with`, so `assert_parity` runs:
   - **`added_purls_match_the_measurement`:** the C218 components minus those present before (`base@4.20.2.0`, `ghc-prim@0.12.0` when declared, `process@1.6.26.1`, `stm@2.5.3.1`, `base@4.19.2.0`) equal, as a set, the PURLs measured in `measurements/stub-before.md`. That is 18 with ghc-prim:
     `array@0.5.8.0 bytestring@0.12.2.0 deepseq@1.5.0.0 directory@1.3.8.5 exceptions@0.10.9 filepath@1.5.4.0 ghc-bignum@1.3 ghc-boot-th@9.10.3 ghc-internal@9.1003.0 mtl@2.3.1 os-string@2.0.7 pretty@1.1.3.6 rts@1.0.2 template-haskell@2.22.0.0 time@1.12.2 transformers@0.6.1.1 unix@2.8.7.0 ghc-prim@0.11.0`.
     Plain, it is 19: the same plus `ghc-prim@0.12.0`, all `pkg:hackage/`. The set pins names and versions together, so no table is re-read in the test.
@@ -57,9 +57,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] In `apply_with`, `waybill-cli/src/resolve/boot_library_edges.rs`: build the set of every component PURL. When resolving a dependency, try (label, name) first, then `pkg:hackage/<dep>@<versions(release, dep)>` against the set (FR-005). Run T004 (a) and (g).
-- [ ] T008 [US1] In `apply_with`, with `Some(cc)`: before the edge loop, close each walkable release's reachable set breadth-first over sorted collections, following plan.md's Design step 2. Synthesize each unheld PURL once with `compiler_supplied_component(name, Some((&release, version)))`, push it, and update the PURL set and the (label, name) index. Add `added` to `BootEdgeSummary`, and print it in the INFO line in `waybill-cli/src/cli/scan_cmd.rs`. Then run T004 to T006 until all pass.
-- [ ] T009 [US1] Mutations. Revert each with `cp` from a backup taken before mutating, then rebuild (`feedback_mutation_revert_with_cp_not_git_checkout`). Record each in `measurements/after.md` with the failing test names:
+- [X] T007 [US1] In `apply_with`, `waybill-cli/src/resolve/boot_library_edges.rs`: build the set of every component PURL. When resolving a dependency, try (label, name) first, then `pkg:hackage/<dep>@<versions(release, dep)>` against the set (FR-005). Run T004 (a) and (g).
+- [X] T008 [US1] In `apply_with`, with `Some(cc)`: before the edge loop, close each walkable release's reachable set breadth-first over sorted collections, following plan.md's Design step 2. Synthesize each unheld PURL once with `compiler_supplied_component(name, Some((&release, version)))`, push it, and update the PURL set and the (label, name) index. Add `added` to `BootEdgeSummary`, and print it in the INFO line in `waybill-cli/src/cli/scan_cmd.rs`. Then run T004 to T006 until all pass.
+- [X] T009 [US1] Mutations. Revert each with `cp` from a backup taken before mutating, then rebuild (`feedback_mutation_revert_with_cp_not_git_checkout`). Record each in `measurements/after.md` with the failing test names:
   - **M1:** disable the PURL lookup; T004 (a) and the T005 version test must fail.
   - **M2:** skip the synthesis; T004 (b) and (c), T005 `every_boot_library_carries_c245` and T006 `added_purls_match_the_measurement` must fail.
   - **M3:** synthesize each release's whole table instead of the reached set; T004 (d) and T006 `added_purls_match_the_measurement` must fail.
@@ -74,8 +74,8 @@
 **Goal**: FR-002, FR-003, FR-004.
 **Independent test**: each added component's key set, PURL, version and CPE match the contract (`contracts/wire.md`).
 
-- [ ] T010 [P] [US2] Unit test `the_version_is_milestone_966s` in `waybill-cli/src/resolve/boot_library_edges.rs`. With the real `boot_table`, release `9.2.4` (no `rts` version in 1653's table), the added `rts` is `pkg:hackage/rts@1.0.2`. The existing `libraries_and_versions_equal_milestone_966s` in `boot_dependencies.rs` already covers FR-003's agreement; leave it as is.
-- [ ] T011 [US2] Integration test `added_libraries_have_their_peers_shape` in `waybill-cli/tests/boot_library_edges.rs`. Every added component (T006's set) has:
+- [X] T010 [P] [US2] Unit test `the_version_is_milestone_966s` in `waybill-cli/src/resolve/boot_library_edges.rs`. With the real `boot_table`, release `9.2.4` (no `rts` version in 1653's table), the added `rts` is `pkg:hackage/rts@1.0.2`. The existing `libraries_and_versions_equal_milestone_966s` in `boot_dependencies.rs` already covers FR-003's agreement; leave it as is.
+- [X] T011 [US2] Integration test `added_libraries_have_their_peers_shape` in `waybill-cli/tests/boot_library_edges.rs`. Every added component (T006's set) has:
   - a PURL starting `pkg:hackage/`;
   - no `cpe`;
   - no CycloneDX `scope`;
@@ -89,16 +89,16 @@
 
 ## Phase 5: Polish & cross-cutting
 
-- [ ] T012 [P] Update the documentation:
+- [X] T012 [P] Update the documentation:
   - the C247 row in `docs/reference/sbom-format-mapping.md`, per `contracts/wire.md`: replace "(`rts` and `ghc-internal` never are)" and state that `absent` names only dependencies the version table lacks;
   - a `CHANGELOG.md` `[Unreleased]` entry: closure documents gain every boot library a boot library depends on, edges resolve by PURL, and shellcheck's golden reads `complete`. Refs #1696.
-- [ ] T013 Run the gate:
+- [X] T013 Run the gate:
   - `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`.
   - Check `GATE_RESULT=pass`, the expected line, and the per-target totals.
   - **On the first green gate, commit, push, and open the PR** with a body: Refs #1696, #1688, plus the footer.
   - Then dispatch: `gh workflow run public-corpus.yml -R kusari-oss/waybill --ref main -f branch=1655-reachable-boot-libraries -f regen_goldens=true`.
   - Enumerate every CI job's conclusion.
-- [ ] T014 After the dispatch commits the goldens, pull them and write `measurements/after.md`:
+- [X] T014 After the dispatch commits the goldens, pull them and write `measurements/after.md`:
   - **SC-001, SC-002:** re-run `shared_purls.py`; every count is 0. Record the distinct added PURLs per target against 11/8/10/12/9.
   - **SC-003:** shellcheck's C104 is `complete`; the other four C105 values lose only the `boot-library-edges-incomplete` clause.
   - **SC-004:** C105 orphan counts are unchanged per target.
@@ -107,11 +107,11 @@
   - **C209:** per golden, `addressable_without_cpe` rises by exactly the added count, and the five C209 counts still sum to the component total (contract `wire.md`).
   - **Golden diffs:** trace every changed file (a normalized, sorted diff with content-addressed IDs masked) to FR-001 through FR-006.
   - Commit and push.
-- [ ] T015 Close out:
+- [X] T015 Close out:
   - verify each task's claim against the code and the measurements, not the checkbox (`feedback_a_task_can_be_unimplemented_not_unticked`);
   - tick the tasks;
   - confirm zero new Cargo dependencies (`git diff main -- '**/Cargo.toml' Cargo.lock` is empty).
-- [ ] T016 File the out-of-scope items as issues, unless one already exists: (i) whole-set boot-library emission; (ii) the CycloneDX `scope` of boot libraries, which today carry none, including the bootstrap compiler's. #1707 is already filed. Each issue gets "Refs #1696" and the footer.
+- [X] T016 File the out-of-scope items as issues, unless one already exists: (i) whole-set boot-library emission; (ii) the CycloneDX `scope` of boot libraries, which today carry none, including the bootstrap compiler's. #1707 is already filed. Each issue gets "Refs #1696" and the footer.
 
 ---
 

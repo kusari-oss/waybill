@@ -1,0 +1,5 @@
+nix-closure-moat: added (keys, has_cpe, scope, absent) {(('waybill:boot-library-compiler', 'waybill:boot-library-dependencies', 'waybill:sbom-tier'), False, None, False): 11}; other top-level sections changed: []
+nix-closure-openai: added (keys, has_cpe, scope, absent) {(('waybill:boot-library-compiler', 'waybill:boot-library-dependencies', 'waybill:sbom-tier'), False, None, False): 8}; other top-level sections changed: []
+nix-closure-shellcheck: added (keys, has_cpe, scope, absent) {(('waybill:boot-library-compiler', 'waybill:boot-library-dependencies', 'waybill:sbom-tier'), False, None, False): 10}; other top-level sections changed: []
+nix-closure-slack-web: added (keys, has_cpe, scope, absent) {(('waybill:boot-library-compiler', 'waybill:boot-library-dependencies', 'waybill:sbom-tier'), False, None, False): 12}; other top-level sections changed: []
+nix-closure-slacklinker: added (keys, has_cpe, scope, absent) {(('waybill:boot-library-compiler', 'waybill:boot-library-dependencies', 'waybill:sbom-tier'), False, None, False): 9}; other top-level sections changed: []

@@ -1,0 +1,5 @@
+nix-closure-moat: pre-existing components changed beyond C247: 0; metadata properties changed: ['waybill:cpe-coverage', 'waybill:graph-completeness-reason']; SPDX 2.3 packages 1629 -> 1640; SPDX 3 packages 1629 -> 1640
+nix-closure-openai: pre-existing components changed beyond C247: 0; metadata properties changed: ['waybill:cpe-coverage', 'waybill:graph-completeness-reason']; SPDX 2.3 packages 1375 -> 1383; SPDX 3 packages 1375 -> 1383
+nix-closure-shellcheck: pre-existing components changed beyond C247: 0; metadata properties changed: ['waybill:cpe-coverage', 'waybill:graph-completeness', 'waybill:graph-completeness-reason']; SPDX 2.3 packages 2086 -> 2096; SPDX 3 packages 2086 -> 2096
+nix-closure-slack-web: pre-existing components changed beyond C247: 0; metadata properties changed: ['waybill:cpe-coverage', 'waybill:graph-completeness-reason']; SPDX 2.3 packages 1251 -> 1263; SPDX 3 packages 1248 -> 1260
+nix-closure-slacklinker: pre-existing components changed beyond C247: 0; metadata properties changed: ['waybill:cpe-coverage', 'waybill:graph-completeness-reason']; SPDX 2.3 packages 2947 -> 2956; SPDX 3 packages 2940 -> 2949

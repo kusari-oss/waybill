@@ -1394,6 +1394,21 @@
       "externalIdentifier": [
         {
           "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/ghc-platform@0.1.0.0",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "ghc-platform",
+      "software_packageUrl": "pkg:hackage/ghc-platform@0.1.0.0",
+      "software_packageVersion": "0.1.0.0",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-33HKNBFF6BNANWTQ",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
           "identifier": "pkg:hackage/skylighting-core@0.14.7",
           "type": "ExternalIdentifier"
         }
@@ -1667,6 +1682,21 @@
       "software_packageUrl": "pkg:generic/packaging@26.1",
       "software_packageVersion": "26.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3BZPVA54T2GLXDWR",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/ghci@9.10.3",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "ghci",
+      "software_packageUrl": "pkg:hackage/ghci@9.10.3",
+      "software_packageVersion": "9.10.3",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3C2W6GERRO4EV5WG",
       "type": "software_Package"
     },
     {
@@ -3848,6 +3878,21 @@
       "externalIdentifier": [
         {
           "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/hpc@0.7.0.2",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "hpc",
+      "software_packageUrl": "pkg:hackage/hpc@0.7.0.2",
+      "software_packageVersion": "0.7.0.2",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FUW42MTCZVGBA7Q",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/bifunctors-5.6.3-r1.cabal-sha256.hWPHWbbce2d1wZI6soaCYayk1Szpptb.sXKc4aiWdmRm4.e",
           "type": "ExternalIdentifier"
         }
@@ -4361,6 +4406,21 @@
       "software_downloadLocation": "mirror://hackage/safe-0.3.21/revision/1.cabal",
       "software_packageUrl": "pkg:generic/safe-0.3.21-r1.cabal-sha256.huSjqFkWHZ4gVWzjOhcfkbRV6G7QdKwX1dwsT1gvGo.sc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YOGQYCM4ZWZEIXL",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/rts@1.0.2",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "rts",
+      "software_packageUrl": "pkg:hackage/rts@1.0.2",
+      "software_packageVersion": "1.0.2",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
       "type": "software_Package"
     },
     {
@@ -9756,6 +9816,21 @@
       "externalIdentifier": [
         {
           "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/ghc-boot-th@9.8.4",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "ghc-boot-th",
+      "software_packageUrl": "pkg:hackage/ghc-boot-th@9.8.4",
+      "software_packageVersion": "9.8.4",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D3OWQBV6AANOBDST",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/dejagnu@1.6.3",
           "type": "ExternalIdentifier"
         }
@@ -15039,6 +15114,21 @@
       "software_downloadLocation": "https://ftpmirror.gnu.org/gawk/gawk-5.3.2.tar.gz",
       "software_packageUrl": "pkg:generic/gawk-5.3.2.tar.gz-sha256.hhjmhqI.p0EaG.pAmY3OdA.pkCptMTtcb.pAk0L.srM0GhmhE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HVXSCD64WPJFUVW4",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/ghc-prim@0.11.0",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "ghc-prim",
+      "software_packageUrl": "pkg:hackage/ghc-prim@0.11.0",
+      "software_packageVersion": "0.11.0",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
       "type": "software_Package"
     },
     {
@@ -22245,6 +22335,21 @@
       "externalIdentifier": [
         {
           "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/semaphore-compat@1.0.0",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "semaphore-compat",
+      "software_packageUrl": "pkg:hackage/semaphore-compat@1.0.0",
+      "software_packageVersion": "1.0.0",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OXDXWHDNQNLD36JY",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/raise-2kpjq9x1yy9zmq0cjjwkqw7l8mnjwigb",
           "type": "ExternalIdentifier"
         }
@@ -25463,6 +25568,21 @@
       "software_downloadLocation": "https://download.savannah.gnu.org/releases/acl/acl-2.3.2.tar.gz",
       "software_packageUrl": "pkg:generic/acl-2.3.2.tar.gz-sha256.hXyvbrWKXB6p9hcYj.pZSqih0t7FWnPeUgW6wL9gWKL3w.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RXIB3MZOVHOIOSIO",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/ghc-internal@9.1003.0",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "ghc-internal",
+      "software_packageUrl": "pkg:hackage/ghc-internal@9.1003.0",
+      "software_packageVersion": "9.1003.0",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
       "type": "software_Package"
     },
     {
@@ -30311,6 +30431,21 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/os-string@2.0.7",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "os-string",
+      "software_packageUrl": "pkg:hackage/os-string@2.0.7",
+      "software_packageVersion": "2.0.7",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
           "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:acl_project:acl:2.3.2:*:*:*:*:*:*:*",
@@ -33195,6 +33330,21 @@
       "externalIdentifier": [
         {
           "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:hackage/ghc-boot-th@9.10.3",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "ghc-boot-th",
+      "software_packageUrl": "pkg:hackage/ghc-boot-th@9.10.3",
+      "software_packageVersion": "9.10.3",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZK3B3E2XKBAO7LDU",
+      "type": "software_Package"
+    },
+    {
+      "creationInfo": "<masked>",
+      "externalIdentifier": [
+        {
+          "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/network-run-0.4.4.tar.gz-sha256.hVzyT94Ay7aOYUAr1f0lt0TyojY3z.s8vEUe1KCtx.sn9A.e",
           "type": "ExternalIdentifier"
         }
@@ -33802,6 +33952,19 @@
       "simplelicensing_licenseText": "License text not extracted by waybill. Consult the original package (e.g., /usr/share/licenses/<name>/ on Debian/RPM, or upstream project source) for the full text.",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/licenseref/OYYXEO22RVIX3J4Z",
       "type": "expandedlicensing_CustomLicense"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-222I7LYCTZN2U37N",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7"
+      ],
+      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -35204,6 +35367,19 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VCUDPST5VQPQYS2T"
       ],
       "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OCNOSRUHTEUY3LB2",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-2QIU4UOJAKEM3OL2",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T7ISDTU7SEAIZC2E",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
+      ],
+      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -36997,6 +37173,19 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-3OU2MBZIIYS7KBRS",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OHGC3GBGWXOZ5CRF"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TTP5D2S75SJJQGHK",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-3PBIYRBQ6SB7ML36",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I25WYOSOMP2P6SEG"
       ],
       "type": "Relationship"
     },
@@ -40246,6 +40435,17 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-5AIZYMP4D6V74NEY",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -40558,6 +40758,20 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VCUDPST5VQPQYS2T"
       ],
       "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-M7GCIO5PJRR47RIX",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-5GMVVDRDXRSWPMKU",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ROVWVD3WQWPTGI7",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7JLUHFT25IQVHC6"
+      ],
+      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -44496,6 +44710,21 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FUW42MTCZVGBA7Q",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-7FVH644OB4J3SE24",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YJZR7SIQ73GMQGH5",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZSP73HPSSZGJ72BN"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-64PJFHBKS6MCWYWO",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -45038,6 +45267,16 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZK3B3E2XKBAO7LDU",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-7OYHBFACFRZEZDWN",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-S2H6AV2UL5M3LXQO",
       "relationshipType": "hasDeclaredLicense",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-7P5HVBWSOGG7BV7T",
@@ -45232,6 +45471,19 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-7S6PTRDBKJVUPFDV",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OHGC3GBGWXOZ5CRF"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ROVWVD3WQWPTGI7",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-7SDFBV3MVJE2TIL6",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7JLUHFT25IQVHC6",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZSP73HPSSZGJ72BN"
       ],
       "type": "Relationship"
     },
@@ -47632,20 +47884,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-AYGGGCHVXEBHN5SX",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2HKNXTU3OASOFC",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ERYII37J2GCEM5AK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -48079,6 +48317,20 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TFQP64UHZHJPEKSN"
       ],
       "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-B7XDWR7IXJDCMWMX",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2HKNXTU3OASOFC",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ERYII37J2GCEM5AK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP"
+      ],
+      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -49050,20 +49302,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PSS7LA2PQQXWJMWQ"
       ],
       "type": "LifecycleScopedRelationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3RT4DTUSFPJIE76L",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-BSBVC6A2JZI23EQP",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FTYHMH6PWUFGDRS2"
-      ],
-      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -52285,19 +52523,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-D5ZKL5S7XM4T3HCE",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZSP73HPSSZGJ72BN"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YJQU4K4RKQQRNSA3",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -54050,6 +54275,20 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-DXHU7V6VDSISBETE",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZSP73HPSSZGJ72BN"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FOKKP5HTYK2C5JGV",
       "relationshipType": "hasDeclaredLicense",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-DXNK4GSINAV5UC67",
@@ -54144,16 +54383,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-DZGFBOOZ7O3X7X6Z",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/license-decl-CGG3ZUWVZH43FFVJ"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-DZGOUX7MB6GZQKJD",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
       ],
       "type": "Relationship"
     },
@@ -56358,6 +56587,21 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-F3EAE5BVCOPQLXJA",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2HKNXTU3OASOFC",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ERYII37J2GCEM5AK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -57933,19 +58177,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-M7GCIO5PJRR47RIX",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-FVILBSILN3APWXM3",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ROVWVD3WQWPTGI7",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7JLUHFT25IQVHC6"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -58031,6 +58262,16 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VCUDPST5VQPQYS2T"
       ],
       "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-FY4NHUSB3ATATJIN",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z"
+      ],
+      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -58908,20 +59149,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FSFV4PWDVLSRPTS5",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-GGAYN7ZO7PYSH5W2",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4YEQ3YLTNFRL2G4U",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -59421,11 +59648,25 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KOYL4XLOFVMG65LO",
+      "relationshipType": "dependsOn",
+      "scope": "build",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-GNYYKKNTUMH5AZKY",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XLOPGXN2IH36OO6",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HFLRT3DQIM33VWBV"
+      ],
+      "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WXYTOVSXFTWEGS6G",
       "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-GNXOQEGQEQDXDCFK",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-GOR636TNYG2XCXLP",
       "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3C2W6GERRO4EV5WG",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3XE2WNCDOKWLBJJH",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FUW42MTCZVGBA7Q",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2HKNXTU3OASOFC",
@@ -59440,6 +59681,7 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LRWJIAK76JZINVOM",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NPJV3NCXA7WHMSL3",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OXDXWHDNQNLD36JY",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PTLB2OXLQTGW6XR7",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RER4NFMH2DTYYAP5",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP",
@@ -59448,18 +59690,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZSP73HPSSZGJ72BN"
       ],
       "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KOYL4XLOFVMG65LO",
-      "relationshipType": "dependsOn",
-      "scope": "build",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-GNYYKKNTUMH5AZKY",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XLOPGXN2IH36OO6",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HFLRT3DQIM33VWBV"
-      ],
-      "type": "LifecycleScopedRelationship"
     },
     {
       "creationInfo": "<masked>",
@@ -59741,16 +59971,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VCUDPST5VQPQYS2T"
       ],
       "type": "LifecycleScopedRelationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-GSIJK4WPI2GDXF37",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ"
-      ],
-      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -60308,6 +60528,22 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3RT4DTUSFPJIE76L",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-H2LYXDQXEASWVABW",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FTYHMH6PWUFGDRS2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I25WYOSOMP2P6SEG"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -60761,6 +60997,16 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-H7VSNELFF3MWA2OI",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4NAD5O7LPAMIA3J5",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -60902,6 +61148,29 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-HCDTRF4O6I4IERPF",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/license-decl-CGG3ZUWVZH43FFVJ"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3C2W6GERRO4EV5WG",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-HCSK34IBVC5GBYCU",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2HKNXTU3OASOFC",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I25WYOSOMP2P6SEG",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IVCUREZVJYFXGSIB",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JGBBVNBWJUFOTOL2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RER4NFMH2DTYYAP5",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WNLLFDFFD7D5JZFP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YJZR7SIQ73GMQGH5",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
       ],
       "type": "Relationship"
     },
@@ -61995,6 +62264,18 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-HTLPBNJ5CXF62MKC",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/license-decl-CGG3ZUWVZH43FFVJ"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-HTVNUVMST2WT5D4I",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T7ISDTU7SEAIZC2E",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
       ],
       "type": "Relationship"
     },
@@ -64339,19 +64620,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-IYG4IF3PXVJT667F",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZSP73HPSSZGJ72BN"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -64865,6 +65133,19 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2HKNXTU3OASOFC",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-JD7LWUTC6WS4K43L",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XDEI5FW5B4J5LOGW",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZK3B3E2XKBAO7LDU"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4VMQASYFAEILQFM4",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -65265,6 +65546,20 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VCUDPST5VQPQYS2T"
       ],
       "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-JKPNRPHDSJBLJSVO",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZSP73HPSSZGJ72BN"
+      ],
+      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -65713,18 +66008,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-JUSA56TBCCW54ZZP",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2TXMWBAXOPYDQRNL",
       "relationshipType": "dependsOn",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-JUV55HZHIUGHWJ5Y",
@@ -65962,18 +66245,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VCUDPST5VQPQYS2T"
       ],
       "type": "LifecycleScopedRelationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TTP5D2S75SJJQGHK",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-JZF7NXIYY3SOPQLG",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ"
-      ],
-      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -66669,6 +66940,20 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-KCBGIMR7FWNKGKAP",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OHGC3GBGWXOZ5CRF"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WNLLFDFFD7D5JZFP",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-KCDL2AKZYB6YX35E",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YJZR7SIQ73GMQGH5",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
       ],
       "type": "Relationship"
     },
@@ -67680,6 +67965,19 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FTYHMH6PWUFGDRS2",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-KRQ26MJC4NHZLPZX",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I25WYOSOMP2P6SEG",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TTP5D2S75SJJQGHK"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YRVSZ633TNQENCBB",
       "relationshipType": "dependsOn",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-KS2REHHRQBAGZYHF",
@@ -68583,6 +68881,18 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OXDXWHDNQNLD36JY",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-LEM664RTFAIL6QFS",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ERYII37J2GCEM5AK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -69247,6 +69557,17 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-LR7FTV3EG4MYXGDJ",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SLS3YA3NQ2DGAO6H",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -69858,6 +70179,16 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3O5JOC5GK3SN3OCT"
       ],
       "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-33HKNBFF6BNANWTQ",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-M2UUBBFUKOWHJ7J7",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK"
+      ],
+      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -72245,6 +72576,16 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D3OWQBV6AANOBDST",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-NBYULYFYWT6BYFN6",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -73341,6 +73682,18 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-NV3JSZRO7X6OWE7T",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T7ISDTU7SEAIZC2E"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TKKWXZVLDOXXLSEB",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -73399,6 +73752,20 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RCBFKTQC5E64WBV2"
       ],
       "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4SWEWVMNDA3DGATN",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-NVPUIBYRIBULPT4N",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FCHWR5GDRQWKRTYX",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OZEJQ6EUOXPOE4ZI",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W5YCRFA7MPTBQCMU"
+      ],
+      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -76308,6 +76675,25 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JGBBVNBWJUFOTOL2",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-PAZ22UX24FCEDD7J",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-33HKNBFF6BNANWTQ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IVCUREZVJYFXGSIB",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YJZR7SIQ73GMQGH5",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZK3B3E2XKBAO7LDU"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MAQGA2LNA3XVVFGV",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -76380,18 +76766,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-PBUFTT5PPW7HJ5BR",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OHGC3GBGWXOZ5CRF"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2HKNXTU3OASOFC",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-PC2JZLH4Z7M5KAHM",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XDEI5FW5B4J5LOGW",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
       ],
       "type": "Relationship"
     },
@@ -78428,18 +78802,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FUQFG5S7ZDELHZYO"
       ],
       "type": "LifecycleScopedRelationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ROVWVD3WQWPTGI7",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-QFUI7MVED4ZX3EJF",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7JLUHFT25IQVHC6"
-      ],
-      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -83261,18 +83623,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OCNOSRUHTEUY3LB2",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-SSEA7KABT74TACCH",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T7ISDTU7SEAIZC2E",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SQHXZICI7KHVAHU4",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -85349,18 +85699,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4SWEWVMNDA3DGATN",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-TVNPERWHDGYLYGEF",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W5YCRFA7MPTBQCMU"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WPBI3C3SHWYXBWZK",
       "relationshipType": "dependsOn",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-TVUPOWIC7CDVMVUE",
@@ -86914,18 +87252,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WNLLFDFFD7D5JZFP",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-UJD2UNJO632FMI6F",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YJZR7SIQ73GMQGH5",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -87645,16 +87971,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FL34XGG4YB72FD5R"
       ],
       "type": "LifecycleScopedRelationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-UVTSSPARTBUHGSJT",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ"
-      ],
-      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -88483,6 +88799,21 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FSFV4PWDVLSRPTS5",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-VFZ53UW2MCYYYF75",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H4UPUXRIJT5DCQEO",
       "relationshipType": "dependsOn",
       "scope": "build",
@@ -88687,18 +89018,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VCUDPST5VQPQYS2T"
       ],
       "type": "LifecycleScopedRelationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FTYHMH6PWUFGDRS2",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-VJKNTRZ7N4QOTN4U",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TTP5D2S75SJJQGHK"
-      ],
-      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -90677,23 +90996,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WCSFHR5FP7RD65MQ"
       ],
       "type": "LifecycleScopedRelationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JGBBVNBWJUFOTOL2",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-WOJK2ZEKS7RMZCVY",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNRYL7SWPYIIBFZO",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IVCUREZVJYFXGSIB",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TP6EVEFMISYCCFYP",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YJZR7SIQ73GMQGH5"
-      ],
-      "type": "Relationship"
     },
     {
       "creationInfo": "<masked>",
@@ -95989,6 +96291,19 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-Z6MX3DIVGVSCHML3",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D3OWQBV6AANOBDST",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XDEI5FW5B4J5LOGW"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-M57PFFYUCTQ6Q3GA",
       "relationshipType": "usesTool",
       "scope": "build",
@@ -99100,6 +99415,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2EIQAQESBHH7XTGH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2EIXN4VZZGGBLCPD",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"runtime-closure\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-V3L27MCVPQ5FGBZQ",
@@ -99703,6 +100026,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2J3RRCWKMKEF62GM",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"runtime-closure\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UCBWCKAITHD4AXVG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2J4WDZ6X4YOORDJG",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-33HKNBFF6BNANWTQ",
       "type": "Annotation"
     },
     {
@@ -102932,6 +103263,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3EHXEGQVWNCKH43O",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZK3B3E2XKBAO7LDU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3EJRI6HKKBCIIWD7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-contents\",\"value\":\"absent\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HMEYJFB3XMCZQAOA",
@@ -104183,6 +104522,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3OVRVXQBRQSWUAGL",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4TLR5UN5O53SFXAI",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3OVX7PNA625JGWNH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3C2W6GERRO4EV5WG",
       "type": "Annotation"
     },
     {
@@ -106269,7 +106616,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4B4FLYWDWWA7A2O2",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-prim\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7M2PBC3PJ54PN2P2",
       "type": "Annotation"
     },
@@ -110469,7 +110816,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5EUX5IBT7L676EKS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-internal\\\",\\\"rts\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WNLLFDFFD7D5JZFP",
       "type": "Annotation"
     },
@@ -111685,7 +112032,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5P4RIHJ63RQNJ3BZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":372,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1346,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":294,\\\"with_candidates\\\":73}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":382,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1346,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":294,\\\"with_candidates\\\":73}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -112639,6 +112986,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5WET4IVSGSP6NKEL",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RWUZBN6MDG4MOQ54",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5WEUEUSH2VIEQPWP",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
       "type": "Annotation"
     },
     {
@@ -113685,7 +114040,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-66GZKCJPWIPYJITU",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"directory\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-M7GCIO5PJRR47RIX",
       "type": "Annotation"
     },
@@ -114599,6 +114954,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6G63WWL7DXGLMH35",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PTWV4AAIZJXILYKU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6G7EIQEB6HFBUSX5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OXDXWHDNQNLD36JY",
       "type": "Annotation"
     },
     {
@@ -116372,6 +116735,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6UDN54P6J5UAM7B3",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FUW42MTCZVGBA7Q",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6UGDKCQ4CCE6CGXH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-contents\",\"value\":\"absent\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-U7IZCAHW4EEFBL34",
@@ -116925,7 +117296,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6ZPGFNZRXT2JF7QS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"os-string\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN464EDB7OD4E2OP",
       "type": "Annotation"
     },
@@ -118124,6 +118495,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7EBQ4SENJEZQXJ3B",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7EFMFK3NJZYTO4KV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MANFOQOCMAS7SYRU",
@@ -118135,6 +118514,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7EHDTITB2AGBXMBV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-36OHPM4XUKBX3LEV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7EJNGQZUCSDPMUNG",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
       "type": "Annotation"
     },
     {
@@ -118405,7 +118792,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7GQOROHVJJAFQKDV",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-bignum\\\",\\\"ghc-prim\\\",\\\"rts\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EL7EE4JSUAJD4UQZ",
       "type": "Annotation"
     },
@@ -121740,6 +122127,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ABTLN4QB6PT53EJR",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ABTPQJCSTZCQ4HCV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-admission\",\"value\":\"build-graph\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E3D4L6QRZLJWEZMW",
@@ -123396,6 +123791,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AQPXGPFX5LMEDYC4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-binary-9.8.4\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D3OWQBV6AANOBDST",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AQQ3V2R7GJGKAI7S",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"confirmed\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C2KLUSPBQGXGQFL7",
@@ -123927,6 +124330,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AVQS6MTSNUO5HP6V",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WDWRB7O5PLYEIOU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AVREEYZNMOICOIC2",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OXDXWHDNQNLD36JY",
       "type": "Annotation"
     },
     {
@@ -127149,7 +127560,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BOZ5SRIVFZN6TVXV",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"os-string\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FSFV4PWDVLSRPTS5",
       "type": "Annotation"
     },
@@ -127597,7 +128008,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BS4TBTX2ISYTT2QS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"time\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ROVWVD3WQWPTGI7",
       "type": "Annotation"
     },
@@ -127845,7 +128256,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BUD2QRK544SPE5KQ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-boot-th\\\",\\\"ghc-platform\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JGBBVNBWJUFOTOL2",
       "type": "Annotation"
     },
@@ -130788,6 +131199,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CMP5KXFT2XJBQW6Z",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZK3B3E2XKBAO7LDU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CMRNVWHTPBOWOMWB",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"runtime-closure\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R5LAJMD6BGJTHITV",
@@ -133519,6 +133938,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DB45JRV7XTNTN2A6",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OAFRINS4KXL5YUIC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DBCQDR4TRDXTRG74",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FUW42MTCZVGBA7Q",
       "type": "Annotation"
     },
     {
@@ -136437,7 +136864,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DYYFW47332UT2N5R",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"os-string\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WPB47D7D4XY72XQ",
       "type": "Annotation"
     },
@@ -137773,7 +138200,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EDENK57247ES7YDJ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghci\\\",\\\"hpc\\\",\\\"semaphore-compat\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WXYTOVSXFTWEGS6G",
       "type": "Annotation"
     },
@@ -138069,7 +138496,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EFHKOK3QW4IMEQS4",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -138541,7 +138968,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EIRWIYXUXMP6CWBF",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-internal\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GQCQYX37YEOQ72ZK",
       "type": "Annotation"
     },
@@ -139399,6 +139826,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EQCTN7E2GL46OA23",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2UI3C3H2OAUVLDWH",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EQE3BIMKLWTH6GVL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
       "type": "Annotation"
     },
     {
@@ -142596,6 +143031,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FLIWTXGBI6GU6F3Z",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZK3B3E2XKBAO7LDU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FLK2USBPXXCWFARO",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-64PJFHBKS6MCWYWO",
@@ -144759,6 +145202,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-G4Y3SEXQYVN5S7XW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-admission\",\"value\":\"build-graph\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CPVI4T3VZZCFGXN7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-G4ZMKQIF2L6LPKPC",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-33HKNBFF6BNANWTQ",
       "type": "Annotation"
     },
     {
@@ -151372,6 +151823,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HTWARYFDGQCHAENV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D3OWQBV6AANOBDST",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HU6HMMYTCY37M32F",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-admission\",\"value\":\"build-graph\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PTQB3R4ENKCJOG62",
@@ -154117,7 +154576,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-IKOUX4TUZ6CFAY4L",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-boot-th\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2HKNXTU3OASOFC",
       "type": "Annotation"
     },
@@ -154423,6 +154882,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-IOE3KJB65LQLNEAH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5ZTEPHULQD6Q5IPS",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-IOFOWQN6IBVC2MP4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
       "type": "Annotation"
     },
     {
@@ -156692,6 +157159,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JARPRUDAS3Z37DSB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3C2W6GERRO4EV5WG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JASDSVDPOH2ACF2K",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-B445WREJBLXTFQFS",
@@ -157655,6 +158130,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JHXJIHQJESO5LFHJ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-contents\",\"value\":\"absent\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-U4NQXOK4FZ2S7GVV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JHXZYKEFIGSBCWSU",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
       "type": "Annotation"
     },
     {
@@ -163668,6 +164151,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-L2K46A5KAP4VTV3R",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-L2LYGDAVXFMHKCWU",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XWLZNATJNMMYR4UP",
@@ -163703,6 +164194,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-L2UJBTMKUL42LE4D",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-contents\",\"value\":\"no-outputs\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZKDZXFFDIYM7MGUK",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-L2YOYMASREZDHN2B",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-33HKNBFF6BNANWTQ",
       "type": "Annotation"
     },
     {
@@ -166197,7 +166696,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-LNTYPT7NZJHEUBDR",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"array\\\",\\\"ghc-prim\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3RT4DTUSFPJIE76L",
       "type": "Annotation"
     },
@@ -167023,6 +167522,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-LUF75B3AHOV5WCH5",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"confirmed\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MMD5MIQRWVM52KI6",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-LUHH75ZFZT25YSSL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D3OWQBV6AANOBDST",
       "type": "Annotation"
     },
     {
@@ -168423,6 +168930,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MBTQ3EJGHA2C7ODH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MVU7IQKGMD5RM2EY",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MBUGM5OV5UQKVBIY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3C2W6GERRO4EV5WG",
       "type": "Annotation"
     },
     {
@@ -170839,14 +171354,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MVQVIVHZSUXZ767X",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FFC4VYTVB5I2HRVK",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MVSJNKJPCFZTHVYE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"boot-library-edges-incomplete: 21 hackage boot librar(ies), 21 with dependencies not in the document, 0 without dependency data\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
     {
@@ -173428,6 +173935,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NMZRPDYOKNXCJVQH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D3OWQBV6AANOBDST",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NN5RVVDNVE6NYCLG",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZPOOZPFKZJRTZ72S",
@@ -174253,7 +174768,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NTIG2WNDCAHGX66X",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"array\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FTYHMH6PWUFGDRS2",
       "type": "Annotation"
     },
@@ -176164,6 +176679,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ODODNF55ZVPANW3P",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ODOIMMHTIQSUMAMP",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ISH6IT4DGHFIKIQB",
@@ -176213,7 +176736,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OE6A3ND3XDCJVP6Y",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"mtl\\\",\\\"stm\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4SWEWVMNDA3DGATN",
       "type": "Annotation"
     },
@@ -177348,6 +177871,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ONY64I5GGTSRIODL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-33HKNBFF6BNANWTQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OO3AUSDQRJ762GGF",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LTYI6ADGXXP3WKX5",
@@ -177565,7 +178096,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OPCX3YQJVSO376WN",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-boot-th\\\",\\\"ghc-prim\\\",\\\"pretty\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2XGIUPKS3427EVIH",
       "type": "Annotation"
     },
@@ -179919,6 +180450,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PCONQ26GSYQZBQIM",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Y73IK4N4NXVZJEXP",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PCSMBCYOVJXXKEQD",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FUW42MTCZVGBA7Q",
       "type": "Annotation"
     },
     {
@@ -185492,6 +186031,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QQ57IUZC7B3G4CNJ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-binary-9.8.4\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QQ6NZ65E6GWAV3BB",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CBPWNKN5XOVXBQF6",
@@ -186877,7 +187424,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-R3WEVXALDXGAAUKH",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-internal\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OCNOSRUHTEUY3LB2",
       "type": "Annotation"
     },
@@ -187140,6 +187687,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-R5PAUNZGC6DWFKQV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZK3B3E2XKBAO7LDU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-R62YGEVXDHHIDI2N",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GAFWIM37BGZI4EIP",
@@ -187335,6 +187890,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-R7UGXM5FYYC4XTEY",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYQTP3PO64O5LZ4J",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-R7XJUTP2GEDU4NXJ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OXDXWHDNQNLD36JY",
       "type": "Annotation"
     },
     {
@@ -189631,6 +190194,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RSXCSHXKQE75BOMF",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2TH5CNTU7OXHZE7W",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RSZ62ZVYF4YRSYUE",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HX5UB4JR3JHLOFD7",
       "type": "Annotation"
     },
     {
@@ -195724,6 +196295,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TIACBDY526TMTYPI",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3C2W6GERRO4EV5WG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TIAKAWJXA3XWHMK4",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4XHSKWCJWW3SPODN",
@@ -196015,6 +196594,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TKG2MX4ARWLMZYRU",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"scaffolding\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SPXCBD7DI4ZFVUY6",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TKGT73O6ANF3XU7N",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE",
       "type": "Annotation"
     },
     {
@@ -197909,7 +198496,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-U2LWH5AVWRHJERW3",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"array\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TTP5D2S75SJJQGHK",
       "type": "Annotation"
     },
@@ -203479,6 +204066,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VIO7LHQRVLPGPK7R",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NNA3NTPZSJZLTAA5",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VIQY3QGGDTI2FILF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OXDXWHDNQNLD36JY",
       "type": "Annotation"
     },
     {
@@ -209661,7 +210256,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-X4XRWYCNWHSZCRHP",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"os-string\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J5OMHF2N5MQH7VI2",
       "type": "Annotation"
     },
@@ -211589,7 +212184,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XLB4XKXTFVTFRILW",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"ghc-prim\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FH7NY2JJNRDHIAUC",
       "type": "Annotation"
     },
@@ -212159,6 +212754,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XP6LKYWHMVNMAPHD",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-contents\",\"value\":\"absent\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XIOMQ6L2YXQBNFEC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XP6XK5VZDN37AUQ2",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5YXAWGSZQS7RWB3Z",
       "type": "Annotation"
     },
     {
@@ -212839,6 +213442,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XVGZMUVOAXEICEPS",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"runtime-closure\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JMKBPDR24XMJBSUW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XVIFSZZ4YD2UR5SD",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FUW42MTCZVGBA7Q",
       "type": "Annotation"
     },
     {
@@ -215228,6 +215839,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YK7S3TNMBMAHA2HY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-compiler\",\"value\":\"ghc-9.10.3\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WU2MLZ5WHWWXWQVE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YK7T5CCA6BL3L2HD",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MLSCM73K2Z4REVQF",
@@ -215901,7 +216520,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YPM23IJBS3OYBFXL",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"absent\\\":[\\\"rts\\\"],\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:boot-library-dependencies\",\"value\":\"{\\\"source\\\":\\\"ghc-boot-dependencies/2026-11-24\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z4TZWRHVMYDQVU5E",
       "type": "Annotation"
     },
@@ -219519,6 +220138,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ZNJXL6IPSOFYRUOO",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W3Z5VH5YPVHLTUYR",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ZNQOHRJOCI5ZMA5Z",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYJ5ZTCEZHD2CMAN",
       "type": "Annotation"
     },
     {

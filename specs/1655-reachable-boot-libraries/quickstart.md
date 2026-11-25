@@ -23,7 +23,7 @@ python3 -I -B specs/1655-reachable-boot-libraries/measurements/shared_purls.py \
 ```
 
 - **Before** (`shared-purls-before.txt`): the per-compiler counts of PURLs the document lacks.
-- **After the dispatch regenerates the goldens:** every `no-component` count is 0 and every `held-under-other-label` count is 0, because the lookup now finds those. Any other result is a difference to trace in `measurements/after.md`.
+- **After the dispatch regenerates the goldens:** every `no-component` count is 0. `held-under-other-label` stays non-zero on bootstrap compilers, because the probe counts by label and those shared versions are held once, under the project label. C247 is the check that they resolve: no boot library lists `absent` (`measurements/before_after.py`). Any other result is a difference to trace in `measurements/after.md`.
 
 Parity on every golden:
 
