@@ -112372,7 +112372,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-internal\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/base@4.20.2.0",
@@ -112547,7 +112547,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"os-string\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/directory@1.3.8.5",
@@ -112582,7 +112582,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"os-string\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/filepath@1.5.4.0",
@@ -112757,7 +112757,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"rts\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/ghc-prim@0.12.0",
@@ -112792,7 +112792,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-boot-th\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/template-haskell@2.22.0.0",
@@ -112862,7 +112862,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"os-string\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/process@1.6.26.1",
@@ -113037,7 +113037,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-bignum\",\"ghc-prim\",\"rts\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/base@4.19.2.0",
@@ -113072,7 +113072,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"array\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/containers@0.6.8",
@@ -113107,7 +113107,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"os-string\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/unix@2.8.7.0",
@@ -113142,7 +113142,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-prim\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/bytestring@0.12.1.0",
@@ -113247,7 +113247,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-internal\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/integer-gmp@1.1",
@@ -113282,7 +113282,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghci\",\"hpc\",\"semaphore-compat\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/ghc@9.10.3",
@@ -113352,7 +113352,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"directory\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/process@1.6.25.0",
@@ -113387,7 +113387,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"time\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/unix@2.8.6.0",
@@ -113422,7 +113422,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-boot-th\",\"ghc-platform\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/ghc-boot@9.10.3",
@@ -113492,7 +113492,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-prim\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/deepseq@1.5.1.0",
@@ -113527,7 +113527,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"array\",\"ghc-prim\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/text@2.1.1",
@@ -113597,7 +113597,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-internal\",\"rts\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/ghc-heap@9.10.3",
@@ -113632,7 +113632,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"mtl\",\"stm\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/exceptions@0.10.7",
@@ -113667,7 +113667,7 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"ghc-boot-th\",\"ghc-prim\",\"pretty\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/template-haskell@2.21.0.0",
@@ -113702,12 +113702,362 @@
         },
         {
           "name": "waybill:boot-library-dependencies",
-          "value": "{\"absent\":[\"array\"],\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
         }
       ],
       "purl": "pkg:hackage/binary@0.8.9.1",
       "type": "library",
       "version": "0.8.9.1"
+    },
+    {
+      "bom-ref": "pkg:hackage/ghc-internal@9.1003.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "ghc-internal",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/ghc-internal@9.1003.0",
+      "type": "library",
+      "version": "9.1003.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/os-string@2.0.7",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "os-string",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/os-string@2.0.7",
+      "type": "library",
+      "version": "2.0.7"
+    },
+    {
+      "bom-ref": "pkg:hackage/ghci@9.10.3",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "ghci",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/ghci@9.10.3",
+      "type": "library",
+      "version": "9.10.3"
+    },
+    {
+      "bom-ref": "pkg:hackage/hpc@0.7.0.2",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "hpc",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/hpc@0.7.0.2",
+      "type": "library",
+      "version": "0.7.0.2"
+    },
+    {
+      "bom-ref": "pkg:hackage/semaphore-compat@1.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "semaphore-compat",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/semaphore-compat@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/ghc-boot-th@9.10.3",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "ghc-boot-th",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/ghc-boot-th@9.10.3",
+      "type": "library",
+      "version": "9.10.3"
+    },
+    {
+      "bom-ref": "pkg:hackage/ghc-platform@0.1.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "ghc-platform",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/ghc-platform@0.1.0.0",
+      "type": "library",
+      "version": "0.1.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/rts@1.0.2",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "rts",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/rts@1.0.2",
+      "type": "library",
+      "version": "1.0.2"
+    },
+    {
+      "bom-ref": "pkg:hackage/ghc-prim@0.11.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "ghc-prim",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/ghc-prim@0.11.0",
+      "type": "library",
+      "version": "0.11.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/ghc-boot-th@9.8.4",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "ghc-boot-th",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        },
+        {
+          "name": "waybill:boot-library-dependencies",
+          "value": "{\"source\":\"ghc-boot-dependencies/2026-11-24\"}"
+        }
+      ],
+      "purl": "pkg:hackage/ghc-boot-th@9.8.4",
+      "type": "library",
+      "version": "9.8.4"
     }
   ],
   "compositions": [
@@ -129735,11 +130085,16 @@
       "ref": "pkg:hackage/base64-bytestring@1.2.1.0"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:hackage/ghc-bignum@1.3",
+        "pkg:hackage/ghc-prim@0.11.0",
+        "pkg:hackage/rts@1.0.2"
+      ],
       "ref": "pkg:hackage/base@4.19.2.0"
     },
     {
       "dependsOn": [
+        "pkg:hackage/ghc-internal@9.1003.0",
         "pkg:hackage/ghc-prim@0.12.0"
       ],
       "ref": "pkg:hackage/base@4.20.2.0"
@@ -129786,6 +130141,7 @@
     },
     {
       "dependsOn": [
+        "pkg:hackage/array@0.5.8.0",
         "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/bytestring@0.12.1.0",
         "pkg:hackage/containers@0.6.8"
@@ -129951,6 +130307,7 @@
       "dependsOn": [
         "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/deepseq@1.5.1.0",
+        "pkg:hackage/ghc-prim@0.11.0",
         "pkg:hackage/template-haskell@2.21.0.0"
       ],
       "ref": "pkg:hackage/bytestring@0.12.1.0"
@@ -130438,6 +130795,7 @@
     },
     {
       "dependsOn": [
+        "pkg:hackage/array@0.5.8.0",
         "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/deepseq@1.5.1.0",
         "pkg:hackage/template-haskell@2.21.0.0"
@@ -130817,7 +131175,8 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/base@4.19.2.0"
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/ghc-prim@0.11.0"
       ],
       "ref": "pkg:hackage/deepseq@1.5.1.0"
     },
@@ -130842,6 +131201,7 @@
       "dependsOn": [
         "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/os-string@2.0.7",
         "pkg:hackage/time@1.12.2",
         "pkg:hackage/unix@2.8.7.0"
       ],
@@ -131102,6 +131462,8 @@
     {
       "dependsOn": [
         "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/mtl@2.3.1",
+        "pkg:hackage/stm@2.5.3.1",
         "pkg:hackage/template-haskell@2.21.0.0",
         "pkg:hackage/transformers@0.6.1.0"
       ],
@@ -131226,6 +131588,7 @@
         "pkg:hackage/bytestring@0.12.2.0",
         "pkg:hackage/deepseq@1.5.0.0",
         "pkg:hackage/exceptions@0.10.9",
+        "pkg:hackage/os-string@2.0.7",
         "pkg:hackage/template-haskell@2.22.0.0"
       ],
       "ref": "pkg:hackage/filepath@1.5.4.0"
@@ -131400,6 +131763,18 @@
     },
     {
       "dependsOn": [
+        "pkg:hackage/base@4.20.2.0"
+      ],
+      "ref": "pkg:hackage/ghc-boot-th@9.10.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base@4.19.2.0"
+      ],
+      "ref": "pkg:hackage/ghc-boot-th@9.8.4"
+    },
+    {
+      "dependsOn": [
         "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/binary@0.8.9.3",
         "pkg:hackage/bytestring@0.12.2.0",
@@ -131407,6 +131782,8 @@
         "pkg:hackage/deepseq@1.5.0.0",
         "pkg:hackage/directory@1.3.8.5",
         "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc-boot-th@9.10.3",
+        "pkg:hackage/ghc-platform@0.1.0.0",
         "pkg:hackage/unix@2.8.7.0"
       ],
       "ref": "pkg:hackage/ghc-boot@9.10.3"
@@ -131438,9 +131815,19 @@
       "dependsOn": [
         "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/containers@0.7",
-        "pkg:hackage/ghc-prim@0.12.0"
+        "pkg:hackage/ghc-internal@9.1003.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/rts@1.0.2"
       ],
       "ref": "pkg:hackage/ghc-heap@9.10.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/ghc-bignum@1.3",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/rts@1.0.2"
+      ],
+      "ref": "pkg:hackage/ghc-internal@9.1003.0"
     },
     {
       "dependsOn": [
@@ -131458,7 +131845,21 @@
       "ref": "pkg:hackage/ghc-paths@0.1.0.12"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:hackage/base@4.20.2.0"
+      ],
+      "ref": "pkg:hackage/ghc-platform@0.1.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/rts@1.0.2"
+      ],
+      "ref": "pkg:hackage/ghc-prim@0.11.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/rts@1.0.2"
+      ],
       "ref": "pkg:hackage/ghc-prim@0.12.0"
     },
     {
@@ -131495,9 +131896,12 @@
         "pkg:hackage/filepath@1.5.4.0",
         "pkg:hackage/ghc-boot@9.10.3",
         "pkg:hackage/ghc-heap@9.10.3",
+        "pkg:hackage/ghci@9.10.3",
         "pkg:hackage/happy@2.1.7",
+        "pkg:hackage/hpc@0.7.0.2",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/process@1.6.26.1",
+        "pkg:hackage/semaphore-compat@1.0.0",
         "pkg:hackage/stm@2.5.3.1",
         "pkg:hackage/template-haskell@2.22.0.0",
         "pkg:hackage/time@1.12.2",
@@ -131505,6 +131909,25 @@
         "pkg:hackage/unix@2.8.7.0"
       ],
       "ref": "pkg:hackage/ghc@9.10.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/binary@0.8.9.3",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc-boot@9.10.3",
+        "pkg:hackage/ghc-heap@9.10.3",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/rts@1.0.2",
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/transformers@0.6.1.1",
+        "pkg:hackage/unix@2.8.7.0"
+      ],
+      "ref": "pkg:hackage/ghci@9.10.3"
     },
     {
       "dependsOn": [
@@ -131752,6 +132175,17 @@
         "pkg:hackage/tasty@1.5.4"
       ],
       "ref": "pkg:hackage/hourglass@0.2.12"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/time@1.12.2"
+      ],
+      "ref": "pkg:hackage/hpc@0.7.0.2"
     },
     {
       "dependsOn": [
@@ -132630,6 +133064,7 @@
       "dependsOn": [
         "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/ghc-bignum@1.3",
+        "pkg:hackage/ghc-internal@9.1003.0",
         "pkg:hackage/ghc-prim@0.12.0"
       ],
       "ref": "pkg:hackage/integer-gmp@1.1"
@@ -133499,6 +133934,16 @@
     },
     {
       "dependsOn": [
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/exceptions@0.10.9",
+        "pkg:hackage/template-haskell@2.22.0.0"
+      ],
+      "ref": "pkg:hackage/os-string@2.0.7"
+    },
+    {
+      "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/glibc-locales@2.42-61",
@@ -133975,6 +134420,7 @@
       "dependsOn": [
         "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/deepseq@1.5.1.0",
+        "pkg:hackage/directory@1.3.8.5",
         "pkg:hackage/filepath@1.4.301.0",
         "pkg:hackage/unix@2.8.6.0"
       ],
@@ -133986,6 +134432,7 @@
         "pkg:hackage/deepseq@1.5.0.0",
         "pkg:hackage/directory@1.3.8.5",
         "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/os-string@2.0.7",
         "pkg:hackage/unix@2.8.7.0"
       ],
       "ref": "pkg:hackage/process@1.6.26.1"
@@ -134379,6 +134826,10 @@
       "ref": "pkg:hackage/retry@0.9.3.1"
     },
     {
+      "dependsOn": [],
+      "ref": "pkg:hackage/rts@1.0.2"
+    },
+    {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
@@ -134443,6 +134894,14 @@
         "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/scientific@0.3.8.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/exceptions@0.10.9",
+        "pkg:hackage/unix@2.8.7.0"
+      ],
+      "ref": "pkg:hackage/semaphore-compat@1.0.0"
     },
     {
       "dependsOn": [
@@ -135326,13 +135785,17 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/base@4.19.2.0"
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/ghc-boot-th@9.8.4",
+        "pkg:hackage/ghc-prim@0.11.0",
+        "pkg:hackage/pretty@1.1.3.6"
       ],
       "ref": "pkg:hackage/template-haskell@2.21.0.0"
     },
     {
       "dependsOn": [
         "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc-boot-th@9.10.3",
         "pkg:hackage/ghc-prim@0.12.0",
         "pkg:hackage/pretty@1.1.3.6"
       ],
@@ -135524,10 +135987,12 @@
     },
     {
       "dependsOn": [
+        "pkg:hackage/array@0.5.8.0",
         "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/binary@0.8.9.1",
         "pkg:hackage/bytestring@0.12.1.0",
         "pkg:hackage/deepseq@1.5.1.0",
+        "pkg:hackage/ghc-prim@0.11.0",
         "pkg:hackage/template-haskell@2.21.0.0"
       ],
       "ref": "pkg:hackage/text@2.1.1"
@@ -136093,7 +136558,8 @@
       "dependsOn": [
         "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/bytestring@0.12.1.0",
-        "pkg:hackage/filepath@1.4.301.0"
+        "pkg:hackage/filepath@1.4.301.0",
+        "pkg:hackage/time@1.12.2"
       ],
       "ref": "pkg:hackage/unix@2.8.6.0"
     },
@@ -136102,6 +136568,7 @@
         "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/bytestring@0.12.2.0",
         "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/os-string@2.0.7",
         "pkg:hackage/time@1.12.2"
       ],
       "ref": "pkg:hackage/unix@2.8.7.0"
@@ -136790,7 +137257,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":372,\"excluded_files\":0,\"excluded_members\":1346,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":294,\"with_candidates\":73}"
+        "value": "{\"addressable_without_cpe\":382,\"excluded_files\":0,\"excluded_members\":1346,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":294,\"with_candidates\":73}"
       },
       {
         "name": "waybill:closure-graph-admission",
@@ -136834,11 +137301,7 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "partial"
-      },
-      {
-        "name": "waybill:graph-completeness-reason",
-        "value": "boot-library-edges-incomplete: 21 hackage boot librar(ies), 21 with dependencies not in the document, 0 without dependency data"
+        "value": "complete"
       },
       {
         "name": "waybill:workspaces-detected",

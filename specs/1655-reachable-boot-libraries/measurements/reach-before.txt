@@ -1,0 +1,20 @@
+nix-closure-moat	ghc-9.10.3	present=25	first-hop-absent=7	reachable-add=9	whole-set=42	not-in-table=[]	reasons=[]	scope={'required': 25}
+		add: ghc-bignum ghc-boot ghc-boot-th ghc-internal ghc-platform ghci hpc rts semaphore-compat
+nix-closure-moat	ghc-binary-9.8.4	present=11	first-hop-absent=10	reachable-add=10	whole-set=37	not-in-table=[]	reasons=[]	scope={'required': 11}
+		add: array directory ghc-bignum ghc-boot-th ghc-prim mtl pretty rts stm time
+nix-closure-openai	ghc-9.6.6	present=26	first-hop-absent=5	reachable-add=5	whole-set=37	not-in-table=[]	reasons=[]	scope={'required': 26}
+		add: ghc-boot ghc-boot-th ghci hpc rts
+nix-closure-openai	ghc-binary-9.2.4	present=14	first-hop-absent=5	reachable-add=5	whole-set=35	not-in-table=[]	reasons=[]	scope={'required': 14}
+		add: ghc-bignum ghc-boot-th ghc-prim pretty rts
+nix-closure-shellcheck	ghc-9.10.3	present=27	first-hop-absent=8	reachable-add=8	whole-set=42	not-in-table=[]	reasons=[]	scope={'required': 27}
+		add: ghc-boot-th ghc-internal ghc-platform ghci hpc os-string rts semaphore-compat
+nix-closure-shellcheck	ghc-binary-9.8.4	present=12	first-hop-absent=10	reachable-add=10	whole-set=37	not-in-table=[]	reasons=[]	scope={'required': 12}
+		add: array directory ghc-bignum ghc-boot-th ghc-prim mtl pretty rts stm time
+nix-closure-slack-web	ghc-9.10.3	present=27	first-hop-absent=7	reachable-add=8	whole-set=42	not-in-table=[]	reasons=[]	scope={'required': 27}
+		add: ghc-boot ghc-boot-th ghc-internal ghc-platform ghci hpc rts semaphore-compat
+nix-closure-slack-web	ghc-binary-9.8.4	present=13	first-hop-absent=12	reachable-add=12	whole-set=37	not-in-table=[]	reasons=[]	scope={'required': 13}
+		add: array directory ghc-bignum ghc-boot-th ghc-prim mtl parsec pretty rts stm text time
+nix-closure-slacklinker	ghc-9.10.3	present=28	first-hop-absent=7	reachable-add=7	whole-set=42	not-in-table=[]	reasons=[]	scope={'required': 28}
+		add: ghc-boot-th ghc-internal ghc-platform ghci hpc rts semaphore-compat
+nix-closure-slacklinker	ghc-binary-9.8.4	present=11	first-hop-absent=10	reachable-add=10	whole-set=37	not-in-table=[]	reasons=[]	scope={'required': 11}
+		add: array directory ghc-bignum ghc-boot-th ghc-prim mtl pretty rts stm time
