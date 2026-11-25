@@ -97,3 +97,11 @@ A scan sent to an unreachable proxy does not hang. It also does not fail: it deg
 M1: the index skips `waybill:sbom-tier` values. That fails 11 tests: `sbom_edit_parity::retiered_outputs_agree_and_record_the_mapping` and 10 in `sbom_edit_retier`. All 5 `sbom_edit*` binaries reported. Reverted with `cp`, checked with `cmp`.
 
 The two `--offline` changes need no mutation: their tests already passed with the network blocked (above), which is the same input as `--offline` as far as enrichment is concerned.
+
+## CI (T014): `Tests` step, run 45695514065 against `main`'s run 45613291165
+
+| lane | before | after |
+|---|---|---|
+| macOS | 1,511 s | 1,135 s (−25%) |
+| Linux | 903 s | 683 s (−24%) |
+| Windows (non-blocking) | 935 s | 1,146 s (+23%, unexplained; one sample each) |
