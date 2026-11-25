@@ -40,6 +40,7 @@ C105 `waybill:graph-completeness-reason` has no code for either, so C104 ignores
   - They occur independently: the stub has the second without the first.
 
   One code would force a reader back to the disclosure rows to learn which gap fired, which is the indirection C105 exists to avoid.
+- Q: (plan) Do all four completeness callers need the input? → A: No, the three format emitters. The orphan-reason pass reads only the reachable set, and passes no scope-drop input for the same reason (FR-005 corrected; research R2).
 - Q: Detail grammar? → A: Counts only, never paths or field names, as `manifest-unread` does, because the value is pinned by goldens compared across hosts. The field names stay in `waybill:nix-closure-read`. The two clauses are:
   - `closure-declarations-unconsulted: <N> declaration(s) in <M> derivation(s)`, plus `, <K> carrier disagreement(s)` only when K > 0;
   - `closure-contents-unread: <U> of <T> member(s)`, where U = absent + partial + failed and T = members.
@@ -88,7 +89,7 @@ The native fields and C104 decide from one input, and the new codes change nothi
 - **FR-002**: C105 MUST gain `closure-contents-unread`. It fires exactly when the closure contents record has members absent, partial or failed, with the detail in Clarifications.
 - **FR-003**: The two codes together MUST fire if and only if `closure_read_partial()` is true. A test MUST assert the equivalence on fixtures covering each gap alone, both, and neither.
 - **FR-004**: Neither code MAY degrade an ecosystem. `degraded_ecosystems`, the per-ecosystem `compositions[]` records and SPDX 3 relationship `completeness` MUST be unchanged.
-- **FR-005**: Every document emitter MUST pass the input to the completeness computation: CycloneDX, SPDX 2.3, SPDX 3, and the orphan-reason pass. C104 and C105 MUST then be identical in all three formats, and parity-check MUST report no new failing row.
+- **FR-005**: The three format emitters (CycloneDX, SPDX 2.3, SPDX 3) MUST pass the input to the completeness computation, so C104 and C105 are identical in all three formats, and parity-check MUST report no new failing row. The orphan-reason pass does not need it: it reads only the reachable set, which a reason code cannot change. It already passes no input for the same reason (spec 1652's scope drop), and it MUST be shown unchanged.
 - **FR-006**: The C105 catalog row (`docs/reference/sbom-format-mapping.md`) and the graph-completeness vocabulary contract MUST list both codes with their detail templates.
 - **FR-007**: Corpus goldens MUST be regenerated only by `public-corpus.yml` dispatch. The diff MUST be traced: only C104 and C105 change, and only on the five closure targets.
 - **FR-008**: Zero new Cargo dependencies, and no new network, store or file read. The inputs are already computed.
