@@ -1261,6 +1261,8 @@ pub fn annotate_document(
         artifacts.integrity,
         artifacts.components,
         artifacts.complete_ecosystems,
+        // Spec 1654 (#1695): the root claim CycloneDX withholds is withheld here.
+        artifacts.closure_read_partial(),
     ) {
         push(
             &mut out,

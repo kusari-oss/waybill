@@ -56,28 +56,8 @@ fn edit3(inputs: &[PathBuf; 3], out: &Path, args: &[&str]) -> ([PathBuf; 3], Vec
         e.assert_ok();
         errs.push(e.stderr);
     }
-    parity(out);
+    common::parity::assert_parity(out);
     (outputs, errs)
-}
-
-/// `waybill sbom parity-check` over the three documents in `dir`; a row is a
-/// gap only if some format carries a value.
-fn parity(dir: &Path) {
-    let out = Command::new(bin())
-        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
-        .arg(dir)
-        .output()
-        .unwrap();
-    let report: Value = serde_json::from_slice(&out.stdout)
-        .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
-    let gaps: Vec<&Value> = report["rows"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|r| r["universal_parity"] == false)
-        .filter(|r| ["cdx", "spdx23", "spdx3"].iter().any(|f| r[*f]["kind"] == "present"))
-        .collect();
-    assert!(gaps.is_empty(), "parity gaps: {gaps:#?}");
 }
 
 fn prop(c: &Value, name: &str) -> Option<String> {

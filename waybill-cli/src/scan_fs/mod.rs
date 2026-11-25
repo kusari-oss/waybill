@@ -2447,6 +2447,91 @@ pub(crate) fn apply_lifecycle_scope_to_edges(
             "milestone 179: rewrote DependsOn → TestDependsOn for m112 NotNeeded transitives (SPDX 2.3 TEST_DEPENDENCY_OF)",
         );
     }
+    // Pass 3 (spec 1654). A no-op here on every scan: `artifact_presence` is
+    // set later, by the closure role pass, which calls it again itself.
+    type_artifact_absent_edges(components, relationships);
+}
+
+/// Spec 1654 (#1695) — the scope a synthesized document-root edge into `c`
+/// carries. Both SPDX emitters add root edges after the typing passes have
+/// run, and typed them from `lifecycle_scope` alone, so pass 3 never reached
+/// them: on nix-closure-shellcheck, 494 root edges into members CycloneDX
+/// marks `scope: excluded` stayed runtime in SPDX.
+///
+/// Same answer as pass 1 then pass 3 give a reader edge: a dev, build or test
+/// lifecycle scope, else `Build` for a member absent from the artifact (which
+/// wins over `optional`, as in pass 3).
+/// Pass 2 (`NotNeeded`) is not applied here; that predates this spec.
+pub(crate) fn synthesized_edge_scope(
+    c: &waybill_common::resolution::ResolvedComponent,
+) -> Option<waybill_common::resolution::LifecycleScope> {
+    use waybill_common::resolution::LifecycleScope;
+    let absent = c.artifact_presence.is_some_and(|p| p.is_absent_from_artifact());
+    match c.lifecycle_scope {
+        // Absence wins over `optional`, as in pass 3.
+        Some(LifecycleScope::Optional) if absent => Some(LifecycleScope::Build),
+        Some(s) if s.is_non_runtime() => Some(s),
+        _ if absent => Some(LifecycleScope::Build),
+        other => other,
+    }
+}
+
+/// Spec 1654 (#1695, R4b) — pass 3 of the edge typing: an edge still
+/// `DependsOn`, or typed `OptionalDependsOn`, into a component the nix
+/// closure marked absent from the artifact (milestone 1277) becomes
+/// `BuildDependsOn`.
+///
+/// CycloneDX marks such a member `scope: excluded` unconditionally, so its
+/// incoming edges read as non-runtime there; SPDX typed them from lifecycle
+/// scope and build inclusion only, and called all of them runtime. Measured
+/// on the five closure goldens: 5,442 to 10,040 edges per target differed
+/// on exactly this (research R4).
+///
+/// `BUILD_DEPENDENCY_OF` is the nearest SPDX type for every such member: the
+/// closure keeps it because a build needed it, whether as tooling or as a
+/// member the artifact does not reference. Members exempted from the rule
+/// (`is_absent_from_artifact() == false`) are left alone, as are edges a
+/// previous pass typed dev, build or test. Runtime-evidence withdrawal only applies to members
+/// with no presence at all, so it and this pass never touch the same edge.
+///
+/// Called by [`apply_lifecycle_scope_to_edges`] and again by the scan after
+/// the closure role pass and the boot-library edges, which is when presence
+/// is known. Returns the number of edges re-typed.
+pub(crate) fn type_artifact_absent_edges(
+    components: &[waybill_common::resolution::ResolvedComponent],
+    relationships: &mut [waybill_common::resolution::Relationship],
+) -> usize {
+    use waybill_common::resolution::RelationshipType;
+    let absent: std::collections::HashSet<&str> = components
+        .iter()
+        .filter(|c| c.artifact_presence.is_some_and(|p| p.is_absent_from_artifact()))
+        .map(|c| c.purl.as_str())
+        .collect();
+    if absent.is_empty() {
+        return 0;
+    }
+    let mut rewrites = 0usize;
+    for rel in relationships.iter_mut() {
+        // `OptionalDependsOn` too: absence wins over `optional`, the one typed
+        // kind in neither SPDX bucket. SPDX 2.3 B2 counts only dev, build and
+        // test, and SPDX 3 gives `optional` no scope, while CycloneDX marks
+        // the absent member `scope: excluded`. Measured: 14 edges on
+        // nix-closure-slack-web. The target keeps its `waybill:lifecycle-scope:
+        // optional` annotation.
+        if matches!(rel.relationship_type, RelationshipType::DependsOn | RelationshipType::OptionalDependsOn)
+            && absent.contains(rel.to.as_str())
+        {
+            rel.relationship_type = RelationshipType::BuildDependsOn;
+            rewrites += 1;
+        }
+    }
+    if rewrites > 0 {
+        tracing::info!(
+            rewrites,
+            "spec 1654: rewrote DependsOn → BuildDependsOn for edges into members absent from the artifact",
+        );
+    }
+    rewrites
 }
 
 /// Milestone 867 (#886) — which ecosystem a component's declared dependency
@@ -3112,6 +3197,84 @@ mod m179_dispatch_tests {
                 source: "test".to_string(),
                 data_type: "relationship".to_string(),
             },
+        }
+    }
+
+    /// Spec 1654 (#1695, R4b) — pass 3: an edge into a member the closure
+    /// marked absent from the artifact is a build dependency in SPDX, as
+    /// CycloneDX marks that member `scope: excluded`.
+    #[test]
+    fn s1654_edge_into_artifact_absent_member_is_build() {
+        let a = mk_component("pkg:generic/waybill-fixture-app@1", "waybill-fixture-app", "1");
+        let mut b = mk_component("pkg:generic/waybill-fixture-tool@1", "waybill-fixture-tool", "1");
+        b.artifact_presence = Some(waybill_common::resolution::ArtifactPresence::NotInArtifact);
+        let mut rels = vec![mk_rel(a.purl.as_str(), b.purl.as_str())];
+        assert_eq!(super::type_artifact_absent_edges(&[a, b], &mut rels), 1);
+        assert!(matches!(rels[0].relationship_type, RelationshipType::BuildDependsOn));
+    }
+
+    /// Spec 1654: the document root's synthesized edges, built after the
+    /// typing passes, take the same answer as pass 3 for their target.
+    #[test]
+    fn s1654_synthesized_root_edge_scope_follows_pass_3() {
+        use waybill_common::resolution::ArtifactPresence;
+        let mut c = mk_component("pkg:generic/waybill-fixture-tool@1", "waybill-fixture-tool", "1");
+        assert_eq!(super::synthesized_edge_scope(&c), None);
+        c.artifact_presence = Some(ArtifactPresence::NotInArtifact);
+        assert_eq!(super::synthesized_edge_scope(&c), Some(LifecycleScope::Build));
+        c.lifecycle_scope = Some(LifecycleScope::Test);
+        assert_eq!(super::synthesized_edge_scope(&c), Some(LifecycleScope::Test), "pass 1 wins");
+        c.lifecycle_scope = Some(LifecycleScope::Runtime);
+        assert_eq!(super::synthesized_edge_scope(&c), Some(LifecycleScope::Build), "as pass 3 types it");
+        c.lifecycle_scope = Some(LifecycleScope::Optional);
+        assert_eq!(super::synthesized_edge_scope(&c), Some(LifecycleScope::Build), "absence wins over optional");
+        c.artifact_presence = Some(ArtifactPresence::ExemptCompilerSupplied);
+        assert_eq!(super::synthesized_edge_scope(&c), Some(LifecycleScope::Optional));
+    }
+
+    /// Spec 1654: absence wins over `optional`, the one typed kind that is
+    /// in neither SPDX bucket (measured: 14 edges on nix-closure-slack-web
+    /// were dev in CycloneDX, absent from SPDX 2.3's B1/B2, runtime in SPDX 3).
+    #[test]
+    fn s1654_pass_3_retypes_an_optional_edge_into_an_absent_member() {
+        let a = mk_component("pkg:generic/waybill-fixture-app@1", "waybill-fixture-app", "1");
+        let mut b = mk_component("pkg:generic/waybill-fixture-opt@1", "waybill-fixture-opt", "1");
+        b.lifecycle_scope = Some(LifecycleScope::Optional);
+        b.artifact_presence = Some(waybill_common::resolution::ArtifactPresence::NotInArtifact);
+        let mut rels = vec![mk_rel(a.purl.as_str(), b.purl.as_str())];
+        apply_lifecycle_scope_to_edges(std::slice::from_ref(&a), &mut rels);
+        assert!(matches!(rels[0].relationship_type, RelationshipType::DependsOn));
+        apply_lifecycle_scope_to_edges(&[a.clone(), b.clone()], &mut rels);
+        assert!(matches!(rels[0].relationship_type, RelationshipType::BuildDependsOn), "{:?}", rels[0].relationship_type);
+    }
+
+    /// Passes 1 and 2 keep precedence: an edge they typed is not re-typed.
+    #[test]
+    fn s1654_pass_3_never_retypes_a_typed_edge() {
+        let a = mk_component("pkg:generic/waybill-fixture-app@1", "waybill-fixture-app", "1");
+        let mut b = mk_component("pkg:generic/waybill-fixture-tool@1", "waybill-fixture-tool", "1");
+        b.lifecycle_scope = Some(LifecycleScope::Test);
+        b.artifact_presence = Some(waybill_common::resolution::ArtifactPresence::NotInArtifact);
+        let mut rels = vec![mk_rel(a.purl.as_str(), b.purl.as_str())];
+        apply_lifecycle_scope_to_edges(&[a, b], &mut rels);
+        assert!(matches!(rels[0].relationship_type, RelationshipType::TestDependsOn));
+    }
+
+    /// No presence, or an exempt one, leaves the edge a runtime `DependsOn`.
+    #[test]
+    fn s1654_pass_3_ignores_present_and_exempt_members() {
+        use waybill_common::resolution::ArtifactPresence;
+        for presence in [
+            None,
+            Some(ArtifactPresence::ExemptCompilerSupplied),
+            Some(ArtifactPresence::ExemptEvaluatedPackage),
+        ] {
+            let a = mk_component("pkg:generic/waybill-fixture-app@1", "waybill-fixture-app", "1");
+            let mut b = mk_component("pkg:generic/waybill-fixture-lib@1", "waybill-fixture-lib", "1");
+            b.artifact_presence = presence;
+            let mut rels = vec![mk_rel(a.purl.as_str(), b.purl.as_str())];
+            apply_lifecycle_scope_to_edges(&[a, b], &mut rels);
+            assert!(matches!(rels[0].relationship_type, RelationshipType::DependsOn), "{presence:?}");
         }
     }
 

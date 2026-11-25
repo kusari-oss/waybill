@@ -507,6 +507,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-24
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `serde_yaml` (`stack.yaml`), `globset` (the `cabal.project` forms, already used by #1032), `tracing`. **Zero new Cargo dependencies.** (1652-root-only-haskell)
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (C245, the reason), `tracing`. The table is `include_str!` data parsed with std, as milestone 966's is. The probe is Python 3 stdlib (`urllib`, `lzma`, `tarfile`), run with `-I -B` at development time only. **Zero new Cargo dependencies.** (1653-boot-library-edges)
 - one committed TSV (1,371 rows: the 36 releases' libraries, Windows-only rows excluded), embedded. No scan-time network or store reads. (1653-boot-library-edges)
+- Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`. **Zero new Cargo dependencies.** (1654-parity-verdict)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -739,10 +740,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1654-parity-verdict: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`. **Zero new Cargo dependencies.**
 - 1653-cmake-build-tree: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
 - 1653-boot-library-edges: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (C245, the reason), `tracing`. The table is `include_str!` data parsed with std, as milestone 966's is. The probe is Python 3 stdlib (`urllib`, `lzma`, `tarfile`), run with `-I -B` at development time only. **Zero new Cargo dependencies.**
-- 1652-root-only-haskell: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `serde_yaml` (`stack.yaml`), `globset` (the `cabal.project` forms, already used by #1032), `tracing`. **Zero new Cargo dependencies.**
-- 1651-edit-retier: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `clap` (the flag), `anyhow`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

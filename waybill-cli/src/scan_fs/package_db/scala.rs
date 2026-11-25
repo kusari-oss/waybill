@@ -396,6 +396,21 @@ pub(crate) fn finalize(
         }
     }
 
+    // Spec 1654 (#1695): the no-op gate again, counting only the locks that
+    // parsed. A `*.sbt.lock`-named file that fails the Q3 content-shape gate is
+    // not Scala evidence, but it passed the gate above by existing, and Phase C
+    // of `discover_subprojects` then emitted an implicit root project
+    // "declared in build.sbt" with no build.sbt. Hidden until spec 1654 gave
+    // CycloneDX's `metadata.component` its `waybill:source-type`, which is what
+    // `q3_content_shape_skips_non_sbt_files` reads.
+    if lock_data.is_empty()
+        && build_sbt_paths.is_empty()
+        && build_properties_paths.is_empty()
+        && dependencies_scala_paths.is_empty()
+    {
+        return out;
+    }
+
     // Phase C — parse all build.sbt files. Map: build.sbt path → (main, deps).
     let mut build_sbt_data: HashMap<PathBuf, (SbtMainModule, Vec<DeclaredSbtDep>)> =
         HashMap::new();

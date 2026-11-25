@@ -298,7 +298,25 @@ Post-071 the JSON output format is the rigorous source of truth:
 waybill sbom parity-check --scan-dir <dir> --format json | jq '.summary.parity_gaps'
 ```
 
-`0` means clean. Any positive number means real cross-format drift; the per-row breakdown in `.rows[]` shows which rows failed and what the per-format sets contained.
+`0` means clean. Any positive number means real cross-format drift.
+
+Each element of `.rows[]` carries `verdict` (since spec 1654):
+
+| `verdict` | meaning |
+|---|---|
+| `pass` | the catalog expects the row in every format, at least one format carries it, and its directionality invariant holds |
+| `fail` | the catalog expects the row in every format, and the invariant does not hold. These are exactly the rows `summary.parity_gaps` counts. |
+| `not-checked` | the row is format-restricted, or no format carries it. A universal row no format carries still counts in `summary.universal_parity_rows_passing`. |
+
+To list the failing rows:
+
+```bash
+waybill sbom parity-check --scan-dir <dir> --format json | jq -r '.rows[] | select(.verdict == "fail") | .row_id'
+```
+
+**`universal_parity` is not the verdict.** It is the catalog's expectation: whether the row should appear in every format. Removing a row from one format leaves it `true`. Ten integration tests read it as the result, so their parity assertions could not fail until spec 1654 (#1695).
+
+The per-row report carries each format's presence and value count (`.rows[].cdx`, `.spdx23`, `.spdx3`), not the values themselves.
 
 ### 6.4 Skip document-level rows from component-level harness checks
 

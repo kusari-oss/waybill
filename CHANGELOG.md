@@ -107,6 +107,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`waybill sbom parity-check --format json` reports a verdict per row, and the formats now agree where the tests check them (#1695).**
+  The per-row report had no pass/fail. Its `universal_parity` field is the catalog's expectation, and ten integration tests read it as the verdict, so their parity assertions could not fail. Measured, 8 of those 11 files' own scans already had failing rows.
+  - **New field `rows[].verdict`:** `pass`, `fail` or `not-checked`, from the one rule that also counts `summary.parity_gaps`. No existing field or table output changes. Over the 28 corpus goldens it reproduces, exactly, the 80 failing rows a temporary instrument measured.
+  - **One test helper that can fail**, `tests/common/parity.rs`, now used by all eleven files. `boot_library_edges` loses its allowlist. A mutation dropping SPDX 2.3's dependency edges fails every file, and dropping C247 from SPDX 3 fails `boot_library_edges`.
+  - **Closure dependency edges.** A member the closure finds absent from the artifact is `scope: excluded` in CycloneDX, and its incoming edges are now `BUILD_DEPENDENCY_OF` in SPDX 2.3 and `scope: build` in SPDX 3. Before this they were runtime: 6,699 to 12,586 edges per closure golden disagreed. The parity check classifies an edge by its target in every format.
+  - **Completeness claim.** SPDX's `compositions` annotation no longer claims a complete record that CycloneDX withholds when the closure read has a gap.
+  - **The root's properties.** A main module promoted to CycloneDX `metadata.component` keeps the `waybill:*` properties SPDX carries on it (`source-type`, `evidence-kind`, `closure-role`, the scope source). It used to get a hand-picked four.
+  - **A lone component** gets a synthetic root in SPDX 2.3, as in CycloneDX and SPDX 3, so single-binary scans keep the root's edge in every format.
+  - **Not fixed here, filed:** declared licences (A7) on 16 goldens, including the closures (#1700); dependency-edge kinds on 10 goldens (#1701), including nix-closure-slack-web's 9 `optional` edges, a spelling the three formats don't share; and image-postgres16's concluded licences, absent from SPDX 3 (#1702).
+
 - **Under `--nix-closure`, GHC boot libraries carry their dependency edges, or the document says they don't (#1688).**
   Every boot library was a leaf: `base` had no edges on any of the five closure corpus targets, and nix-closure-shellcheck read `complete`.
   - **Now:** a boot library depends on the boot libraries its compiler release records, between components of the same compiler that the document already has. The data is a new committed table, `ghc_boot_dependencies.tsv`, built by `scripts/ghc-boot-dependencies.py` from each GHC release's own bindist. It covers the same 36 releases as milestone 966's version table, and matches it in every library and version. It also matches nixpkgs' installed package databases in 5 of 5 releases checked. No scan reads a package database.

@@ -96,7 +96,7 @@ fn scan_with_log(dir: tempfile::TempDir, filter: &str) -> Scan {
         .unwrap();
     assert!(out.status.success(), "scan failed: {}", String::from_utf8_lossy(&out.stderr));
     let cdx: Value = serde_json::from_slice(&std::fs::read(&files[0]).unwrap()).unwrap();
-    parity(&out_dir);
+    common::parity::assert_parity(out_dir.path());
     unique_bom_refs(&cdx);
     Scan { cdx, stderr: String::from_utf8_lossy(&out.stderr).into_owned(), _dir: dir }
 }
@@ -141,26 +141,6 @@ fn component<'a>(s: &'a Scan, purl: &str) -> &'a Value {
 
 fn prop<'a>(c: &'a Value, name: &str) -> Option<&'a str> {
     c["properties"].as_array()?.iter().find(|p| p["name"] == name)?["value"].as_str()
-}
-
-/// `waybill sbom parity-check` over the three documents; a row is a gap only
-/// if some format carries a value (as in specs 1643 and 1644).
-fn parity(out_dir: &tempfile::TempDir) {
-    let out = Command::new(common::bin())
-        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
-        .arg(out_dir.path())
-        .output()
-        .unwrap();
-    let report: Value = serde_json::from_slice(&out.stdout)
-        .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
-    let gaps: Vec<&Value> = report["rows"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|r| r["universal_parity"] == false)
-        .filter(|r| ["cdx", "spdx23", "spdx3"].iter().any(|f| r[*f]["kind"] == "present"))
-        .collect();
-    assert!(gaps.is_empty(), "parity gaps: {gaps:#?}");
 }
 
 fn unique_bom_refs(cdx: &Value) {

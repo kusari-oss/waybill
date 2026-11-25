@@ -963,7 +963,7 @@ impl CycloneDxBuilder {
         } else {
             None
         };
-        let metadata = build_metadata(
+        let mut metadata = build_metadata(
             MetadataSubject {
                 target_name,
                 target_version: "0.0.0",
@@ -1050,6 +1050,30 @@ impl CycloneDxBuilder {
         }
         let (cdx_components, bom_refs) =
             self.build_components(effective_components, &mut match_counts, document_graph.subject_main_module.as_deref())?;
+        // Spec 1654 (#1695, R7): a main module promoted to
+        // `metadata.component` has no `components[]` entry, so its
+        // properties came only from `metadata.rs`'s hand-picked list, which
+        // lacked `waybill:source-type` (C1), `waybill:evidence-kind` (C4),
+        // `waybill:closure-role` (C182) and the scope source (C203) that both
+        // SPDX formats carry on the same package. Append what `components[]`
+        // would emit for it, keeping the list's own entries first.
+        //
+        // Only when the subject has no twin in `components[]`. With several
+        // main modules, milestone 860 keeps the promoted one there too, and
+        // that entry already carries every property; the document then stays
+        // as it was.
+        if let Some(subject) = document_graph
+            .subject_main_module
+            .as_deref()
+            .and_then(|p| effective_components.iter().find(|c| c.purl.as_str() == p))
+        {
+            let has_twin = cdx_components
+                .as_array()
+                .is_some_and(|cs| cs.iter().any(|c| c["bom-ref"].as_str() == Some(subject.purl.as_str())));
+            if !has_twin {
+                merge_subject_properties(&mut metadata, self.component_properties(subject, None));
+            }
+        }
         for (idx, count) in &match_counts {
             if *count == 0 {
                 let flag = &self.component_identifiers[*idx];
@@ -1276,6 +1300,477 @@ impl CycloneDxBuilder {
     /// losing the component entirely. This can happen when the Maven
     /// scanner couldn't identify a fat-jar's primary coord but still
     /// extracted vendored children.
+    /// The `properties[]` of one component, as `components[]` emits them.
+    ///
+    /// Spec 1654 (#1695, R7): also called for a main module promoted to
+    /// `metadata.component`, which copied a hand-picked subset of these and
+    /// so dropped `waybill:source-type`, `waybill:evidence-kind`, the closure
+    /// role and the scope source that SPDX carries on the same package.
+    /// `match_counts` is `None` there: `--component-id` matches are counted,
+    /// and their identifiers attached, only for `components[]`.
+    fn component_properties(
+        &self,
+        component: &ResolvedComponent,
+        mut match_counts: Option<&mut std::collections::BTreeMap<usize, usize>>,
+    ) -> Vec<serde_json::Value> {
+        let mut properties: Vec<serde_json::Value> = Vec::new();
+        if !component.cpes.is_empty() {
+            if component.cpes.len() > 1 {
+                properties.push(json!({
+                    "name": "waybill:cpe-candidates",
+                    "value": serde_json::to_string(&component.cpes).unwrap_or_default()
+                }));
+            }
+            // #1430 — grype reads `component.cpe` and `syft:cpe23`, so
+            // a curated row's second vendor needs this to be matched.
+            for cpe in crate::generate::cpe::secondary_cpes(component) {
+                properties.push(json!({ "name": "syft:cpe23", "value": cpe }));
+            }
+        }
+
+        // Include source file paths if configured and present.
+        // Milestone 133 US2.1 (FR-012 Defect B): emit as JSON array
+        // instead of pre-133's comma-separated string. Path
+        // normalization (Defects A + C — rootfs-prefix-strip and
+        // leading-`/`-strip) is done at source-population time in
+        // `scan_fs::mod.rs`, so consumers here just serialize the
+        // already-clean `source_file_paths` Vec.
+        if self.config.include_source_files {
+            if let Some(value) = crate::scan_fs::sbom_path::source_files_as_json_array(
+                &crate::scan_fs::sbom_path::emitted_source_files(
+                    &component.evidence.source_file_paths,
+                    &self.config.scan_roots,
+                ),
+            ) {
+                properties.push(json!({
+                    "name": "waybill:source-files",
+                    "value": value,
+                }));
+            }
+        }
+
+        // Milestone 052: `waybill:lifecycle-scope` property carrying
+        // the finer-grained dev/build/test distinction that CDX 1.6's
+        // 3-value native `scope` enum cannot express. The native
+        // `scope: "excluded"` field is set on the component itself
+        // (in the component-builder block above the properties array
+        // — see the lifecycle_scope branch on `Component::scope`).
+        // Constitution Principle V (v1.4.0): native fields take
+        // precedence; this property carries the carve-out for
+        // information the standard doesn't natively express.
+        if self.config.include_dev {
+            if let Some(scope) = component.lifecycle_scope.filter(|s| s.is_non_runtime()) {
+                properties.push(json!({
+                    "name": "waybill:lifecycle-scope",
+                    "value": scope.as_str()
+                }));
+            }
+        }
+        // Milestone 112: `waybill:build-inclusion` property from
+        // the typed `BuildInclusion` field. `unknown` carries no
+        // native CDX construct (the 3-value `scope` enum cannot
+        // express "undetermined"); `not-needed`'s PRIMARY signal is
+        // the native `scope: "excluded"` set in the scope block —
+        // this property carries the finer-grained reason
+        // (contracts/annotations.md, Constitution V/X). The
+        // companion `waybill:build-inclusion-derivation` flows
+        // through the extra_annotations bag.
+        if let Some(inclusion) = component.build_inclusion {
+            properties.push(json!({
+                "name": "waybill:build-inclusion",
+                "value": inclusion.as_str()
+            }));
+        }
+        // C203 — milestone 1277: which analysis concluded the component
+        // is not in the artifact. Emitted only where the closure role
+        // concluded it, so absence is a claim about this feature rather
+        // than about the component (FR-009).
+        if let Some(src) =
+            crate::resolve::closure_role_scope::classification_source(component)
+        {
+            properties.push(json!({
+                "name": crate::resolve::closure_role_scope::CLASSIFICATION_SOURCE,
+                "value": src
+            }));
+        }
+        // Milestone 199 — always-array shape. CDX `properties[].value`
+        // is a string; the JSON array is serialized-into-string per
+        // the m197 contracts/annotation-shapes.md wire contract.
+        if !component.requirement_ranges.is_empty() {
+            properties.push(json!({
+                "name": "waybill:requirement-ranges",
+                "value": serde_json::to_string(&component.requirement_ranges).unwrap_or_default(),
+            }));
+        }
+        if let Some(ref src_type) = component.source_type {
+            properties.push(json!({
+                "name": "waybill:source-type",
+                "value": src_type
+            }));
+        }
+        // `waybill:co-owned-by` — set by the Maven JAR walker on
+        // coords extracted from JARs whose bytes are ALSO claimed
+        // by an OS package-db reader (RPM/deb/apk). Value is the
+        // owner ecosystem. Downstream consumers can filter on this
+        // property to collapse dual-identity components to a
+        // single view (e.g. drop the Maven coord when they only
+        // want distro-level CVE tracking via the RPM component).
+        // See docs/ecosystems.md ("Dual-identity: JAR-embedded
+        // Maven coords in RPM-owned artifacts" for rationale.
+        if let Some(ref owner) = component.co_owned_by {
+            properties.push(json!({
+                "name": "waybill:co-owned-by",
+                "value": owner
+            }));
+        }
+        // Evidence-derived provenance properties. Replaces the
+        // former `evidence.identity[].tools` entries — those fail
+        // CDX 1.6 schema because `tools[]` must be bom-refs to
+        // declared BOM elements, which source_connection_ids and
+        // deps.dev markers are not. Properties are the idiomatic
+        // home for scanner-specific provenance data.
+        properties.extend(evidence_to_properties(&component.evidence));
+        // `waybill:sbom-tier` — the traceability-ladder classifier
+        // introduced in milestone 002 (spec FR-021a, research R13).
+        // Emitted on every component that carries one. Values:
+        // build | deployed | analyzed | source | design.
+        if let Some(ref tier) = component.sbom_tier {
+            properties.push(json!({
+                "name": "waybill:sbom-tier",
+                "value": tier
+            }));
+        }
+        // `waybill:npm-role` — feature 005 US1 (spec FR-001, FR-003).
+        // Emitted only on npm components discovered inside npm's own
+        // bundled tree (`**/node_modules/npm/node_modules/**`) during
+        // --image scans. Value: `internal`. Absent on application
+        // deps (the vast majority) and on all --path-mode scans,
+        // where the internals are filtered out before they reach
+        // the builder. See data-model.md §PackageDbEntry.npm_role.
+        if let Some(ref role) = component.npm_role {
+            properties.push(json!({
+                "name": "waybill:npm-role",
+                "value": role
+            }));
+        }
+        // `waybill:raw-version` — feature 005 US4 (spec FR-013).
+        // Verbatim `VERSION-RELEASE` string from the rpmdb header.
+        // Populated on every rpm component so downstream consumers
+        // can cross-reference `rpm -qa`'s `%{VERSION}-%{RELEASE}`
+        // column without re-parsing the PURL. Absent on non-rpm
+        // components today; reserved for other ecosystems to opt
+        // in later via the same field on `PackageDbEntry`.
+        if let Some(ref raw) = component.raw_version {
+            properties.push(json!({
+                "name": "waybill:raw-version",
+                "value": raw
+            }));
+        }
+        // `waybill:buildinfo-status` — milestone 003 (spec FR-015).
+        // Emitted ONLY on file-level Go binary components where
+        // `runtime/debug.BuildInfo` couldn't be recovered. Operators
+        // distinguish "no modules found" from "scan failed" via the
+        // value: `"missing"` (stripped binary, magic absent) or
+        // `"unsupported"` (Go <1.18 pre-inline format).
+        if let Some(ref status) = component.buildinfo_status {
+            properties.push(json!({
+                "name": "waybill:buildinfo-status",
+                "value": status
+            }));
+        }
+        // `waybill:evidence-kind` — milestone 004 (spec FR-004,
+        // contracts/schema.md). Canonical enum identifying how the
+        // component was discovered. Consumers filter by this.
+        // Valid values enforced by `debug_assert!` per data-model.md
+        // §Validation rules.
+        //
+        // Binary-reader kinds come from `BINARY_EVIDENCE_KINDS` rather
+        // than a copy here: a copy omitted `cargo-auditable` and panicked
+        // debug builds on every cargo-auditable binary (#1399). That
+        // constant is checked against the readers' source by
+        // `binary_evidence_kind_drift`. Package-database kinds are still
+        // listed by hand below.
+        if let Some(ref kind) = component.evidence_kind {
+            debug_assert!(
+                crate::scan_fs::binary::BINARY_EVIDENCE_KINDS.contains(&kind.as_str())
+                    || matches!(
+                        kind.as_str(),
+                        "rpm-file"
+                            | "rpmdb-sqlite"
+                            | "rpmdb-bdb"
+                            | "alpm-local-db"
+                            | "brew-install-receipt"
+                            | "brew-cask-metadata"
+                            | "pubspec-lock"
+                            | "pubspec-yaml"
+                            | "composer-lock"
+                            | "composer-json"
+                            | "composer-installed-json"
+                            | "cocoapods-podfile-lock"
+                            | "cocoapods-podfile"
+                            | "cocoapods-manifest-lock"
+                            | "mix-lock"
+                            | "mix-exs"
+                            | "rebar-lock"
+                            | "rebar-config"
+                            | "app-src"
+                            | "sbt-lock"
+                            | "sbt-build"
+                            | "cabal-freeze"
+                            | "stack-yaml-lock"
+                            | "cabal-pkg-descriptor"
+                            // Milestone 1273 (#1278) — the hpack reader. A
+                            // component described from a `package.yaml` is
+                            // distinguishable from one described from a
+                            // `*.cabal`, which is how FR-002's "the document
+                            // MUST record which" is satisfied per component.
+                            | "hpack-manifest"
+                            // Milestone 925 (#946) — Nix flake.lock reader.
+                            | "nix-flake-lock"
+                            // Milestone 169 (T013, closes #500) — ipk
+                            // archive-file reader + opkg installed-DB
+                            // hardening. See spec.md FR-009 + FR-015.
+                            | "ipk-file"
+                            | "opkg-status-db"
+                            // Milestone 188 (#455) — Helm chart reader.
+                            // Chart-level components carry
+                            // `helm-chart-yaml` or `helm-chart-lock`;
+                            // image-ref components extracted from
+                            // `templates/*.yaml` carry
+                            // `helm-template-image-ref`.
+                            | "helm-chart-yaml"
+                            | "helm-chart-lock"
+                            | "helm-template-image-ref"
+                    ),
+                "waybill:evidence-kind value '{kind}' is neither a binary evidence \
+                 kind (`BINARY_EVIDENCE_KINDS`, scan_fs/binary/mod.rs) nor a \
+                 package-database kind listed at this assertion"
+            );
+            properties.push(json!({
+                "name": "waybill:evidence-kind",
+                "value": kind
+            }));
+        }
+        // Milestone 004 US2 binary-component properties. Each is
+        // emitted only when Some(...) — the absence of the property
+        // is itself informative (e.g. no `waybill:binary-class` =
+        // non-binary component).
+        if let Some(ref confidence) = component.confidence {
+            debug_assert!(
+                crate::scan_fs::binary::BINARY_CONFIDENCE_VALUES
+                    .contains(&confidence.as_str()),
+                "waybill:confidence value '{confidence}' is not in \
+                 `BINARY_CONFIDENCE_VALUES` (scan_fs/binary/mod.rs)"
+            );
+            properties.push(json!({
+                "name": "waybill:confidence",
+                "value": confidence
+            }));
+        }
+        if let Some(ref class) = component.binary_class {
+            debug_assert!(
+                matches!(class.as_str(), "elf" | "macho" | "pe"),
+                "waybill:binary-class value '{class}' is not in {{elf, macho, pe}}"
+            );
+            properties.push(json!({
+                "name": "waybill:binary-class",
+                "value": class
+            }));
+        }
+        if let Some(stripped) = component.binary_stripped {
+            properties.push(json!({
+                "name": "waybill:binary-stripped",
+                "value": if stripped { "true" } else { "false" }
+            }));
+        }
+        if let Some(ref linkage) = component.linkage_kind {
+            debug_assert!(
+                matches!(linkage.as_str(), "dynamic" | "static" | "mixed"),
+                "waybill:linkage-kind value '{linkage}' is not in {{dynamic, static, mixed}}"
+            );
+            properties.push(json!({
+                "name": "waybill:linkage-kind",
+                "value": linkage
+            }));
+        }
+        if component.detected_go == Some(true) {
+            properties.push(json!({
+                "name": "waybill:detected-go",
+                "value": "true"
+            }));
+        }
+        if component.shade_relocation == Some(true) {
+            properties.push(json!({
+                "name": "waybill:shade-relocation",
+                "value": "true"
+            }));
+        }
+        if let Some(ref packed) = component.binary_packed {
+            debug_assert!(
+                matches!(packed.as_str(), "upx" | "none"),
+                "waybill:binary-packed value '{packed}' is not in the canonical \
+                 enum (upx | none); milestone-096 Q2 always-emits 'none' on \
+                 file-level components when no packer is detected"
+            );
+            properties.push(json!({
+                "name": "waybill:binary-packed",
+                "value": packed
+            }));
+        }
+
+        // Milestone 023: generic per-component annotation bag.
+        // Each entry surfaces as a CycloneDX property. Strings
+        // pass through verbatim; other JSON values are
+        // serde_json-stringified (matches the existing convention
+        // for array- and object-shaped CDX property values).
+        //
+        // Milestone 127: filter out internal-only keys (the
+        // `waybill:is-workspace-root` signal that drives root-selector
+        // logic but is NOT meant to surface in emitted SBOMs).
+        // Issue #940: a property name already emitted from a typed field
+        // must not be emitted again from the bag.
+        //
+        // Seven readers populate BOTH slots for the same fact — cocoapods,
+        // composer, dart, elixir, erlang, haskell and scala — and the
+        // emitter rendered each, so `waybill:source-type` appeared twice on
+        // every component they produced: 61 components across the public
+        // corpus, 21 on one reference repository.
+        //
+        // The m145 US3 guard below covers this, but only for a hardcoded
+        // list (`waybill:source-files`) and only by skipping the bag entry
+        // UNCONDITIONALLY. That is unsafe to extend: `source_type` is an
+        // `Option`, so a reader may write the annotation without setting
+        // the typed field, and an unconditional skip would then drop the
+        // value entirely rather than deduplicate it. Composer and dart do
+        // write more annotations than typed fields.
+        //
+        // So the check is what was already emitted, not what might be. It
+        // needs no list, cannot lose a value that has no other source, and
+        // covers keys added later — which matters because this defect was
+        // reintroduced in new code (the m925 nix reader) days after the
+        // issue describing it was written.
+        let emitted_names: std::collections::HashSet<String> = properties
+            .iter()
+            .filter_map(|p| p.get("name").and_then(|n| n.as_str()).map(str::to_string))
+            .collect();
+        for (key, value) in &component.extra_annotations {
+            if crate::generate::root_selector::is_internal_emission_key(key)
+                || crate::generate::root_selector::is_field_owned_annotation_key(key)
+            {
+                // Milestone 145 US3 (FR-009): skip keys already
+                // emitted from a field-derived source (e.g.,
+                // `waybill:source-files` comes from
+                // `c.evidence.source_file_paths` higher up in
+                // this function — re-emitting from the bag
+                // would double-stamp and produce value drift.
+                continue;
+            }
+            if key == crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES {
+                // Milestone 1035: CycloneDX carries these in native
+                // `pedigree.patches[]` just above, so re-emitting the
+                // annotation here would state the same fact twice in one
+                // document. SPDX 2.3 and SPDX 3 have no `pedigree` and do
+                // carry the annotation — the one place the three formats
+                // differ in capability rather than spelling. This cannot
+                // use `is_field_owned_annotation_key`, which both the CDX
+                // and SPDX pass-throughs consult and which would therefore
+                // drop it from SPDX too.
+                continue;
+            }
+            if emitted_names.contains(key.as_str()) {
+                // Already emitted from a typed field above (#940). The
+                // typed slot wins: it is emitted first, and where the two
+                // have diverged it was the typed one that carried the
+                // current value (m925's requirement-ranges, where the bag
+                // held a stale subset after the dedup pass unioned the
+                // typed field).
+                tracing::debug!(
+                    component = %component.purl.as_str(),
+                    key = key.as_str(),
+                    "cdx: annotation duplicates a field-derived property; keeping the field value (#940)"
+                );
+                continue;
+            }
+            let value_str = match value {
+                serde_json::Value::String(s) => s.clone(),
+                other => serde_json::to_string(other).unwrap_or_default(),
+            };
+            properties.push(json!({
+                "name": key,
+                "value": value_str,
+            }));
+        }
+
+        // Milestone 210: per-component compiler-pipeline attribution
+        // (C130 + C131 + C134). Only emitted when the scan was
+        // invoked via `waybill trace` AND at least one compiler
+        // invocation was captured. Matched via write-set intersection
+        // with the component's known file paths per
+        // contracts/annotations.md A-1/A-2/A-5. `Traced` ⇒ both C130
+        // (source-read-set payload) + C131 (source label).
+        // `Unknown` ⇒ C131 only. C134 = `"true"` when the doc-scope
+        // completeness is `Partial(AttachLate)` — the trace attached
+        // mid-build so every captured component potentially has a
+        // partial read-set (best-effort per-component signal from
+        // doc-scope truth; per-invocation granularity is a future
+        // milestone). No pipeline ⇒ none of the three, preserving
+        // byte-identity for scan-mode consumers.
+        if let Some(ref pipeline) = self.compiler_pipeline {
+            let mapping = crate::generate::compiler_pipeline_annotation::map_component_to_source_read_set(
+                component,
+                pipeline,
+            );
+            if let Some(payload) = mapping.payload {
+                properties.push(json!({
+                    "name": "waybill:source-read-set",
+                    "value": serde_json::to_string(&payload).unwrap_or_default(),
+                }));
+            }
+            properties.push(json!({
+                "name": "waybill:read-set-source",
+                "value": mapping.source.as_wire_str(),
+            }));
+            if matches!(
+                pipeline.completeness,
+                waybill_common::attestation::compiler_pipeline::CompletenessState::Partial {
+                    reason: waybill_common::attestation::compiler_pipeline::PartialReason::AttachLate,
+                }
+            ) {
+                properties.push(json!({
+                    "name": "waybill:trace-attach-late",
+                    "value": "true",
+                }));
+            }
+        }
+
+        // Milestone 076: per-component user-defined identifiers
+        // from `--component-id <PURL>=<scheme>:<value>` flags.
+        // Match by byte-equality of `purl` per research §5; append
+        // matching entries AFTER pre-existing properties (research
+        // §6 — preserve original positions, lex-sort the new
+        // entries by `(scheme, value)`).
+        let mut new_per_component_props: Vec<(String, String)> = Vec::new();
+        for (idx, flag) in self.component_identifiers.iter().enumerate() {
+            if flag.selector_purl == component.purl.as_str() {
+                let Some(counts) = match_counts.as_deref_mut() else { continue };
+                *counts.entry(idx).or_insert(0) += 1;
+                new_per_component_props.push((
+                    flag.scheme.as_str().to_string(),
+                    flag.value.as_str().to_string(),
+                ));
+            }
+        }
+        new_per_component_props.sort();
+        new_per_component_props.dedup();
+        for (name, value) in new_per_component_props {
+            properties.push(json!({
+                "name": name,
+                "value": value,
+            }));
+        }
+        properties
+    }
+
     fn build_components(
         &self,
         components: &[ResolvedComponent],
@@ -1621,461 +2116,10 @@ impl CycloneDxBuilder {
             // vendor-candidate list under a property so downstream NVD
             // matchers can take the union of heuristics instead of being
             // locked to one guess.
-            let mut properties: Vec<serde_json::Value> = Vec::new();
             if !component.cpes.is_empty() {
                 entry["cpe"] = json!(component.cpes[0]);
-                if component.cpes.len() > 1 {
-                    properties.push(json!({
-                        "name": "waybill:cpe-candidates",
-                        "value": serde_json::to_string(&component.cpes).unwrap_or_default()
-                    }));
-                }
-                // #1430 — grype reads `component.cpe` and `syft:cpe23`, so
-                // a curated row's second vendor needs this to be matched.
-                for cpe in crate::generate::cpe::secondary_cpes(component) {
-                    properties.push(json!({ "name": "syft:cpe23", "value": cpe }));
-                }
             }
-
-            // Include source file paths if configured and present.
-            // Milestone 133 US2.1 (FR-012 Defect B): emit as JSON array
-            // instead of pre-133's comma-separated string. Path
-            // normalization (Defects A + C — rootfs-prefix-strip and
-            // leading-`/`-strip) is done at source-population time in
-            // `scan_fs::mod.rs`, so consumers here just serialize the
-            // already-clean `source_file_paths` Vec.
-            if self.config.include_source_files {
-                if let Some(value) = crate::scan_fs::sbom_path::source_files_as_json_array(
-                    &crate::scan_fs::sbom_path::emitted_source_files(
-                        &component.evidence.source_file_paths,
-                        &self.config.scan_roots,
-                    ),
-                ) {
-                    properties.push(json!({
-                        "name": "waybill:source-files",
-                        "value": value,
-                    }));
-                }
-            }
-
-            // Milestone 052: `waybill:lifecycle-scope` property carrying
-            // the finer-grained dev/build/test distinction that CDX 1.6's
-            // 3-value native `scope` enum cannot express. The native
-            // `scope: "excluded"` field is set on the component itself
-            // (in the component-builder block above the properties array
-            // — see the lifecycle_scope branch on `Component::scope`).
-            // Constitution Principle V (v1.4.0): native fields take
-            // precedence; this property carries the carve-out for
-            // information the standard doesn't natively express.
-            if self.config.include_dev {
-                if let Some(scope) = component.lifecycle_scope.filter(|s| s.is_non_runtime()) {
-                    properties.push(json!({
-                        "name": "waybill:lifecycle-scope",
-                        "value": scope.as_str()
-                    }));
-                }
-            }
-            // Milestone 112: `waybill:build-inclusion` property from
-            // the typed `BuildInclusion` field. `unknown` carries no
-            // native CDX construct (the 3-value `scope` enum cannot
-            // express "undetermined"); `not-needed`'s PRIMARY signal is
-            // the native `scope: "excluded"` set in the scope block —
-            // this property carries the finer-grained reason
-            // (contracts/annotations.md, Constitution V/X). The
-            // companion `waybill:build-inclusion-derivation` flows
-            // through the extra_annotations bag.
-            if let Some(inclusion) = component.build_inclusion {
-                properties.push(json!({
-                    "name": "waybill:build-inclusion",
-                    "value": inclusion.as_str()
-                }));
-            }
-            // C203 — milestone 1277: which analysis concluded the component
-            // is not in the artifact. Emitted only where the closure role
-            // concluded it, so absence is a claim about this feature rather
-            // than about the component (FR-009).
-            if let Some(src) =
-                crate::resolve::closure_role_scope::classification_source(component)
-            {
-                properties.push(json!({
-                    "name": crate::resolve::closure_role_scope::CLASSIFICATION_SOURCE,
-                    "value": src
-                }));
-            }
-            // Milestone 199 — always-array shape. CDX `properties[].value`
-            // is a string; the JSON array is serialized-into-string per
-            // the m197 contracts/annotation-shapes.md wire contract.
-            if !component.requirement_ranges.is_empty() {
-                properties.push(json!({
-                    "name": "waybill:requirement-ranges",
-                    "value": serde_json::to_string(&component.requirement_ranges).unwrap_or_default(),
-                }));
-            }
-            if let Some(ref src_type) = component.source_type {
-                properties.push(json!({
-                    "name": "waybill:source-type",
-                    "value": src_type
-                }));
-            }
-            // `waybill:co-owned-by` — set by the Maven JAR walker on
-            // coords extracted from JARs whose bytes are ALSO claimed
-            // by an OS package-db reader (RPM/deb/apk). Value is the
-            // owner ecosystem. Downstream consumers can filter on this
-            // property to collapse dual-identity components to a
-            // single view (e.g. drop the Maven coord when they only
-            // want distro-level CVE tracking via the RPM component).
-            // See docs/ecosystems.md ("Dual-identity: JAR-embedded
-            // Maven coords in RPM-owned artifacts" for rationale.
-            if let Some(ref owner) = component.co_owned_by {
-                properties.push(json!({
-                    "name": "waybill:co-owned-by",
-                    "value": owner
-                }));
-            }
-            // Evidence-derived provenance properties. Replaces the
-            // former `evidence.identity[].tools` entries — those fail
-            // CDX 1.6 schema because `tools[]` must be bom-refs to
-            // declared BOM elements, which source_connection_ids and
-            // deps.dev markers are not. Properties are the idiomatic
-            // home for scanner-specific provenance data.
-            properties.extend(evidence_to_properties(&component.evidence));
-            // `waybill:sbom-tier` — the traceability-ladder classifier
-            // introduced in milestone 002 (spec FR-021a, research R13).
-            // Emitted on every component that carries one. Values:
-            // build | deployed | analyzed | source | design.
-            if let Some(ref tier) = component.sbom_tier {
-                properties.push(json!({
-                    "name": "waybill:sbom-tier",
-                    "value": tier
-                }));
-            }
-            // `waybill:npm-role` — feature 005 US1 (spec FR-001, FR-003).
-            // Emitted only on npm components discovered inside npm's own
-            // bundled tree (`**/node_modules/npm/node_modules/**`) during
-            // --image scans. Value: `internal`. Absent on application
-            // deps (the vast majority) and on all --path-mode scans,
-            // where the internals are filtered out before they reach
-            // the builder. See data-model.md §PackageDbEntry.npm_role.
-            if let Some(ref role) = component.npm_role {
-                properties.push(json!({
-                    "name": "waybill:npm-role",
-                    "value": role
-                }));
-            }
-            // `waybill:raw-version` — feature 005 US4 (spec FR-013).
-            // Verbatim `VERSION-RELEASE` string from the rpmdb header.
-            // Populated on every rpm component so downstream consumers
-            // can cross-reference `rpm -qa`'s `%{VERSION}-%{RELEASE}`
-            // column without re-parsing the PURL. Absent on non-rpm
-            // components today; reserved for other ecosystems to opt
-            // in later via the same field on `PackageDbEntry`.
-            if let Some(ref raw) = component.raw_version {
-                properties.push(json!({
-                    "name": "waybill:raw-version",
-                    "value": raw
-                }));
-            }
-            // `waybill:buildinfo-status` — milestone 003 (spec FR-015).
-            // Emitted ONLY on file-level Go binary components where
-            // `runtime/debug.BuildInfo` couldn't be recovered. Operators
-            // distinguish "no modules found" from "scan failed" via the
-            // value: `"missing"` (stripped binary, magic absent) or
-            // `"unsupported"` (Go <1.18 pre-inline format).
-            if let Some(ref status) = component.buildinfo_status {
-                properties.push(json!({
-                    "name": "waybill:buildinfo-status",
-                    "value": status
-                }));
-            }
-            // `waybill:evidence-kind` — milestone 004 (spec FR-004,
-            // contracts/schema.md). Canonical enum identifying how the
-            // component was discovered. Consumers filter by this.
-            // Valid values enforced by `debug_assert!` per data-model.md
-            // §Validation rules.
-            //
-            // Binary-reader kinds come from `BINARY_EVIDENCE_KINDS` rather
-            // than a copy here: a copy omitted `cargo-auditable` and panicked
-            // debug builds on every cargo-auditable binary (#1399). That
-            // constant is checked against the readers' source by
-            // `binary_evidence_kind_drift`. Package-database kinds are still
-            // listed by hand below.
-            if let Some(ref kind) = component.evidence_kind {
-                debug_assert!(
-                    crate::scan_fs::binary::BINARY_EVIDENCE_KINDS.contains(&kind.as_str())
-                        || matches!(
-                            kind.as_str(),
-                            "rpm-file"
-                                | "rpmdb-sqlite"
-                                | "rpmdb-bdb"
-                                | "alpm-local-db"
-                                | "brew-install-receipt"
-                                | "brew-cask-metadata"
-                                | "pubspec-lock"
-                                | "pubspec-yaml"
-                                | "composer-lock"
-                                | "composer-json"
-                                | "composer-installed-json"
-                                | "cocoapods-podfile-lock"
-                                | "cocoapods-podfile"
-                                | "cocoapods-manifest-lock"
-                                | "mix-lock"
-                                | "mix-exs"
-                                | "rebar-lock"
-                                | "rebar-config"
-                                | "app-src"
-                                | "sbt-lock"
-                                | "sbt-build"
-                                | "cabal-freeze"
-                                | "stack-yaml-lock"
-                                | "cabal-pkg-descriptor"
-                                // Milestone 1273 (#1278) — the hpack reader. A
-                                // component described from a `package.yaml` is
-                                // distinguishable from one described from a
-                                // `*.cabal`, which is how FR-002's "the document
-                                // MUST record which" is satisfied per component.
-                                | "hpack-manifest"
-                                // Milestone 925 (#946) — Nix flake.lock reader.
-                                | "nix-flake-lock"
-                                // Milestone 169 (T013, closes #500) — ipk
-                                // archive-file reader + opkg installed-DB
-                                // hardening. See spec.md FR-009 + FR-015.
-                                | "ipk-file"
-                                | "opkg-status-db"
-                                // Milestone 188 (#455) — Helm chart reader.
-                                // Chart-level components carry
-                                // `helm-chart-yaml` or `helm-chart-lock`;
-                                // image-ref components extracted from
-                                // `templates/*.yaml` carry
-                                // `helm-template-image-ref`.
-                                | "helm-chart-yaml"
-                                | "helm-chart-lock"
-                                | "helm-template-image-ref"
-                        ),
-                    "waybill:evidence-kind value '{kind}' is neither a binary evidence \
-                     kind (`BINARY_EVIDENCE_KINDS`, scan_fs/binary/mod.rs) nor a \
-                     package-database kind listed at this assertion"
-                );
-                properties.push(json!({
-                    "name": "waybill:evidence-kind",
-                    "value": kind
-                }));
-            }
-            // Milestone 004 US2 binary-component properties. Each is
-            // emitted only when Some(...) — the absence of the property
-            // is itself informative (e.g. no `waybill:binary-class` =
-            // non-binary component).
-            if let Some(ref confidence) = component.confidence {
-                debug_assert!(
-                    crate::scan_fs::binary::BINARY_CONFIDENCE_VALUES
-                        .contains(&confidence.as_str()),
-                    "waybill:confidence value '{confidence}' is not in \
-                     `BINARY_CONFIDENCE_VALUES` (scan_fs/binary/mod.rs)"
-                );
-                properties.push(json!({
-                    "name": "waybill:confidence",
-                    "value": confidence
-                }));
-            }
-            if let Some(ref class) = component.binary_class {
-                debug_assert!(
-                    matches!(class.as_str(), "elf" | "macho" | "pe"),
-                    "waybill:binary-class value '{class}' is not in {{elf, macho, pe}}"
-                );
-                properties.push(json!({
-                    "name": "waybill:binary-class",
-                    "value": class
-                }));
-            }
-            if let Some(stripped) = component.binary_stripped {
-                properties.push(json!({
-                    "name": "waybill:binary-stripped",
-                    "value": if stripped { "true" } else { "false" }
-                }));
-            }
-            if let Some(ref linkage) = component.linkage_kind {
-                debug_assert!(
-                    matches!(linkage.as_str(), "dynamic" | "static" | "mixed"),
-                    "waybill:linkage-kind value '{linkage}' is not in {{dynamic, static, mixed}}"
-                );
-                properties.push(json!({
-                    "name": "waybill:linkage-kind",
-                    "value": linkage
-                }));
-            }
-            if component.detected_go == Some(true) {
-                properties.push(json!({
-                    "name": "waybill:detected-go",
-                    "value": "true"
-                }));
-            }
-            if component.shade_relocation == Some(true) {
-                properties.push(json!({
-                    "name": "waybill:shade-relocation",
-                    "value": "true"
-                }));
-            }
-            if let Some(ref packed) = component.binary_packed {
-                debug_assert!(
-                    matches!(packed.as_str(), "upx" | "none"),
-                    "waybill:binary-packed value '{packed}' is not in the canonical \
-                     enum (upx | none); milestone-096 Q2 always-emits 'none' on \
-                     file-level components when no packer is detected"
-                );
-                properties.push(json!({
-                    "name": "waybill:binary-packed",
-                    "value": packed
-                }));
-            }
-
-            // Milestone 023: generic per-component annotation bag.
-            // Each entry surfaces as a CycloneDX property. Strings
-            // pass through verbatim; other JSON values are
-            // serde_json-stringified (matches the existing convention
-            // for array- and object-shaped CDX property values).
-            //
-            // Milestone 127: filter out internal-only keys (the
-            // `waybill:is-workspace-root` signal that drives root-selector
-            // logic but is NOT meant to surface in emitted SBOMs).
-            // Issue #940: a property name already emitted from a typed field
-            // must not be emitted again from the bag.
-            //
-            // Seven readers populate BOTH slots for the same fact — cocoapods,
-            // composer, dart, elixir, erlang, haskell and scala — and the
-            // emitter rendered each, so `waybill:source-type` appeared twice on
-            // every component they produced: 61 components across the public
-            // corpus, 21 on one reference repository.
-            //
-            // The m145 US3 guard below covers this, but only for a hardcoded
-            // list (`waybill:source-files`) and only by skipping the bag entry
-            // UNCONDITIONALLY. That is unsafe to extend: `source_type` is an
-            // `Option`, so a reader may write the annotation without setting
-            // the typed field, and an unconditional skip would then drop the
-            // value entirely rather than deduplicate it. Composer and dart do
-            // write more annotations than typed fields.
-            //
-            // So the check is what was already emitted, not what might be. It
-            // needs no list, cannot lose a value that has no other source, and
-            // covers keys added later — which matters because this defect was
-            // reintroduced in new code (the m925 nix reader) days after the
-            // issue describing it was written.
-            let emitted_names: std::collections::HashSet<String> = properties
-                .iter()
-                .filter_map(|p| p.get("name").and_then(|n| n.as_str()).map(str::to_string))
-                .collect();
-            for (key, value) in &component.extra_annotations {
-                if crate::generate::root_selector::is_internal_emission_key(key)
-                    || crate::generate::root_selector::is_field_owned_annotation_key(key)
-                {
-                    // Milestone 145 US3 (FR-009): skip keys already
-                    // emitted from a field-derived source (e.g.,
-                    // `waybill:source-files` comes from
-                    // `c.evidence.source_file_paths` higher up in
-                    // this function — re-emitting from the bag
-                    // would double-stamp and produce value drift.
-                    continue;
-                }
-                if key == crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES {
-                    // Milestone 1035: CycloneDX carries these in native
-                    // `pedigree.patches[]` just above, so re-emitting the
-                    // annotation here would state the same fact twice in one
-                    // document. SPDX 2.3 and SPDX 3 have no `pedigree` and do
-                    // carry the annotation — the one place the three formats
-                    // differ in capability rather than spelling. This cannot
-                    // use `is_field_owned_annotation_key`, which both the CDX
-                    // and SPDX pass-throughs consult and which would therefore
-                    // drop it from SPDX too.
-                    continue;
-                }
-                if emitted_names.contains(key.as_str()) {
-                    // Already emitted from a typed field above (#940). The
-                    // typed slot wins: it is emitted first, and where the two
-                    // have diverged it was the typed one that carried the
-                    // current value (m925's requirement-ranges, where the bag
-                    // held a stale subset after the dedup pass unioned the
-                    // typed field).
-                    tracing::debug!(
-                        component = %component.purl.as_str(),
-                        key = key.as_str(),
-                        "cdx: annotation duplicates a field-derived property; keeping the field value (#940)"
-                    );
-                    continue;
-                }
-                let value_str = match value {
-                    serde_json::Value::String(s) => s.clone(),
-                    other => serde_json::to_string(other).unwrap_or_default(),
-                };
-                properties.push(json!({
-                    "name": key,
-                    "value": value_str,
-                }));
-            }
-
-            // Milestone 210: per-component compiler-pipeline attribution
-            // (C130 + C131 + C134). Only emitted when the scan was
-            // invoked via `waybill trace` AND at least one compiler
-            // invocation was captured. Matched via write-set intersection
-            // with the component's known file paths per
-            // contracts/annotations.md A-1/A-2/A-5. `Traced` ⇒ both C130
-            // (source-read-set payload) + C131 (source label).
-            // `Unknown` ⇒ C131 only. C134 = `"true"` when the doc-scope
-            // completeness is `Partial(AttachLate)` — the trace attached
-            // mid-build so every captured component potentially has a
-            // partial read-set (best-effort per-component signal from
-            // doc-scope truth; per-invocation granularity is a future
-            // milestone). No pipeline ⇒ none of the three, preserving
-            // byte-identity for scan-mode consumers.
-            if let Some(ref pipeline) = self.compiler_pipeline {
-                let mapping = crate::generate::compiler_pipeline_annotation::map_component_to_source_read_set(
-                    component,
-                    pipeline,
-                );
-                if let Some(payload) = mapping.payload {
-                    properties.push(json!({
-                        "name": "waybill:source-read-set",
-                        "value": serde_json::to_string(&payload).unwrap_or_default(),
-                    }));
-                }
-                properties.push(json!({
-                    "name": "waybill:read-set-source",
-                    "value": mapping.source.as_wire_str(),
-                }));
-                if matches!(
-                    pipeline.completeness,
-                    waybill_common::attestation::compiler_pipeline::CompletenessState::Partial {
-                        reason: waybill_common::attestation::compiler_pipeline::PartialReason::AttachLate,
-                    }
-                ) {
-                    properties.push(json!({
-                        "name": "waybill:trace-attach-late",
-                        "value": "true",
-                    }));
-                }
-            }
-
-            // Milestone 076: per-component user-defined identifiers
-            // from `--component-id <PURL>=<scheme>:<value>` flags.
-            // Match by byte-equality of `purl` per research §5; append
-            // matching entries AFTER pre-existing properties (research
-            // §6 — preserve original positions, lex-sort the new
-            // entries by `(scheme, value)`).
-            let mut new_per_component_props: Vec<(String, String)> = Vec::new();
-            for (idx, flag) in self.component_identifiers.iter().enumerate() {
-                if flag.selector_purl == component.purl.as_str() {
-                    *match_counts.entry(idx).or_insert(0) += 1;
-                    new_per_component_props.push((
-                        flag.scheme.as_str().to_string(),
-                        flag.value.as_str().to_string(),
-                    ));
-                }
-            }
-            new_per_component_props.sort();
-            new_per_component_props.dedup();
-            for (name, value) in new_per_component_props {
-                properties.push(json!({
-                    "name": name,
-                    "value": value,
-                }));
-            }
+            let properties = self.component_properties(component, Some(&mut *match_counts));
 
             if !properties.is_empty() {
                 entry["properties"] = json!(properties);
@@ -2202,6 +2246,38 @@ impl FoldCtx<'_> {
 /// `type` field on components waybill can't classify further.
 /// Spec 1535 (#1565): a component the CMake reader built from a declared
 /// dataset download (C160 `waybill:component-kind: dataset`).
+/// Append to `metadata.component.properties` each property whose name it
+/// does not already carry (spec 1654, R7). A no-op when there is no
+/// `metadata.component`.
+fn merge_subject_properties(metadata: &mut serde_json::Value, extra: Vec<serde_json::Value>) {
+    let Some(component) = metadata.get_mut("component").and_then(|c| c.as_object_mut()) else {
+        return;
+    };
+    let props = component
+        .entry("properties")
+        .or_insert_with(|| serde_json::Value::Array(Vec::new()));
+    let Some(props) = props.as_array_mut() else {
+        return;
+    };
+    // Names present before the merge: a repeatable property (`syft:cpe23`)
+    // the list did not emit keeps every value.
+    let names: std::collections::HashSet<String> = props
+        .iter()
+        .filter_map(|p| p.get("name").and_then(|n| n.as_str()).map(str::to_string))
+        .collect();
+    for p in extra {
+        let Some(name) = p.get("name").and_then(|n| n.as_str()).map(str::to_string) else {
+            continue;
+        };
+        if !names.contains(&name) {
+            props.push(p);
+        }
+    }
+    if props.is_empty() {
+        component.remove("properties");
+    }
+}
+
 pub(crate) fn is_dataset(c: &ResolvedComponent) -> bool {
     c.extra_annotations.get("waybill:component-kind").and_then(|v| v.as_str()) == Some("dataset")
 }
@@ -3442,6 +3518,55 @@ mod tests {
         assert!(
             purls.contains(&"pkg:cargo/serde@1.0.0"),
             "regular dep must be preserved; got: {purls:?}"
+        );
+    }
+
+    /// Spec 1654 (#1695, R7): a main module promoted to `metadata.component`
+    /// carries the properties `components[]` would give it, which SPDX
+    /// carries on the same package: C1, C4, C182 and C203. The hand-picked
+    /// list's own entries stay first, and none is duplicated.
+    #[test]
+    fn s1654_promoted_main_module_keeps_its_component_properties() {
+        let mut root = make_main_module_component("hackage", "waybill-fixture-app", "0.1.0");
+        root.source_type = Some("manifest".to_string());
+        root.evidence_kind = Some("cabal-pkg-descriptor".to_string());
+        root.scope_evidence = Some(waybill_common::resolution::ScopeEvidence::RuntimeClosure);
+        root.extra_annotations.insert(
+            crate::resolve::closure_role_scope::CLOSURE_ROLE.to_string(),
+            serde_json::Value::String("subject".to_string()),
+        );
+        let bom = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .build(&[root, make_component("serde", "1.0.0")], &[], &clean_integrity(), "app", &[], None)
+            .expect("build bom");
+        let meta = &bom["metadata"]["component"];
+        assert_eq!(meta["name"], "waybill-fixture-app", "{meta}");
+        let props: Vec<(&str, &str)> = meta["properties"]
+            .as_array()
+            .expect("properties")
+            .iter()
+            .map(|p| (p["name"].as_str().unwrap(), p["value"].as_str().unwrap()))
+            .collect();
+        for (name, value) in [
+            ("waybill:source-type", "manifest"),
+            ("waybill:evidence-kind", "cabal-pkg-descriptor"),
+            (crate::resolve::closure_role_scope::CLOSURE_ROLE, "subject"),
+            (
+                crate::resolve::closure_role_scope::CLASSIFICATION_SOURCE,
+                waybill_common::resolution::ScopeEvidence::RuntimeClosure.as_str(),
+            ),
+        ] {
+            assert!(props.contains(&(name, value)), "{name}={value} missing: {props:?}");
+        }
+        assert_eq!(props[0], ("waybill:component-role", "main-module"), "{props:?}");
+        let mut names: Vec<&str> = props.iter().map(|p| p.0).collect();
+        let total = names.len();
+        names.sort_unstable();
+        names.dedup();
+        assert_eq!(names.len(), total, "a property was emitted twice: {props:?}");
+        // The subject is not also a `components[]` entry.
+        assert!(
+            bom["components"].as_array().unwrap().iter().all(|c| c["name"] != "waybill-fixture-app"),
+            "{bom}"
         );
     }
 
