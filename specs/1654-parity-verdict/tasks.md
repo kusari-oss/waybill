@@ -106,10 +106,10 @@
     - R7 reverted;
     - R8 reverted;
     - each A7 fix reverted.
-- [ ] T019 [P] Docs:
+- [X] T019 [P] Docs:
   - `docs/reference/conformance-harness-guide.md` (or wherever `parity-check` JSON is documented; grep `parity-check` under `docs/`): the `verdict` field, and that `universal_parity` is the catalog's expectation;
   - `docs/reference/sbom-format-mapping.md`: B1/B2's target rule, the third typing pass and E1's meaning.
-- [ ] T020 [P] CHANGELOG entry under Unreleased → Fixed. It covers:
+- [X] T020 [P] CHANGELOG entry under Unreleased → Fixed. It covers:
   - the verdict field;
   - the helper;
   - the B1/B2 rule and SPDX `BUILD_DEPENDENCY_OF` into artifact-absent closure members;
