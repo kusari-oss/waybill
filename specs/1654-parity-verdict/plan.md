@@ -16,7 +16,7 @@
 - **The binary tests' SPDX 2.3 root edge (R8):** traced first, then fixed.
 - **Closure A7:** traced per shape first, then fixed.
 
-**G1 is a golden-masking artefact, not a defect (R3).** The dev-inclusion gate (R5) and A8 are out of scope and filed.
+**G1 is a golden-masking artefact, not a defect (R3).** The non-closure B1/B2 causes (R5) and A8 are out of scope and filed.
 
 ## Technical Context
 

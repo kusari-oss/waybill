@@ -115,7 +115,7 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   - **Completeness claim.** SPDX's `compositions` annotation no longer claims a complete record that CycloneDX withholds when the closure read has a gap.
   - **The root's properties.** A main module promoted to CycloneDX `metadata.component` keeps the `waybill:*` properties SPDX carries on it (`source-type`, `evidence-kind`, `closure-role`, the scope source). It used to get a hand-picked four.
   - **A lone component** gets a synthetic root in SPDX 2.3, as in CycloneDX and SPDX 3, so single-binary scans keep the root's edge in every format.
-  - **Not fixed here:** the declared-licence row A7 fails on 16 goldens (including the closures) through five licence-representation shapes, and needs a spec of its own.
+  - **Not fixed here, filed:** declared licences (A7) on 16 goldens, including the closures (#1700); dependency-edge kinds on 10 goldens (#1701), including nix-closure-slack-web's 9 `optional` edges, a spelling the three formats don't share; and image-postgres16's concluded licences, absent from SPDX 3 (#1702).
 
 - **Under `--nix-closure`, GHC boot libraries carry their dependency edges, or the document says they don't (#1688).**
   Every boot library was a leaf: `base` had no edges on any of the five closure corpus targets, and nix-closure-shellcheck read `complete`.

@@ -89,9 +89,11 @@ An earlier regeneration (run 45518589278, at `b3cf7ece`) left shellcheck with 49
 
 **The five closures:** moat, openai, shellcheck and slacklinker fail A7 only. slack-web fails A7, B1 and B2. No closure golden has any other failing row.
 
-**The other B1/B2 failures,** all filed in T024, classified by the differing edges' targets:
+**Filed (T024):** A7 #1700, B1/B2 #1701, A8 #1702.
+
+**The other B1/B2 failures** (#1701), classified by the differing edges' targets:
 - **`optional` targets:** python-flask 156 of 156, maven-guice 6 of 6, haskell-language-server 4 of 9, both hpack-hs-opentelemetry variants 1 of 9.
-- **No `scope` in CycloneDX (R5's dev-inclusion gate):** haskell-aeson 7, hpack-ogmios (both variants) 7, haskell-language-server 5, hpack-hs-opentelemetry 8.
+- **A dev edge into a component that is not dev (R5, corrected at T024: the reader types the edge, while CycloneDX carries scope only per component):** haskell-aeson 7, hpack-ogmios (both variants) 7, haskell-language-server 5, hpack-hs-opentelemetry 8.
 - **go-opentelemetry:** 2 edges into `test`-scoped targets, not traced.
 
 ## Mutations (T018)

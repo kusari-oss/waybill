@@ -126,8 +126,8 @@
 
   Commit the goldens.
 - [ ] T023 Dispatch a verification run without regeneration, and confirm every golden passes.
-- [ ] T024 File the out-of-scope gaps, each with its per-row measurement and the public footer (R10):
-  - the dev-inclusion gate (R5);
+- [X] T024 File the out-of-scope gaps, each with its per-row measurement and the public footer (R10):
+  - the non-closure B1/B2 causes (R5, corrected at T024, and `optional`);
   - A8 on image-postgres16;
   - any non-closure A7 shape from T007.
 - [ ] T025 Mark the tasks and checklist complete, verifying each claim against the diff. Open the PR with `Refs #1695`, the footer, the before and after tables, and the issue numbers from T024.
