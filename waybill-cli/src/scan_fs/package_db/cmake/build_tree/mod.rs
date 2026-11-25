@@ -12,6 +12,7 @@
 pub(crate) mod cache;
 pub(crate) mod compile_db;
 pub(crate) mod discover;
+pub(crate) mod file_api;
 pub(crate) mod redact;
 pub(crate) mod settle;
 
@@ -135,7 +136,18 @@ impl BuildEvidence {
             let found = discover::discover(tree);
             for c in &found.caches {
                 let Some(root) = c.parent() else { continue };
-                let cache = match std::fs::read_to_string(c).map_err(|_| ()).and_then(|t| CacheView::parse(&t).map_err(|_| ())) {
+                // US4 (FR-010): a file-API reply is preferred over the
+                // cache and the compilation database it describes; each
+                // file is the fallback for what the reply lacks.
+                let (mut reply, reply_malformed) = match file_api::load(root) {
+                    file_api::Loaded::Read(r) => (Some(r), false),
+                    file_api::Loaded::Absent => (None, false),
+                    file_api::Loaded::Malformed => (None, true),
+                };
+                let from_reply = reply.as_mut().and_then(|r| r.cache.take());
+                let cache = match from_reply.ok_or(()).or_else(|()| {
+                    std::fs::read_to_string(c).map_err(|_| ()).and_then(|t| CacheView::parse(&t).map_err(|_| ()))
+                }) {
                     Ok(v) => v,
                     Err(()) => {
                         coverage.unreadable_files += 1;
@@ -149,7 +161,13 @@ impl BuildEvidence {
                 if home.as_deref().is_some_and(|h| !h.starts_with(&canonical_root)) {
                     coverage.source_mismatch += 1;
                 }
-                let units = match read_units(&root.join("compile_commands.json")) {
+                if reply_malformed {
+                    coverage.unreadable_files += 1;
+                }
+                if reply.is_some() {
+                    coverage.file_api_replies += 1;
+                }
+                let units = match reply.and_then(|r| r.units).map(Ok).unwrap_or_else(|| read_units(&root.join("compile_commands.json"))) {
                     Ok(u) => u,
                     Err(()) => {
                         coverage.unreadable_files += 1;

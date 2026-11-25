@@ -182,7 +182,7 @@ fn split_command_windows(c: &str) -> Vec<String> {
     out
 }
 
-fn absolute(dir: &Path, p: &str) -> PathBuf {
+pub(crate) fn absolute(dir: &Path, p: &str) -> PathBuf {
     let p = Path::new(p);
     normalise(&if p.is_absolute() { p.to_path_buf() } else { dir.join(p) })
 }

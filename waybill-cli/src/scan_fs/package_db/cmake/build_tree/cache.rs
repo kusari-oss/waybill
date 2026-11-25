@@ -20,7 +20,7 @@ pub(crate) enum CacheKind {
 }
 
 impl CacheKind {
-    fn parse(s: &str) -> Self {
+    pub(crate) fn parse(s: &str) -> Self {
         match s {
             "BOOL" => Self::Bool,
             "STRING" => Self::String,
@@ -89,6 +89,24 @@ impl CacheView {
             return Err(CacheError::NoEntries);
         }
         Ok(Self { entries, help })
+    }
+
+    /// A view from (name, kind, value, help) entries, as a file-API
+    /// `cache-v2` reply lists them (spec 1653 US4). `help` is the entry's
+    /// `HELPSTRING` property: the text `CMakeCache.txt` writes as the `//`
+    /// comment, which [`Self::help`] needs to tell a package directory apart.
+    pub(crate) fn from_entries(entries: impl IntoIterator<Item = (String, CacheKind, String, Option<String>)>) -> Result<Self, CacheError> {
+        let (mut map, mut help) = (HashMap::new(), HashMap::new());
+        for (name, kind, value, h) in entries.into_iter().filter(|e| !e.0.is_empty()) {
+            if let Some(h) = h.filter(|h| !h.is_empty()) {
+                help.insert(name.clone(), h);
+            }
+            map.insert(name, CacheEntry { kind, value });
+        }
+        if map.is_empty() {
+            return Err(CacheError::NoEntries);
+        }
+        Ok(Self { entries: map, help })
     }
 
     pub(crate) fn get(&self, name: &str) -> Option<&CacheEntry> {
