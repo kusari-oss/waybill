@@ -8,7 +8,6 @@ pkg:hackage/base
 pkg:hackage/bytestring
 pkg:hackage/case-insensitive
 pkg:hackage/clock
-pkg:hackage/co-log
 pkg:hackage/co-log-core
 pkg:hackage/co-log@0.6.1.2
 pkg:hackage/conduit
@@ -91,8 +90,6 @@ pkg:hackage/postgresql-simple
 pkg:hackage/pretty-hex
 pkg:hackage/primitive
 pkg:hackage/process
-pkg:hackage/proto-lens
-pkg:hackage/proto-lens-runtime
 pkg:hackage/proto-lens-runtime@0.7.0.7
 pkg:hackage/proto-lens@0.7.1.6
 pkg:hackage/random
@@ -106,7 +103,6 @@ pkg:hackage/tasty-bench
 pkg:hackage/tasty-hunit
 pkg:hackage/template-haskell
 pkg:hackage/text
-pkg:hackage/thread-utils-context
 pkg:hackage/thread-utils-context@0.4.1.0
 pkg:hackage/thread-utils-finalizers@0.1.1.0
 pkg:hackage/time
@@ -114,7 +110,6 @@ pkg:hackage/tls
 pkg:hackage/transformers
 pkg:hackage/unagi-chan
 pkg:hackage/unix
-pkg:hackage/unix-compat
 pkg:hackage/unix-compat@0.7.1
 pkg:hackage/unliftio
 pkg:hackage/unliftio-core

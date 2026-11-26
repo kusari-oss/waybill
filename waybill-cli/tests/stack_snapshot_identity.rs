@@ -136,3 +136,72 @@ fn every_snapshot_is_named_sourced_and_explained() {
     // FR-000: (d)'s lock, the string form, is read: its pinned package is emitted.
     assert!(all.iter().any(|c| c["purl"] == "pkg:hackage/waybill-fixture-dep-d@2.3.4"), "lock package from (d) missing");
 }
+
+/// Spec 1663: a root `stack.yaml.lock` governs the packages its `stack.yaml`
+/// lists in subdirectories. The pinned dependency is one versioned component
+/// reached by the package's edge, not a versionless one plus an unreachable
+/// pinned twin (the hs-opentelemetry / lootbox shape). A pin no declared
+/// package names is `edgeless-lock-pin`.
+#[test]
+fn a_root_lock_governs_listed_subdirectory_packages() {
+    let lts = format!("{SS}/lts/18/8.yaml");
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path().join(ROOT);
+    let files = [
+        ("stack.yaml", "resolver: lts-18.8\npackages:\n  - pkgs/a\n".to_string()),
+        (
+            "stack.yaml.lock",
+            format!(
+                "snapshots:\n- completed:\n    sha256: {LTS_SHA}\n    size: 1\n    url: {lts}\n  original: lts-18.8\n\
+                 packages:\n\
+                 - completed:\n    hackage: waybill-fixture-direct-1.2.3@sha256:00,1\n  original:\n    hackage: waybill-fixture-direct-1.2.3\n\
+                 - completed:\n    hackage: waybill-fixture-transitive-4.5.6@sha256:00,1\n  original:\n    hackage: waybill-fixture-transitive-4.5.6\n"
+            ),
+        ),
+        (
+            "pkgs/a/package.yaml",
+            "name: waybill-fixture-app\nversion: 0.1.0\nlibrary:\n  dependencies:\n    - base\n    - waybill-fixture-direct\n".to_string(),
+        ),
+    ];
+    for (rel, text) in &files {
+        let p = root.join(rel);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(p, text).unwrap();
+    }
+    let out = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let cdx = out.path().join("w.cdx.json");
+    let o = Command::new(env!("CARGO_BIN_EXE_waybill"))
+        .env("HOME", home.path())
+        .args(["--offline", "sbom", "scan", "--path"])
+        .arg(&root)
+        .args(["--no-deep-hash", "--format", "cyclonedx-json", "--output"])
+        .arg(format!("cyclonedx-json={}", cdx.display()))
+        .output()
+        .unwrap();
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    let doc: Value = serde_json::from_slice(&std::fs::read(cdx).unwrap()).unwrap();
+    let all = components(&doc);
+    let direct: Vec<&str> = all
+        .iter()
+        .filter_map(|c| c["purl"].as_str())
+        .filter(|p| p.starts_with("pkg:hackage/waybill-fixture-direct"))
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    assert_eq!(direct, ["pkg:hackage/waybill-fixture-direct@1.2.3"], "one versioned component, no versionless twin");
+    let reached: std::collections::HashSet<&str> = doc["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .flat_map(|d| d["dependsOn"].as_array().into_iter().flatten().filter_map(Value::as_str))
+        .collect();
+    let by_purl = |p: &str| *all.iter().find(|c| c["purl"] == p).unwrap_or_else(|| panic!("missing {p}"));
+    let d = by_purl("pkg:hackage/waybill-fixture-direct@1.2.3");
+    assert!(reached.contains(d["bom-ref"].as_str().unwrap()), "the pinned direct dependency is reached");
+    let t = by_purl("pkg:hackage/waybill-fixture-transitive@4.5.6");
+    assert!(
+        reached.contains(t["bom-ref"].as_str().unwrap()) || prop(t, "waybill:orphan-reason") == Some("edgeless-lock-pin"),
+        "a pin no package names is reachable or edgeless-lock-pin"
+    );
+}

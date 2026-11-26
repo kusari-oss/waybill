@@ -1061,12 +1061,30 @@ pub(crate) fn finalize(
         match parse_stack_lock(path) {
             Ok((entries, snapshots)) => {
                 if let Some(dir) = path.parent() {
-                    let canon = std::fs::canonicalize(dir)
-                        .unwrap_or_else(|_| dir.to_path_buf());
-                    let slot = pins_by_dir.entry(canon).or_default();
-                    for e in &entries {
-                        // Stack lockfile entries are always exact versions.
-                        slot.insert(e.name.to_lowercase());
+                    // Spec 1663: a `stack.yaml.lock` governs every package
+                    // its sibling `stack.yaml` lists, not only one in its own
+                    // directory. Measured: hs-opentelemetry's root lock pins
+                    // `co-log@0.6.1.2` for `instrumentation/*` packages, and
+                    // with the pin confined to the root directory each one
+                    // emitted a versionless `co-log` that the edges reached
+                    // AND an unreachable, unexplained `co-log@0.6.1.2` (22
+                    // I7 failures across hs-opentelemetry and lootbox).
+                    let mut governed: Vec<PathBuf> = vec![dir.to_path_buf()];
+                    let stack_yaml = dir.join("stack.yaml");
+                    if stack_yaml.is_file() {
+                        for entry in stack_yaml_packages(&stack_yaml).unwrap_or_default() {
+                            let e = entry.trim().trim_end_matches('/');
+                            let e = e.strip_prefix("./").unwrap_or(e);
+                            governed.push(if e.is_empty() || e == "." { dir.to_path_buf() } else { dir.join(e) });
+                        }
+                    }
+                    for g in governed {
+                        let canon = std::fs::canonicalize(&g).unwrap_or(g);
+                        let slot = pins_by_dir.entry(canon).or_default();
+                        for e in &entries {
+                            // Stack lockfile entries are always exact versions.
+                            slot.insert(e.name.to_lowercase());
+                        }
                     }
                     stack_lock_dirs.insert(dir.to_path_buf());
                 }

@@ -53,14 +53,22 @@ scan() { # name dir sha
         ((.properties | map(select(.name == "waybill:orphan-reason")) | .[0].value) // "-")
       ] | join("\t"))
     | unique | .[]' "$cdx" > "$out/$name.snapshots.tsv"
+  # I7's population: unreachable from the root and carrying no orphan reason.
+  jq -r '([(.dependencies // [])[] | .dependsOn[]?]) as $r
+    | [.. | objects | select((.purl? // "") | startswith("pkg:"))] | unique_by(.purl)
+    | map(. as $c | select((($r | index($c["bom-ref"])) == null)
+        and (((.properties // []) | map(select(.name == "waybill:orphan-reason")) | length) == 0)
+        and ($c["bom-ref"] != null)))
+    | .[].purl' "$cdx" | sort > "$out/$name.unexplained.txt"
   local warn
   warn=$(grep -c 'failed to parse stack.yaml.lock' "$log" || true)
-  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$label" "$name" "${sha:0:7}" \
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$label" "$name" "${sha:0:7}" \
     "$(wc -l < "$out/$name.hackage.txt" | tr -d ' ')" \
-    "$(wc -l < "$out/$name.snapshots.tsv" | tr -d ' ')" "$warn"
+    "$(wc -l < "$out/$name.snapshots.tsv" | tr -d ' ')" "$warn" \
+    "$(wc -l < "$out/$name.unexplained.txt" | tr -d ' ')"
 }
 
-printf 'label\ttarget\tpin\thackage\tsnapshots\tlock_parse_warnings\n'
+printf 'label\ttarget\tpin\thackage\tsnapshots\tlock_parse_warnings\tunreachable_unexplained\n'
 for t in "${targets[@]}"; do
   read -r name url sha variant <<<"$t"
   src="$work/src/$name"

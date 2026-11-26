@@ -88,3 +88,20 @@ Every part must be all-digits. Mirrors and other refs keep working, and a non-nu
 - The `stack.yaml` fallback already runs only when no sibling lock parsed (`haskell.rs:1033`). With R1, hs-opentelemetry's root gets `stackage-lts-24.35@6406d803…` from the lock in place of `@unspecified` from `stack.yaml`.
 
 Lock-file *package* components also record an empty `source_path` (`haskell.rs:2407`). That is not in this spec's scope; filed as a side finding.
+
+## R7. A Stack lock governs the packages its `stack.yaml` lists (added at implementation)
+
+**Finding:** the corpus run on #1737's first head failed I7 on four targets (`measurements/snapshots.md`). `governing_pins` looked up a lock in the package's own directory only. A root `stack.yaml.lock` pins for every package `stack.yaml` lists, and those are in subdirectories in both affected repositories.
+
+**Decision (maintainer):**
+- A lock's pins apply to its own directory and to each `stack.yaml` `packages:` entry, read with spec 1662's `stack_yaml_packages`.
+- `cabal.project.freeze` is unchanged.
+
+## R8. `edgeless-lock-pin` (added at implementation)
+
+12 lock pins (1 in hs-opentelemetry, 11 in lootbox) are named by no manifest. No existing code fits:
+- `dead-lockfile-entry` claims the pin is unused;
+- `unreferenced-lock-node` assumes a lock whose nodes reference each other;
+- `unresolved-indirect-require` is Go-only by contract.
+
+**Decision (maintainer):** a new C45 value, `edgeless-lock-pin`. It means a `stack.yaml.lock` package entry that no declared package reaches; the lock records no edges, so it cannot say what needs the pin. It is assigned to `source_type = hackage-stack-lock` only, and it's documented in `sbom-format-mapping.md` (C45) and `sbom-invariants.md`.

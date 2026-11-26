@@ -1,0 +1,1 @@
+pkg:generic/haskell-security-advisories@4dc0b9b

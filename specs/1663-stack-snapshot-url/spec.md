@@ -75,6 +75,8 @@ A consumer can see which lock file named a snapshot, and either the snapshot is 
 ### Functional Requirements
 
 - **FR-000** (added at plan time, maintainer decision; research R1): a `stack.yaml.lock` whose snapshot `original` is a plain string (`original: lts-24.35`, the form Stack writes for a resolver) MUST be read. Today it fails to deserialize and the whole file, packages included, is ignored. In the corpus, that's hs-opentelemetry's root lock and lootbox's.
+- **FR-000a** (added at implementation, maintainer decision; research R7): a `stack.yaml.lock` MUST govern the packages its sibling `stack.yaml` lists, not only a package in its own directory. A dependency it pins is then one versioned component, not a versionless one plus an unreachable pinned twin.
+- **FR-000b** (added at implementation, maintainer decision; research R8): a lock pin that no declared package reaches MUST carry the new orphan reason `edgeless-lock-pin`. It does not claim the pin is unused.
 - **FR-001**: A snapshot pinned by a URL in the stackage-snapshots layout MUST be named as its resolver would be:
   - `…/lts/<M>/<m>.yaml` → `lts-<M>.<m>`;
   - `…/nightly/<Y>/<M>/<D>.yaml` → `nightly-<Y>-<MM>-<DD>`, with zero-padding.

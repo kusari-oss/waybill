@@ -1,0 +1,1 @@
+pkg:generic/hpack-hs-opentelemetry@25f5b2d
