@@ -1,0 +1,4 @@
+mode	N	batches	names	duplicate_entries
+real	18	200	3600	0
+real	72	200	14400	0
+fixed-seed	18	20	360	340

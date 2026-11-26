@@ -11,7 +11,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `specs/1660-held-temp-paths/measurements/`.
+- [x] T001 Create `specs/1660-held-temp-paths/measurements/`.
 
 ## Phase 2: User Story 1, measure the mechanism before any change (P1)
 
@@ -19,17 +19,17 @@
 
 **Independent test**: the control run shows duplicates; the real runs report their counts, including 0.
 
-- [ ] T002 [US1] Create the standalone crate `specs/1660-held-temp-paths/measurements/collide/`:
+- [x] T002 [US1] Create the standalone crate `specs/1660-held-temp-paths/measurements/collide/`:
   - **`Cargo.toml`:** package `collide`, an empty `[workspace]` table, and dependencies `tempfile = "=3.27.0"` and `fastrand = "=2.4.1"` (the lockfile's versions; check with `grep -A1 '^name = "tempfile"' Cargo.lock`). Use its own `target` directory by building with `--manifest-path`.
   - **`src/main.rs`:**
     - with no argument, create `tempfile::NamedTempFile::new()`, print `.path()`, then drop it (the tests' shape);
     - with `--fixed-seed`, print a name built from `fastrand::Rng::with_seed(42)` the way `tempfile` builds one (`.tmp` + 6 alphanumerics), as the control.
-- [ ] T003 [US1] Write `specs/1660-held-temp-paths/measurements/collide.sh` (bash):
+- [x] T003 [US1] Write `specs/1660-held-temp-paths/measurements/collide.sh` (bash):
   - build the crate in release mode;
   - for each mode (`real`, `fixed-seed`) and each N in 18, 36 and 72, run 50 batches, each starting N processes at once (`&` then `wait`), collecting stdout per batch;
   - count duplicates per batch with `sort | uniq -d | wc -l`, and sum them;
   - write `mode`, `N`, `batches`, `names`, `duplicates` to `collide-results.tsv`.
-- [ ] T004 [US1] Run `collide.sh` 3 times, appending a `run` column, and write `measurements/collide.md`:
+- [x] T004 [US1] Run `collide.sh` 3 times, appending a `run` column, and write `measurements/collide.md`:
   - **The host:** model and core count.
   - **The control result,** which must be greater than 0, or the harness is broken.
   - **The real results:** if every real count is 0, say plainly that the collision did not reproduce on this host, and that the fix rests on the code facts.

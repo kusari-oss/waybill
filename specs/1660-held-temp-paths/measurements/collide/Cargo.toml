@@ -1,0 +1,12 @@
+# Throwaway measurement crate for spec 1660 (FR-001). Not a workspace member.
+[package]
+name = "collide"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+tempfile = "=3.27.0"
+fastrand = "=2.4.1"
+
+[workspace]
