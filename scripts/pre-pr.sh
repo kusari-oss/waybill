@@ -46,9 +46,13 @@ fi
 # allow-list). The walker audit is the same script CI runs, so local and CI
 # cannot drift; before it was shared it lived only in CI, and a local-green
 # PR still failed it (#1111).
+# The held-temp-path check (#1727, spec 1660) is another fast, toolchain-free
+# gate: a temp file dropped in the statement that takes its path leaves the
+# path unreserved, which parallel tests can end up sharing.
 steps=(
     "python3 scripts/check-homoglyphs.py"
     "bash scripts/check-walker-audit.sh"
+    "python3 -I -B scripts/check-held-temp-paths.py"
     "cargo clippy --workspace --all-targets ${feature_args[*]:-} -- -D warnings"
     "cargo nextest run --workspace --no-fail-fast --color never ${feature_args[*]:-}"
     "cargo test --workspace --doc ${feature_args[*]:-}"

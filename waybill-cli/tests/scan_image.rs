@@ -72,10 +72,9 @@ fn build_synthetic_image(files: &[ImageFile]) -> PathBuf {
 
 fn scan_image(tarball: &Path) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_waybill");
-    let out_path = tempfile::NamedTempFile::new()
-        .unwrap()
-        .path()
-        .to_path_buf();
+    // Held until the output is read: a dropped temp file frees its name (#1727).
+    let out_path_dir = tempfile::tempdir().unwrap();
+    let out_path = out_path_dir.path().join("out");
     let output = Command::new(bin)
         .arg("--offline")
         .arg("sbom")
@@ -405,10 +404,9 @@ fn image_subject_records_the_main_modules_it_outranked_issue_1170() {
     // Asserted here so "the document says why" and "the operator is told
     // what lost" are both covered, rather than assumed.
     let bin = env!("CARGO_BIN_EXE_waybill");
-    let out_path = tempfile::NamedTempFile::new()
-        .unwrap()
-        .path()
-        .to_path_buf();
+    // Held until the output is read: a dropped temp file frees its name (#1727).
+    let out_path_dir = tempfile::tempdir().unwrap();
+    let out_path = out_path_dir.path().join("out");
     let stderr = String::from_utf8_lossy(
         &Command::new(bin)
             .arg("--offline")
