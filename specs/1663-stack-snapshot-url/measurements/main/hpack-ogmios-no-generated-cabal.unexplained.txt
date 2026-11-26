@@ -1,0 +1,1 @@
+pkg:generic/hpack-ogmios-no-generated-cabal@435189a

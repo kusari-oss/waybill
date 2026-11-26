@@ -1,0 +1,2 @@
+pkg:generic/stackage-lts-18.8@93a107557e8691ed5ca17beaee41e68222b142c48868fc8c04a4181fb233477d	["instrumentation/yesod/stack.yaml.lock"]	unreachable	build-toolchain
+pkg:generic/stackage-lts-24.35@6406d8039dd538f18fc0d242f01c7066ee386d81ba3c8751b914ac1ae193ec5d	["stack.yaml.lock"]	unreachable	build-toolchain
