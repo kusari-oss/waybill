@@ -26,7 +26,7 @@ The file is deleted and only its name is kept, so nothing reserves the path.
 
 **Observed once:** `scan_pip::scan_pip_dynamic_version_uses_placeholder` read `pkg:pypi/editable-pkg@1.0.0`, another test's fixture, on macOS CI (PR #1726, run 45741984929, attempt 2). It didn't reproduce locally: 0 failures in 40 parallel runs of `scan_pip`.
 
-A grep with 3 lines of context finds 21 candidate call sites in 20 test files (#1727). That grep can include sites that keep the guard alive, so it is a candidate list, not a defect count.
+#1727 first listed 21 sites in 20 files, from a grep with 3 lines of context. Research R1 replaced that list. A statement-level scan of all of `waybill-cli` finds 23 dropped sites in 22 test files, and none in production code. #1727's list was mostly held sites and missed `scan_pip.rs`; #1727 carries the correction.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -56,7 +56,7 @@ A contributor's parallel test run can't hand two tests the same output file.
 
 **Acceptance Scenarios**:
 
-1. **Given** the 21 candidate sites, and any found under other spellings, **When** each is reviewed, **Then** it is recorded as either *dropped* (fixed) or *held* (no change), with the reason.
+1. **Given** the 23 sites found by the statement-level scan (research R1), and any found under other spellings, **When** each is reviewed, **Then** it is recorded as either *dropped* (fixed) or *held* (no change), with the reason.
 2. **Given** a fixed site, **When** its test runs, **Then** its assertions are unchanged and it passes.
 3. **Given** the full suite, **When** it runs under nextest at least 3 times locally, and once on every CI lane, **Then** every run passes.
 

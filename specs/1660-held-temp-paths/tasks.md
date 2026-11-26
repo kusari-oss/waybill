@@ -33,6 +33,7 @@
   - **The host:** model and core count.
   - **The control result,** which must be greater than 0, or the harness is broken.
   - **The real results:** if every real count is 0, say plainly that the collision did not reproduce on this host, and that the fix rests on the code facts.
+  - **Scope:** state that the harness tests the naming mechanism under concurrent process starts, not nextest's own launcher. A count of 0 here says nothing about whether nextest could still collide.
   - **Cleanup:** remove `collide/target` afterwards.
 
 **Checkpoint**: the mechanism is measured before any code changes.
@@ -44,7 +45,7 @@
 **Independent test**: `--self-test` passes, and the check lists all 23 sites on the unfixed tree.
 
 - [ ] T005 [US3] Write `scripts/check-held-temp-paths.py` per `contracts/check.md`:
-  - **Scan:** every `*.rs` under `waybill-cli/` and `xtask/`.
+  - **Scan:** every `*.rs` file in every workspace member (`waybill-cli/`, `waybill-common/`, `waybill-ebpf/`, `xtask/`), excluding `target/`.
   - **Constructors:** `NamedTempFile::new(`, `NamedTempFile::new_in(`, `Builder::new()` followed by `.tempfile(`/`.tempdir(`, `tempfile::tempdir(`, bare `tempdir(` and `TempDir::new(`/`TempDir::new_in(`.
   - **The statement:** from the constructor's start to the first `;` at bracket depth 0, skipping string literals.
   - **The chain:** parse the constructor's own parenthesised arguments, then look at what is chained onto it. The statement is flagged when that chain reaches `.path()` and the statement isn't of the form `let <ident> = <ctor>…;` with nothing after `.unwrap()`/`.expect(...)`/`?`.

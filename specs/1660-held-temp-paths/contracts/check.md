@@ -1,7 +1,7 @@
 # Contract: `scripts/check-held-temp-paths.py`
 
 ```
-python3 -I -B scripts/check-held-temp-paths.py              # scan waybill-cli/ and xtask/
+python3 -I -B scripts/check-held-temp-paths.py              # scan every workspace member's .rs files, excluding target/
 python3 -I -B scripts/check-held-temp-paths.py --self-test  # run the built-in controls
 ```
 

@@ -34,7 +34,7 @@
 ## R3. Enforcement check (FR-006)
 
 **Decision:** `scripts/check-held-temp-paths.py`, Python 3 standard library only, run as `python3 -I -B`, like `check-homoglyphs.py`.
-- **What it scans:** every `*.rs` under `waybill-cli/` and `xtask/`.
+- **What it scans:** every `*.rs` file in every workspace member (`waybill-cli/`, `waybill-common/`, `waybill-ebpf/`, `xtask/`), excluding `target/`.
 - **What it flags:** a statement that calls a temporary-file or temporary-directory constructor (the R1 list), then a method chained onto that constructor's result, ending in `.path()` and optionally followed by `.to_path_buf()`, `.to_owned()` or `.join(…)`, without binding the guard. The check is per statement, from the constructor to the matching `;`, so `new_in(tmp.path())` is not flagged: there, `.path()` belongs to the argument, not to the chain.
 - **What it allows:**
   - binding the guard: `let tmp = …;` then `tmp.path()`;
