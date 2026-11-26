@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-25
+Auto-generated from all feature plans. Last updated: 2026-11-26
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -682,6 +682,25 @@ counts and content, not exit codes and "it compiled". Checking the
 status of a script that compares content is exactly right; that is
 what a gate is. Checking a status when nothing compared content is
 not a check at all.
+
+### `.cargo/config.toml`: macOS debug-info packing (spec 1661)
+
+On macOS, cargo's default `split-debuginfo = "unpacked"` left about 31,100 new
+`*.rcgu.o` files in `target/debug/deps` on every rebuild (65,923 → 97,032 → 128,141
+entries), and rebuilds slowed 29 → 33 → 42 s until `cargo clean`. That directory
+size is also what made `pre-pr.sh` slow (see the memory note on slow `pre-pr.sh`).
+`.cargo/config.toml` now passes `-C split-debuginfo=packed` for macOS targets only.
+`deps/` holds steady across rebuilds and full debug info is kept. It's set as
+rustflags because cargo silently ignores `profile.*` under a `[target.…]` table,
+and a plain profile setting would change Linux and Windows. A `RUSTFLAGS`
+environment variable overrides it. A `target/` that grew before this change needs
+one `cargo clean`. Version bumps still leave stale binary generations, so check
+`ls target/debug/deps | wc -l` when a gate is slow.
+
+`waybill-cli/tests/backtrace_resolves_source.rs` fails if a test build loses
+file:line in backtraces. CI's debug info was measured and left unchanged:
+runner-to-runner noise (38–51% for one setting) exceeded any setting's effect
+(`specs/1661-test-debuginfo/measurements/ci.md`).
 
 ### Run the gate in the configuration that can fail
 
