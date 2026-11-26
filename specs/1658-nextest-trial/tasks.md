@@ -65,14 +65,14 @@
 
 **Independent test**: `ci.tsv` and `runs.tsv` have the required rows.
 
-- [ ] T016 [US3] Time the new `pre-pr.sh` 3 times (the before runs are T016a), through `gate.sh` with C2. Record the times in `runs.tsv` (SC-003).
-- [ ] T017 [US3] CI before: take the `Tests` step time per lane from run 45695514065, and dispatch or reuse one more green `main` run (2 per lane). Record both in `ci.tsv`.
+- [x] T016 [US3] Time the new `pre-pr.sh` 3 times (the before runs are T016a), through `gate.sh` with C2. Record the times in `runs.tsv` (SC-003).
+- [x] T017 [US3] CI before: take the `Tests` step time per lane from run 45695514065, and dispatch or reuse one more green `main` run (2 per lane). Record both in `ci.tsv`.
 - [ ] T018 [US3] CI after: once the draft PR is open (this is FR-006's CI trial), record the `Tests` and `Doctests` step times from its first run, plus one re-run (2 per lane), in `ci.tsv` (SC-002). Enumerate every job's conclusion.
 - [ ] T019 [US3] #1716 check. From the T004 and CI-after logs, find the slowest test per lane. If it's one of #1716's four self-scan tests, apply #1716's fix and re-measure. Otherwise note in `decision.md` that #1716 stays filed.
 
 ## Phase 6: Polish
 
-- [ ] T020 Run the gate: `./scripts/gate.sh` with both C2 expectations, `prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass`, the nextest summary line and the doctest lines.
+- [x] T020 Run the gate: `./scripts/gate.sh` with both C2 expectations, `prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass`, the nextest summary line and the doctest lines.
 - [ ] T021 Write `measurements/after.md`: local and CI timings, count parity, isolation findings, gate mutations, and the #1716 outcome. Update `CLAUDE.md` Recent Changes with spec 1658.
 - [ ] T022 Open the PR (Refs #1719, #1718) at the first green gate. Then tick #1718 in #1719's checklist once it merges.
 
