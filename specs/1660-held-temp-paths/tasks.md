@@ -77,8 +77,8 @@
 
 ## Phase 6: Verify and ship
 
-- [ ] T012 Run the full suite 3 times: `cargo nextest run --workspace --no-fail-fast --color never`. Record each summary line in `measurements/after.md`.
-- [ ] T013 Run the gate: `./scripts/gate.sh` with both `--expect` patterns from CLAUDE.md, around `prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass`, the summary line, and that the test count is unchanged (9,299), and that the new check's step ran.
+- [x] T012 Run the full suite 3 times: `cargo nextest run --workspace --no-fail-fast --color never`. Record each summary line in `measurements/after.md`.
+- [x] T013 Run the gate: `./scripts/gate.sh` with both `--expect` patterns from CLAUDE.md, around `prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass`, the summary line, and that the test count is unchanged (9,299), and that the new check's step ran.
 - [ ] T014 Write `measurements/after.md`, commit, and open the PR (Refs #1719, #1727). Check every CI lane once, enumerating every job's conclusion. After merge, close #1727 and tick it in #1719.
 
 ## Dependencies
