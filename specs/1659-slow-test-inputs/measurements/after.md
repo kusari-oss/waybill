@@ -28,3 +28,25 @@
 ## CI, Linux (`ci.tsv`)
 
 The before runs are the first `main` run after spec 1658 (45737629137) and spec 1658's last PR run (45731418569, same test tree). The after runs come from this PR.
+
+| run | phase | `Tests` step | summed test time |
+|---|---|---|---|
+| 45737629137 | before | 529 s | 1,434 s |
+| 45731418569 | before | 676 s | 1,817 s |
+| 45741984929 | after | 633 s | 1,638 s |
+| 45741984929 (re-run) | after | 618 s | 1,620 s |
+
+The step totals vary by about 25% between the two before runs, more than the work removed, so they show no effect either way. The affected tests' own Linux times (nextest per-test durations, before run 45737629137, after run 45741984929 re-run) do:
+
+| test | before | after |
+|---|---|---|
+| i1454 | 105.95 s | 38.75 s |
+| `us4` | 2.79 s | 4.16 s |
+| self-scan guards | 18.50 + 21.47 + 22.15 + 21.63 = 83.75 s | 14.96 s |
+| **total** | **192.49 s** | **57.87 s** |
+
+That is 134.6 s less CPU per Linux run, about 34 s of wall time at the observed 4-way parallelism.
+
+## CI failure on the re-run (not caused by this change)
+
+macOS failed one test on the re-run, `scan_pip::scan_pip_dynamic_version_uses_placeholder`. It read another test's SBOM (`editable-pkg@1.0.0`) through an output path taken from a dropped `NamedTempFile`, which nothing reserves once dropped. Filed as #1727, which lists 21 such call sites. The failed job was re-run.
