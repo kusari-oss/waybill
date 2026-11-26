@@ -819,8 +819,23 @@ pub(crate) fn finalize(
         resolve_root_declared_members(rootfs, &cabal_project_paths, &stack_yaml_paths, &package_dirs)
     };
 
+    // Spec 1662 — every `package.yaml` is read once, here, before #1032's
+    // filter: the filter needs each manifest's `name:` (its stand-in, below),
+    // and the emit loop reuses the result rather than parsing a second time.
+    let mut hpack_reads: Vec<(PathBuf, Vec<hpack::IncludeResolution>, hpack::ManifestRead)> =
+        package_yaml_paths
+            .iter()
+            .map(|p| {
+                let (includes, read) = hpack::read_manifest(p, rootfs);
+                (p.clone(), includes, read)
+            })
+            .collect();
+
     // Issue #1032 — drop `.cabal` files the governing `cabal.project` does not
-    // declare.
+    // declare. Spec 1662 extends it to `package.yaml`: each manifest takes part
+    // as its stand-in, the `.cabal` hpack would generate for it
+    // (`hpack_stand_in`), so one matcher reaches one verdict per directory
+    // whichever file the directory holds.
     //
     // Scoped to the tree each `cabal.project` sits in, and applied only where
     // the file actually declares a `packages:` list. A `.cabal` outside any
@@ -835,6 +850,7 @@ pub(crate) fn finalize(
     {
         let before = cabal_paths.len();
         let mut dropped_total = 0usize;
+        let mut dropped_hpack = 0usize;
         for project in &cabal_project_paths {
             let Some(project_dir) = project.parent() else {
                 continue;
@@ -842,12 +858,29 @@ pub(crate) fn finalize(
             let Ok(text) = std::fs::read_to_string(project) else {
                 continue;
             };
-            let Some(entries) = parse_cabal_project_packages(&text) else {
+            let Some(mut entries) = parse_cabal_project_packages(&text) else {
                 // Declares no `packages:` — governs nothing rather than
                 // governing the empty set.
                 continue;
             };
-            let declared = cabal_files_declared_by(project_dir, &entries, &cabal_paths);
+            // Spec 1662 — a `stack.yaml` beside the `cabal.project` is a second
+            // build definition for the same tree, and a package either one
+            // builds belongs to the project. Measured: hs-opentelemetry's
+            // `examples/otlp-demo` is commented out of `cabal.project` but in
+            // `stack.yaml`'s `packages:`. Stack entries are plain directories,
+            // which the matcher treats exactly like a `cabal.project` directory
+            // entry. A `stack.yaml` with no `cabal.project` still governs
+            // nothing, as before.
+            for stack in stack_yaml_paths.iter().filter(|s| s.parent() == Some(project_dir)) {
+                entries.extend(stack_yaml_packages(stack).unwrap_or_default());
+            }
+            let stand_ins: Vec<PathBuf> = hpack_reads
+                .iter()
+                .map(|(p, _, read)| hpack_stand_in(p, read))
+                .collect();
+            let candidates: Vec<PathBuf> =
+                cabal_paths.iter().chain(stand_ins.iter()).cloned().collect();
+            let declared = cabal_files_declared_by(project_dir, &entries, &candidates);
             if declared.is_empty() {
                 // Every entry failed to match. More likely a shape this parser
                 // does not understand than a project that declares nothing, so
@@ -861,16 +894,26 @@ pub(crate) fn finalize(
             let before_this = cabal_paths.len();
             cabal_paths.retain(|c| !c.starts_with(project_dir) || declared.contains(c));
             dropped_total += before_this - cabal_paths.len();
+            let hpack_before = hpack_reads.len();
+            hpack_reads.retain(|(p, _, read)| {
+                let s = hpack_stand_in(p, read);
+                !s.starts_with(project_dir) || declared.contains(&s)
+            });
+            dropped_hpack += hpack_before - hpack_reads.len();
         }
-        if dropped_total > 0 {
+        if dropped_total > 0 || dropped_hpack > 0 {
             tracing::info!(
                 dropped = dropped_total,
+                dropped_package_yaml = dropped_hpack,
                 kept = cabal_paths.len(),
                 found = before,
-                "haskell: .cabal files not declared by a governing cabal.project were skipped (#1032)"
+                "haskell: .cabal and package.yaml files not declared by a governing cabal.project were skipped (#1032, spec 1662)"
             );
         }
     }
+    // Downstream readers (the no-op check, `emit_hpack_warnings`) see only the
+    // manifests that survived.
+    let package_yaml_paths: Vec<PathBuf> = hpack_reads.iter().map(|(p, _, _)| p.clone()).collect();
 
     // FR-008 / SC-004: no-op when no Haskell artifacts present.
     //
@@ -1039,10 +1082,10 @@ pub(crate) fn finalize(
     // sibling carrying the hpack generation header is therefore suppressed
     // rather than merged.
     let mut hpack_outcome = hpack::HpackReadOutcome::default();
-    for path in &package_yaml_paths {
+    for (path, includes, read) in hpack_reads {
+        let path = &path;
         hpack_outcome.seen.push(path.clone());
         let Some(dir) = path.parent() else { continue };
-        let (includes, read) = hpack::read_manifest(path, rootfs);
         hpack_outcome.includes.extend(includes);
         match read {
             Ok((mut manifest, unmodelled)) => {
@@ -1379,18 +1422,8 @@ fn resolve_root_declared_members(
     }
 
     for stack in stack_yaml_paths.iter().filter(|p| at_root(p)) {
-        let Ok(text) = std::fs::read_to_string(stack) else {
+        let Some(entries) = stack_yaml_packages(stack) else {
             continue;
-        };
-        let Ok(v) = serde_yaml::from_str::<serde_yaml::Value>(&text) else {
-            continue;
-        };
-        let entries: Vec<String> = match v.get("packages") {
-            Some(serde_yaml::Value::Sequence(seq)) => {
-                seq.iter().filter_map(|e| e.as_str().map(str::to_string)).collect()
-            }
-            Some(_) => continue,
-            None => vec![".".to_string()],
         };
         for e in entries {
             let d = normalise(&e);
@@ -1937,6 +1970,44 @@ fn parse_cabal_project_packages(text: &str) -> Option<Vec<String>> {
         return None;
     }
     Some(entries)
+}
+
+/// The package directories a `stack.yaml` declares: its `packages:` list, or
+/// Stack's default `["."]` when the field is absent. Stack does not glob them.
+/// `None` when the file can't be read or `packages:` isn't a list. Read as an
+/// untyped value, so a `stack.yaml` in an older layout cannot break the
+/// resolver read that `StackYaml` serves.
+///
+/// Shared by spec 1652's root-declared members and, since spec 1662, by
+/// #1032's membership filter.
+fn stack_yaml_packages(path: &Path) -> Option<Vec<String>> {
+    let text = std::fs::read_to_string(path).ok()?;
+    let v = serde_yaml::from_str::<serde_yaml::Value>(&text).ok()?;
+    match v.get("packages") {
+        Some(serde_yaml::Value::Sequence(seq)) => {
+            Some(seq.iter().filter_map(|e| e.as_str().map(str::to_string)).collect())
+        }
+        Some(_) => None,
+        None => Some(vec![".".to_string()]),
+    }
+}
+
+/// Spec 1662 — the `.cabal` file hpack would generate for the `package.yaml`
+/// at `path`: `<dir>/<name>.cabal`. Used only to decide membership through
+/// #1032's matcher; never emitted.
+///
+/// hpack 0.38.3 names the file after the manifest's `name:`, and with no
+/// `name:` after the directory (measured, research R1). A manifest this
+/// reader could not read uses the directory name too.
+fn hpack_stand_in(path: &Path, read: &hpack::ManifestRead) -> PathBuf {
+    let dir = path.parent().unwrap_or_else(|| Path::new(""));
+    let name = read
+        .as_ref()
+        .ok()
+        .and_then(|(m, _)| m.name.clone())
+        .or_else(|| dir.file_name().map(|n| n.to_string_lossy().into_owned()))
+        .unwrap_or_default();
+    dir.join(format!("{name}.cabal"))
 }
 
 /// Which of `candidates` the entries of a `cabal.project` at `project_dir`
@@ -3637,6 +3708,79 @@ tests: True
         );
         assert!(!got.contains(&root.join("plugins/hls-cabal-plugin/test/testdata/x/FieldSuggestions.cabal")));
         assert_eq!(got.len(), 2);
+    }
+
+    /// Spec 1662 (FR-002, research R2) — for one `packages:` entry, whether a
+    /// directory holding only a `.cabal` and a directory holding only a
+    /// `package.yaml` are declared. Both go through the same matcher; the
+    /// `package.yaml` through its stand-in.
+    ///
+    /// The fixture lives at `<tmp>/modules/<dir>/`, and both files are named
+    /// after `name` (the `.cabal` as hpack would generate it).
+    fn both_verdicts(entry: &str, dir: &str, yaml: &str, name: &str) -> (bool, bool) {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        let d = root.join(dir);
+        std::fs::create_dir_all(&d).unwrap();
+        let yaml_path = d.join("package.yaml");
+        std::fs::write(&yaml_path, yaml).unwrap();
+        let (_, read) = hpack::read_manifest(&yaml_path, root);
+        let stand_in = hpack_stand_in(&yaml_path, &read);
+        let real = d.join(format!("{name}.cabal"));
+        let entries = vec![entry.to_string()];
+        let cabal_verdict = cabal_files_declared_by(root, &entries, std::slice::from_ref(&real)).contains(&real);
+        let yaml_verdict =
+            cabal_files_declared_by(root, &entries, std::slice::from_ref(&stand_in)).contains(&stand_in);
+        (cabal_verdict, yaml_verdict)
+    }
+
+    const NAMED: &str = "name: waybill-fixture-m\nversion: 0.1.0\nlibrary: {}\n";
+
+    #[test]
+    fn spec1662_every_entry_form_gives_a_package_yaml_the_cabal_verdict() {
+        // (entry, directory, expected verdict)
+        let cases: &[(&str, &str, bool)] = &[
+            ("modules/m", "modules/m", true),
+            ("./modules/m", "modules/m", true),
+            ("modules/m/", "modules/m", true),
+            ("modules/*", "modules/m", true),
+            ("other/*", "modules/m", false),
+            ("modules/m/waybill-fixture-m.cabal", "modules/m", true),
+            ("modules/m/other.cabal", "modules/m", false),
+            ("modules/*/*.cabal", "modules/m", true),
+            ("*/*.cabal", "modules/m", false),
+            // `.`, `./` and empty name the root only — never a nested package.
+            (".", "modules/m", false),
+            ("./", "modules/m", false),
+            (".", ".", true),
+            ("./", ".", true),
+            ("*.cabal", ".", true),
+        ];
+        for (entry, dir, want) in cases {
+            let (c, y) = both_verdicts(entry, dir, NAMED, "waybill-fixture-m");
+            assert_eq!((c, y), (*want, *want), "entry {entry:?}, dir {dir:?}: .cabal={c}, package.yaml={y}");
+        }
+    }
+
+    /// hpack with no `name:` names the file after the directory (R1). The
+    /// reader rejects such a manifest as not-a-manifest, so the stand-in
+    /// falls back to the directory name — which is hpack's own answer.
+    #[test]
+    fn spec1662_an_unnamed_or_unreadable_manifest_stands_in_under_its_directory_name() {
+        for yaml in ["version: 0.1.0\nlibrary: {}\n", "{{ not yaml"] {
+            let (c, y) = both_verdicts("modules/m/m.cabal", "modules/m", yaml, "m");
+            assert_eq!((c, y), (true, true), "{yaml:?}");
+            let (c, y) = both_verdicts("modules/m/waybill-fixture-m.cabal", "modules/m", yaml, "m");
+            assert_eq!((c, y), (false, false), "{yaml:?}");
+        }
+    }
+
+    /// A directory entry does not recurse: a `package.yaml` under a declared
+    /// package's test data is not claimed, as for a `.cabal` there.
+    #[test]
+    fn spec1662_a_package_yaml_nested_under_a_declared_package_is_not_claimed() {
+        let (c, y) = both_verdicts("modules/m", "modules/m/test/data/x", NAMED, "waybill-fixture-m");
+        assert_eq!((c, y), (false, false));
     }
 
     #[test]

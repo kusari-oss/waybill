@@ -2591,6 +2591,13 @@ pub(crate) fn recall_proxy(cdx: &serde_json::Value, truth: &serde_json::Value) -
 /// What an hpack target's documents must show however #1673–#1676 change
 /// them. Those fixes change how many `package.yaml` are read and what is
 /// recovered, never how many are seen, so `seen` is a stable count.
+///
+/// Spec 1662: `seen` counts the manifests that belong to the project. A
+/// `package.yaml` that neither the governing `cabal.project` nor a
+/// `stack.yaml` beside it declares is dropped before C200 is recorded. That
+/// is why ogmios is 7 of the 8 on disk (`modules/json-via-show` is not in
+/// `server/cabal.project`) and hs-temporal-sdk is 6 of 7
+/// (`tools/tix-to-markdown` is outside `packages: */*.cabal`).
 pub(crate) struct HpackExpect {
     /// `manifests-seen` in C200 (`waybill:hpack-read-outcome`).
     seen: usize,
@@ -2709,13 +2716,13 @@ pub fn hpack_lootbox_no_generated_cabal_expectations(sboms: &EmittedSboms) -> Re
 }
 
 pub fn hpack_hs_temporal_sdk_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: true })
+    hpack_expectations(sboms, HpackExpect { seen: 6, generated_cabal_present: true })
 }
 
 pub fn hpack_ogmios_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    hpack_expectations(sboms, HpackExpect { seen: 8, generated_cabal_present: true })
+    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: true })
 }
 
 pub fn hpack_ogmios_no_generated_cabal_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    hpack_expectations(sboms, HpackExpect { seen: 8, generated_cabal_present: false })
+    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: false })
 }
