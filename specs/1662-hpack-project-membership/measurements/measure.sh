@@ -35,7 +35,8 @@ scan() { # name dir sha
     --root-name "$name" --root-version "${sha:0:7}" >/dev/null 2>"$work/$label-$name.log"
   jq -r '[.. | objects | .purl? // empty | select(startswith("pkg:hackage/"))] | unique | .[]' \
     "$work/$label-$name.cdx.json" > "$out/$name.txt"
-  jq '[.. | objects | select(.name? == "waybill:hpack-read-outcome") | .value] | unique' \
+  # Paths are rewritten under `<work>` so no local path is committed.
+  jq --arg w "$work" '[.. | objects | select(.name? == "waybill:hpack-read-outcome") | .value | gsub($w; "<work>")] | unique' \
     "$work/$label-$name.cdx.json" > "$out/$name.c200.json"
   printf '%s\t%s\t%s\t%s\n' "$label" "$name" "$sha" "$(wc -l < "$out/$name.txt" | tr -d ' ')"
 }
