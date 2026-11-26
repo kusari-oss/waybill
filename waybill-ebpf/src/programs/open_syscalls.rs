@@ -50,7 +50,7 @@ use waybill_common::events::{FileEvent, FileEventType, AT_FDCWD};
 
 use crate::helpers::{
     current_comm, current_pid, current_tid, gating_armed, in_traced_subtree,
-    increment_drop_counter, increment_event_drop, should_trace,
+    increment_drop_counter, increment_event_drop, increment_handshake_diag, should_trace,
 };
 use crate::maps::{
     PendingOpen, FILE_EVENTS, FILE_EVENT_DROPS, OPEN_DIAG, OPEN_FAILURES_DISCARDED,
@@ -74,6 +74,17 @@ const KERNEL_PENDING_INSERT_FAILED: u8 = 3;
 const KERNEL_OUTSIDE_TRACED_SUBTREE: u8 = 4;
 const KERNEL_TRACED_INSERT_FAILED: u8 = 5;
 
+/// #1185 — `HANDSHAKE_DIAG` slots. See `crate::maps::HANDSHAKE_DIAG` for
+/// what each one rules in or out.
+const DIAG_OPENAT_ENTERED: u8 = 0;
+const DIAG_SENTINEL_DFD_SEEN: u8 = 1;
+const DIAG_NONCE_REJECTED: u8 = 2;
+const DIAG_RECOGNISED: u8 = 3;
+const DIAG_LOW32_ONLY: u8 = 4;
+const DIAG_ODD_NEGATIVE_DFD: u8 = 5;
+const DIAG_NONCE_IN_FLAGS: u8 = 6;
+const DIAG_NON_TRACER_OPEN: u8 = 7;
+
 const ARG0: usize = 16;
 const ARG1: usize = 24;
 const ARG2: usize = 32;
@@ -96,15 +107,51 @@ fn read_ret(ctx: &TracePointContext) -> i64 {
 /// `waybill-common` for why the pid cannot simply be passed in.
 #[inline(always)]
 fn is_handshake(dfd: i64, flags: u32) -> bool {
-    if dfd != waybill_common::maps::TRACE_HANDSHAKE_DFD {
+    // A zero nonce is no armed handshake, so nothing can be seeded by a
+    // caller that happens to guess the marker.
+    let nonce = match TRACE_HANDSHAKE_NONCE.get(waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT)
+    {
+        Some(&n) => n,
+        None => return false,
+    };
+    if nonce == 0 {
         return false;
     }
-    // A zero nonce is no armed handshake, so nothing can be seeded by a
-    // caller that happens to guess the dfd.
-    match TRACE_HANDSHAKE_NONCE.get(waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT) {
-        Some(&n) => n != 0 && n == flags,
-        None => false,
+
+    let dfd_match = dfd == waybill_common::maps::TRACE_HANDSHAKE_DFD;
+    // #1185 — the nonce in `flags` is the signal now, and `dfd` is only
+    // the control.
+    //
+    // The marker was an open with a deliberately invalid `dfd`, observed
+    // at syscall entry. On 7.0 x86_64 it is never observed: the entry
+    // program fires, ordinary opens are counted, and no open arrives
+    // carrying the sentinel -- nor any negative `dfd` other than
+    // `AT_FDCWD` at all, which rules out its arriving transformed.
+    //
+    // A nonce in `flags` does not depend on the kernel accepting the
+    // call. The loader forces bit 30 set, so the value is above
+    // 0x40000000 and no real open-flags combination can collide with it.
+    let flags_match = flags == nonce;
+
+    if dfd_match {
+        increment_handshake_diag(DIAG_SENTINEL_DFD_SEEN);
+    } else if dfd as u32 == waybill_common::maps::TRACE_HANDSHAKE_DFD as u32 {
+        increment_handshake_diag(DIAG_LOW32_ONLY);
+    } else if dfd < 0 && dfd != AT_FDCWD as i64 {
+        increment_handshake_diag(DIAG_ODD_NEGATIVE_DFD);
     }
+    if flags_match {
+        increment_handshake_diag(DIAG_NONCE_IN_FLAGS);
+    }
+
+    if flags_match {
+        increment_handshake_diag(DIAG_RECOGNISED);
+        return true;
+    }
+    if dfd_match {
+        increment_handshake_diag(DIAG_NONCE_REJECTED);
+    }
+    false
 }
 
 /// Record the handshaking process as the traced root.
@@ -421,6 +468,17 @@ fn discard_failed_open(p: &PendingOpen, ret: i64) {
 /// `openat(dfd, filename, flags, mode)`.
 #[tracepoint]
 pub fn sys_enter_openat(ctx: TracePointContext) -> u32 {
+    // #1185 — counted first and ungated, so a zero distinguishes "this
+    // program does not run on this kernel" from "it runs and recognises
+    // nothing". The handshake is issued as an explicit `SYS_openat`, so
+    // this is the program it must reach.
+    increment_handshake_diag(DIAG_OPENAT_ENTERED);
+    // #1185 — is any open seen that is not the tracer's own? `should_trace`
+    // returns false only for the tracer pid, so this reuses the existing
+    // comparison rather than adding a second source of truth.
+    if should_trace() {
+        increment_handshake_diag(DIAG_NON_TRACER_OPEN);
+    }
     unsafe {
         store_open(
             ctx.read_at::<i64>(ARG0).unwrap_or(AT_FDCWD as i64),

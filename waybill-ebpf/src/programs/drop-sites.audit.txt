@@ -62,7 +62,9 @@ open_syscalls.rs:if unsafe { TRACED_PIDS.insert(&pid, &1u8, 0) }.is_err() {
 open_syscalls.rs:let _ = PENDING_OPEN.remove(&tid);
 open_syscalls.rs:let _ = unsafe { PENDING_OPEN.insert(&tid, &marker, 0) };
 open_syscalls.rs:let how_ptr = ctx.read_at::<u64>(ARG2).unwrap_or(0);
+open_syscalls.rs:None => return false,
 open_syscalls.rs:return false;
+open_syscalls.rs:return true;
 open_syscalls.rs:return;
 open_syscalls.rs:return;
 open_syscalls.rs:return;

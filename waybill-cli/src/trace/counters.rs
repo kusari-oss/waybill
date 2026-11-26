@@ -773,6 +773,103 @@ pub fn read_traced_subtree_hits<T>(_bpf: &mut T) -> (u64, Option<String>) {
     (0, None)
 }
 
+/// #1185 — localise a handshake that never arrived.
+///
+/// Reads `HANDSHAKE_DIAG` and the nonce slot and says which link in the
+/// chain broke, rather than leaving the reader with "TRACED_PIDS is
+/// empty" and no way to narrow it. Each slot rules something in or out;
+/// see `waybill-ebpf/src/maps.rs::HANDSHAKE_DIAG`.
+///
+/// Every read here can fail, and a failed read must not read as a zero:
+/// a zero in slot 0 is a strong claim (the entry program does not run on
+/// this kernel) and an unreadable map is no claim at all.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
+    fn slot(bpf: &mut aya::Ebpf, i: u32) -> String {
+        match read_percpu_slot_sum(bpf, "HANDSHAKE_DIAG", i) {
+            Ok(n) => n.to_string(),
+            Err(e) => format!("unreadable({})", truncate_error(&e.to_string())),
+        }
+    }
+    let entered = slot(bpf, 0);
+    let sentinel = slot(bpf, 1);
+    let rejected = slot(bpf, 2);
+    let recognised = slot(bpf, 3);
+    let low32_only = slot(bpf, 4);
+    let odd_negative = slot(bpf, 5);
+    let nonce_in_flags = slot(bpf, 6);
+    let non_tracer = slot(bpf, 7);
+    let insert_failed = match read_percpu_slot_sum(bpf, "EVENT_DROPS", 5) {
+        Ok(n) => n.to_string(),
+        Err(e) => format!("unreadable({})", truncate_error(&e.to_string())),
+    };
+    let nonce_readback = match bpf
+        .map_mut("TRACE_HANDSHAKE_NONCE")
+        .ok_or_else(|| anyhow::anyhow!("map not found"))
+        .and_then(|m| {
+            aya::maps::Array::<_, u32>::try_from(m)
+                .map_err(|e| anyhow::anyhow!("not a usable array: {e}"))
+        })
+        .and_then(|a| {
+            a.get(&waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT, 0)
+                .map_err(|e| anyhow::anyhow!("{e}"))
+        }) {
+        Ok(n) => n.to_string(),
+        Err(e) => format!("unreadable({})", truncate_error(&e.to_string())),
+    };
+
+    // The reading, stated rather than left to be re-derived. Phrased as
+    // what each shape rules out, because the point of the counters is
+    // that two plausible mechanisms were already wrong.
+    let reading = if nonce_in_flags != "0" {
+        "slot 6 fired, so the nonce-in-flags marker was observed; if \
+         `sentinel_dfd_seen` is zero alongside it, this kernel raises \
+         the tracepoint after validating `dfd` and the invalid-`dfd` \
+         marker could never be seen on it"
+    } else if low32_only != "0" {
+        "slot 4 is non-zero: the sentinel arrived with its low 32 bits \
+         intact and its upper 32 differing, so the kernel reports `dfd` \
+         zero-extended from the `int` rather than as the raw register. \
+         The comparison belongs on the low 32 bits"
+    } else if entered == "0" {
+        "slot 0 is zero: `sys_enter_openat` did not fire at all, which is \
+         larger than the handshake and would explain a short capture too"
+    } else if sentinel == "0" && nonce_in_flags == "0" && entered != "0" {
+        // Run 13 made this the observed case, and the chain had the data
+        // to narrow it and did not use it. The two markers differ in
+        // `dfd` AND in `flags`; one of them depends on neither the
+        // kernel accepting the call nor on how `dfd` arrives. Both
+        // absent while the program is demonstrably running eliminates
+        // every encoding hypothesis at once.
+        "the entry program ran and NEITHER marker arrived. The two \
+         markers differ in `dfd` and in `flags`, so no encoding of \
+         either can explain both being absent: the child's pre-exec \
+         openats are not reaching this tracepoint at all, while other \
+         processes' opens are counted in openat_entered. Not an \
+         argument-layout problem"
+    } else if sentinel == "0" {
+        "the entry program ran and no open carried the sentinel `dfd` \
+         while the nonce-in-flags marker WAS seen: this kernel raises \
+         the tracepoint after validating `dfd`"
+    } else if recognised == "0" {
+        "the sentinel `dfd` arrived and the nonce did not match: compare \
+         the read-back below against what the loader wrote"
+    } else {
+        "the handshake was recognised and seeding was attempted, so the \
+         break is at the insert or in what userspace reads"
+    };
+
+    format!(
+        "#1185 handshake diagnosis -- openat_entered={entered} \
+         sentinel_dfd_seen={sentinel} nonce_rejected={rejected} \
+         recognised={recognised} low32_only={low32_only} \
+         odd_negative_dfd={odd_negative} nonce_in_flags={nonce_in_flags} \
+         non_tracer_opens={non_tracer}[invalid-control] \
+         traced_insert_failed={insert_failed} \
+         nonce_readback={nonce_readback}; {reading}"
+    )
+}
+
 /// #1185 — block until the traced root has announced itself, or fail.
 ///
 /// The root performs its handshake between fork and exec, so `spawn()` can
@@ -804,12 +901,23 @@ pub fn wait_for_traced_root(bpf: &mut aya::Ebpf, timeout: std::time::Duration) -
             return Ok(n);
         }
         if start.elapsed() >= timeout {
+            // #1185 — say where it died before refusing.
+            //
+            // This guard destroyed its own evidence: aborting here means
+            // no attestation is written, so every drop counter was
+            // unreadable -- including `kernel_traced_insert_failed`,
+            // which covers the seeding path itself. Diagnosing the 7.0
+            // x86_64 failure took a separate probe and two refuted
+            // hypotheses because of it.
+            let d = describe_handshake_failure(bpf);
+            tracing::error!("{d}");
             anyhow::bail!(
                 "the traced root never announced itself within {:?}: TRACED_PIDS is empty, \
                  so the kernel has no traced subtree. The capture would admit every process \
                  on the machine, and once the subtree gate is enabled it would instead admit \
                  none while still reporting itself complete (#1185). Refusing to trace on an \
-                 unestablished root rather than producing a figure that cannot be attributed.",
+                 unestablished root rather than producing a figure that cannot be attributed. \
+                 {d}",
                 timeout
             );
         }

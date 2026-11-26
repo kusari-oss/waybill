@@ -14,16 +14,34 @@
 #     blocks PID-namespace teardown, which matches the #991 signature);
 #   - the container is always removed, so a retry starts clean.
 #
-# Usage: ebpf-container-run.sh <image> <deadline-seconds>
+# Usage: ebpf-container-run.sh <image> <deadline-seconds> [entrypoint [args...]]
+#
+# With no entrypoint the image's own ENTRYPOINT runs, which is the
+# integration harness. #1185's handshake-rate probe needs the same
+# privileged container and the same deadline-with-diagnostics treatment
+# while running a different script, so it is passed explicitly rather
+# than given a second copy of this logic to drift from.
 
 set -uo pipefail
 
 image="$1"
 deadline="$2"
+shift 2
 
+entrypoint_args=()
+if [[ $# -gt 0 ]]; then
+    entrypoint_args=(--entrypoint "$1")
+    shift
+fi
+
+# `${a[@]+"${a[@]}"}` rather than `"${a[@]}"`: under `set -u` an empty
+# array expansion is an unbound-variable error before bash 4.4, and this
+# script is reachable from a macOS host whose /bin/bash is 3.2. Measured,
+# not assumed -- bash 3.2 errors here and bash 5.3 does not.
 cid=$(docker run -d --privileged \
     -v /sys/kernel/debug:/sys/kernel/debug \
-    "$image") || exit 1
+    ${entrypoint_args[@]+"${entrypoint_args[@]}"} \
+    "$image" "$@") || exit 1
 
 docker logs -f "$cid" &
 logs_pid=$!
