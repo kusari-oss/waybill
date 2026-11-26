@@ -269,7 +269,8 @@ fn fetchcontent_fallback_taken_is_in_scope() {
     assert!(prop(c, C122).is_none(), "taken: no C122: {c}");
     let v = settlement(&s, "hdronly");
     assert_eq!(v["state"], "taken");
-    assert_eq!(basis(&v), ["cache-source-dir", "deps-src-dir", "fetchcontent-source-dir-entry"]);
+    // `compile-include` is US3's: the project's unit includes its population.
+    assert_eq!(basis(&v), ["cache-source-dir", "compile-include", "deps-src-dir", "fetchcontent-source-dir-entry"]);
     assert_eq!(v["builds"], serde_json::json!(["build:."]));
     assert_eq!(v["build-only"], false);
     let cov = coverage_bt(&s).unwrap();
@@ -291,7 +292,7 @@ fn fetchcontent_found_on_the_system_is_not_taken() {
     assert_eq!(prop(c, C122), Some("cmake-find-package-args"), "{c}");
     let v = settlement(&s, "hdronly");
     assert_eq!(v["state"], "not-taken");
-    assert_eq!(basis(&v), ["cache-package-dir"]);
+    assert_eq!(basis(&v), ["cache-package-dir", "compile-include"]);
 }
 
 #[test]
@@ -486,4 +487,218 @@ fn a_package_search_follows_the_configured_value() {
     set_cache(&f, "WITH_EXTRA:BOOL=OFF", "WITH_EXTRA:BOOL=ON");
     let s = scan_bt(&f, &[&f.build]);
     assert_eq!(scope(named(&s, "waybillfixturesearched")), "required");
+}
+
+
+// ---------------------------------------------------------------------
+// US3: compile edges (FR-009)
+// ---------------------------------------------------------------------
+
+fn purl_of_named(s: &Scan, name: &str) -> String {
+    named(s, name)["purl"].as_str().unwrap().to_string()
+}
+
+fn cdx_edges(cdx: &Value) -> std::collections::BTreeSet<(String, String)> {
+    cdx["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .flat_map(|d| {
+            let from = d["ref"].as_str().unwrap().to_string();
+            d["dependsOn"].as_array().into_iter().flatten().filter_map(move |t| t.as_str().map(|t| (from.clone(), t.to_string())))
+        })
+        .collect()
+}
+
+fn spdx23_edges(doc: &Value) -> std::collections::BTreeSet<(String, String)> {
+    let purl_of: std::collections::BTreeMap<&str, &str> = doc["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|p| {
+            let purl = p["externalRefs"].as_array()?.iter().find(|r| r["referenceType"] == "purl")?["referenceLocator"].as_str()?;
+            Some((p["SPDXID"].as_str()?, purl))
+        })
+        .collect();
+    // An edge to an optional or test component is written reversed, as
+    // `<dep> OPTIONAL_DEPENDENCY_OF <project>` (milestone 179).
+    doc["relationships"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|r| {
+            let a = purl_of.get(r["spdxElementId"].as_str()?)?;
+            let b = purl_of.get(r["relatedSpdxElement"].as_str()?)?;
+            match r["relationshipType"].as_str()? {
+                "DEPENDS_ON" => Some((a.to_string(), b.to_string())),
+                t if t.ends_with("_DEPENDENCY_OF") => Some((b.to_string(), a.to_string())),
+                _ => None,
+            }
+        })
+        .collect()
+}
+
+fn spdx3_edges(doc: &Value) -> std::collections::BTreeSet<(String, String)> {
+    let graph = doc["@graph"].as_array().unwrap();
+    let purl_of: std::collections::BTreeMap<&str, &str> =
+        graph.iter().filter_map(|e| Some((e["spdxId"].as_str()?, e["software_packageUrl"].as_str()?))).collect();
+    graph
+        .iter()
+        .filter(|e| e["type"] == "Relationship" && e["relationshipType"] == "dependsOn")
+        .flat_map(|e| {
+            let from = e["from"].as_str().and_then(|f| purl_of.get(f)).map(|s| s.to_string());
+            e["to"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|t| purl_of.get(t.as_str()?).map(|s| s.to_string()))
+                .filter_map(move |to| from.clone().map(|f| (f, to)))
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+/// The edge `from → to` in all three formats.
+fn assert_edge(s: &Scan, from: &str, to: &str) {
+    let e = (from.to_string(), to.to_string());
+    assert!(cdx_edges(&s.cdx).contains(&e), "CycloneDX: {from} -> {to}");
+    assert!(spdx23_edges(&s.spdx23).contains(&e), "SPDX 2.3: {from} -> {to}");
+    assert!(spdx3_edges(&s.spdx3).contains(&e), "SPDX 3: {from} -> {to}");
+}
+
+fn edit_compile_db(f: &Fixture, from: &str, to: &str) {
+    let p = f.build.join("compile_commands.json");
+    let text = std::fs::read_to_string(&p).unwrap();
+    assert!(text.contains(from), "fixture drift: {from}");
+    std::fs::write(&p, text.replacen(from, to, 1)).unwrap();
+}
+
+/// The project's own translation unit includes `hdronly` and `urldep` from
+/// their populations: two compile edges, and `compile-include` in both
+/// bases. `MixedCase` is only compiled against itself, by its own unit.
+#[test]
+fn includes_into_populations_are_compile_edges() {
+    let f = materialise("fetch");
+    let s = checked(&f, &[&f.build]);
+    let probe = purl_of_named(&s, "probe");
+    for dep in ["hdronly", "urldep"] {
+        assert_edge(&s, &probe, &purl_of_named(&s, dep));
+        let v = settlement(&s, dep);
+        assert!(basis(&v).contains(&"compile-include"), "{dep}: {v}");
+        assert_eq!(v["state"], "taken", "{dep}: {v}");
+    }
+    let mixed = settlement(&s, "MixedCase");
+    assert!(!basis(&mixed).contains(&"compile-include"), "a dependency compiling itself is not the project compiling against it: {mixed}");
+    let cov = coverage_bt(&s).unwrap();
+    assert_eq!(cov["compile-edges"], 2, "{cov}");
+    assert_eq!(cov["include-dirs-unresolved"], 0, "{cov}");
+    assert_eq!(cov["unreadable-files"], 0, "{cov}");
+}
+
+/// FX/system: `hdronly` came from the install prefix its `hdronly_DIR`
+/// names. The edge is the same; the fetch stays *not taken* and out of
+/// scope, because compile evidence alone changes no scope (FR-009).
+#[test]
+fn an_include_under_a_package_prefix_is_a_compile_edge_and_scope_is_unchanged() {
+    let f = materialise("system");
+    let s = checked(&f, &[&f.build]);
+    let hdronly = named(&s, "hdronly");
+    assert_eq!(scope(hdronly), "excluded", "compile evidence changes no scope: {hdronly}");
+    assert_edge(&s, &purl_of_named(&s, "probe"), &purl_of_named(&s, "hdronly"));
+    let v = settlement(&s, "hdronly");
+    assert_eq!(v["state"], "not-taken", "{v}");
+    assert_eq!(basis(&v), ["cache-package-dir", "compile-include"]);
+    assert_eq!(coverage_bt(&s).unwrap()["compile-edges"], 2);
+}
+
+/// No compilation database, or TheRock's 0-byte one (measurements/therock.md):
+/// no compile edge is claimed, and nothing is unreadable.
+#[test]
+fn without_a_compile_database_nothing_is_claimed() {
+    for contents in [None, Some("")] {
+        let f = materialise("fetch");
+        let db = f.build.join("compile_commands.json");
+        match contents {
+            None => std::fs::remove_file(&db).unwrap(),
+            Some(c) => std::fs::write(&db, c).unwrap(),
+        }
+        let s = checked(&f, &[&f.build]);
+        let cov = coverage_bt(&s).unwrap();
+        assert_eq!(cov["compile-edges"], 0, "{contents:?}: {cov}");
+        assert_eq!(cov["unreadable-files"], 0, "{contents:?}: {cov}");
+        assert!(!basis(&settlement(&s, "hdronly")).contains(&"compile-include"));
+    }
+}
+
+#[test]
+fn a_malformed_compile_database_is_counted_not_fatal() {
+    let f = materialise("fetch");
+    std::fs::write(f.build.join("compile_commands.json"), "[{\"directory\": ").unwrap();
+    let s = checked(&f, &[&f.build]);
+    let cov = coverage_bt(&s).unwrap();
+    assert_eq!(cov["unreadable-files"], 1, "{cov}");
+    assert_eq!(cov["compile-edges"], 0, "{cov}");
+}
+
+/// An include directory no component accounts for is counted, never
+/// emitted. The project's own directories are not counted.
+#[test]
+fn an_unresolved_include_directory_is_counted_and_not_emitted() {
+    let f = materialise("fetch");
+    let outside = f.fx.path("elsewhere/include");
+    std::fs::create_dir_all(&outside).unwrap();
+    std::fs::create_dir_all(f.src.join("include")).unwrap();
+    let extra = format!("-isystem {} -I{}/include -Igenerated -I", outside.display(), f.src.display());
+    edit_compile_db(&f, "-I", &extra);
+    let s = checked(&f, &[&f.build]);
+    let cov = coverage_bt(&s).unwrap();
+    assert_eq!(cov["include-dirs-unresolved"], 1, "{cov}");
+    assert_eq!(cov["compile-edges"], 2, "{cov}");
+}
+
+/// Rule 4: an include directory inside a git submodule is an edge to the
+/// submodule's component. Declarations alone give no such edge.
+#[test]
+fn an_include_inside_a_submodule_is_an_edge_to_it() {
+    let f = materialise("fetch");
+    f.fx.repo("subdep");
+    f.fx.write("subdep/include/sub.h", "\n");
+    f.fx.git(&f.fx.path("subdep"), &["add", "."]);
+    f.fx.git(&f.fx.path("subdep"), &["commit", "-q", "-m", "headers"]);
+    f.fx.add_submodule("tree", "subdep", "vendor/sub");
+    let before = scan_bt(&f, &[&f.build]);
+    let sub = cdx_components(&before.cdx)
+        .into_iter()
+        .find(|c| c["purl"].as_str().is_some_and(|p| p.contains("subdep")))
+        .unwrap_or_else(|| panic!("no submodule component: {:#?}", cdx_components(&before.cdx)))["purl"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let probe = purl_of_named(&before, "probe");
+    assert!(!cdx_edges(&before.cdx).contains(&(probe.clone(), sub.clone())), "control: no edge before");
+    edit_compile_db(&f, "-I", &format!("-I{}/vendor/sub/include -I", f.src.display()));
+    // Not `checked`: a submodule added by local path carries that path in
+    // its own identity (spec 1530), which is not this feature's output.
+    let s = scan_bt(&f, &[&f.build]);
+    parity(&s);
+    assert_edge(&s, &probe, &sub);
+    assert_eq!(coverage_bt(&s).unwrap()["compile-edges"], 3);
+}
+
+/// #1717 review, finding 2: a Find-module cache entry is not a package
+/// directory. `ZLIB_INCLUDE_DIR=<prefix>/include` shares `hdronly_DIR`'s
+/// prefix; counted as a package, it tied with `hdronly` in rule 3, which
+/// then resolved the include to nothing and dropped `compile-include`.
+#[test]
+fn a_find_module_include_dir_is_not_a_package_prefix() {
+    let f = materialise("system");
+    let cache = f.build.join("CMakeCache.txt");
+    let text = std::fs::read_to_string(&cache).unwrap();
+    let dir = text.lines().find_map(|l| l.strip_prefix("hdronly_DIR:PATH=")).expect("fixture drift: hdronly_DIR").to_string();
+    let prefix = dir.strip_suffix("/lib/cmake/hdronly").expect("fixture drift: hdronly_DIR layout");
+    std::fs::write(&cache, format!("{text}\n//Path to a file.\nZLIB_INCLUDE_DIR:PATH={prefix}/include\n")).unwrap();
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(basis(&settlement(&s, "hdronly")), ["cache-package-dir", "compile-include"]);
+    let cov = coverage_bt(&s).unwrap();
+    assert_eq!(cov["include-dirs-unresolved"], 0, "{cov}");
 }

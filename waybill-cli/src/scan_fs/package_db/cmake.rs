@@ -40,7 +40,7 @@
 //! Cross-platform; no `#[cfg(unix)]` gates. Zero new Cargo deps —
 //! uses workspace `regex` + std.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -202,6 +202,7 @@ pub(crate) fn finalize(
     scan_root: &Path,
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
+    submodules: &super::git_submodule::SubmoduleDirs,
 ) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage, FetchCoverage) {
     if !marker.seen
         && !scan_root.join("CMakeLists.txt").is_file()
@@ -212,7 +213,10 @@ pub(crate) fn finalize(
         return (Vec::new(), Default::default(), Default::default());
     }
     // Spec 1653: build trees named with `--cmake-build-tree`, read once.
-    let build_tree = build_tree::BuildEvidence::from_env(scan_root);
+    let build_tree = build_tree::BuildEvidence::from_env(scan_root).map(|mut ev| {
+        ev.submodules = submodules.clone();
+        ev
+    });
     read_with_downloads(scan_root, include_vendored, exclude_set, Some(marker.files), &marker.config_templates, build_tree.as_ref())
 }
 
@@ -393,6 +397,8 @@ pub(crate) fn read_with_downloads(
     // it owns accounts for.
     if let (Some(ev), Some(bt)) = (build_tree, fetches.build_tree.as_mut()) {
         entries.extend(build_only_entries(ev, bt, &decls.build_matched, scan_root));
+        // US3 (FR-009): the project's translation units compiled against these.
+        fetches.compile_edges = compile_edges(ev, bt, &mut entries, scan_root);
         let n = |k: &str| bt.declarations.get(k).copied().unwrap_or(0);
         tracing::info!(
             target: "waybill::cmake_build_tree",
@@ -403,6 +409,8 @@ pub(crate) fn read_with_downloads(
             no_evidence = n("no-evidence"),
             build_only = bt.build_only,
             conflicts = bt.conflicts,
+            compile_edges = bt.compile_edges,
+            include_dirs_unresolved = bt.include_dirs_unresolved,
             "cmake build tree: fetch declarations settled (spec 1653)"
         );
     }
@@ -455,6 +463,102 @@ fn build_only_entries(
         }
     }
     out
+}
+
+/// Spec 1653 US3 (FR-009, T029, T030): compile edges from each build
+/// directory's compilation database.
+///
+/// Only the project's own translation units count: a unit whose source
+/// file lies in a dependency is that dependency compiling itself. Each of
+/// their include directories is resolved ([`build_tree::compile_db::Resolver`]);
+/// one that names a CMake declaration's component gains `compile-include`
+/// in its C245 basis (state and scope unchanged), and one in a git
+/// submodule is an edge to it. A directory inside the build or its source
+/// is the project's own. Anything else is counted as unresolved, never
+/// emitted.
+///
+/// Returns (the build's `CMakeLists.txt`, target PURL) pairs: the edge is
+/// from whatever owns that file, by `scan_fs::cmake_fetch_attach`'s owner
+/// rule, so it has the same source as the declaration edges.
+fn compile_edges(
+    ev: &build_tree::BuildEvidence,
+    bt: &mut build_tree::BuildTreeCoverage,
+    entries: &mut [PackageDbEntry],
+    scan_root: &Path,
+) -> Vec<(PathBuf, String)> {
+    use build_tree::compile_db::{canonical_lenient, Resolver, Target};
+    const DECLARED: [&str; 3] = ["cmake-fetchcontent", "cmake-externalproject", "cmake-find-package"];
+    let mechanism = |e: &PackageDbEntry| {
+        e.extra_annotations.get("waybill:source-mechanism").and_then(|v| v.as_str()).map(str::to_string).unwrap_or_default()
+    };
+    // Lower-cased name → entry: fetches first, then package searches; ties
+    // by PURL so the choice is stable.
+    let mut by_name: BTreeMap<String, (usize, String, usize)> = BTreeMap::new();
+    for (i, e) in entries.iter().enumerate() {
+        let m = mechanism(e);
+        let Some(rank) = DECLARED.iter().position(|d| m.starts_with(d)).map(|r| r.min(1)) else { continue };
+        let key = (rank, e.purl.as_str().to_string(), i);
+        let slot = by_name.entry(e.name.to_lowercase()).or_insert(key.clone());
+        if key < *slot {
+            *slot = key;
+        }
+    }
+    let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let mut edges: BTreeSet<(PathBuf, String)> = BTreeSet::new();
+    let mut compiled: BTreeSet<usize> = BTreeSet::new();
+    let mut unresolved: BTreeSet<PathBuf> = BTreeSet::new();
+    for d in &ev.dirs {
+        let Some(home) = d.home.as_ref().filter(|h| h.starts_with(&canonical_root)) else { continue };
+        let owner_file = home.join("CMakeLists.txt");
+        let r = Resolver {
+            deps: d.root.join("_deps"),
+            ep_sources: &d.ep_sources,
+            package_dirs: &d.package_dirs,
+            submodules: &ev.submodules,
+        };
+        let own = |p: &Path| (p.starts_with(home) || p.starts_with(&d.root)) && !p.starts_with(r.deps.as_path());
+        for u in &d.units {
+            let file = canonical_lenient(&u.file);
+            if !own(&file) || r.resolve(&file).is_some_and(|t| matches!(t, Target::Name(_))) {
+                continue;
+            }
+            for inc in &u.includes {
+                let inc = canonical_lenient(inc);
+                let to = match r.resolve(&inc) {
+                    Some(Target::Name(n)) => match by_name.get(&n.to_lowercase()) {
+                        Some(&(_, ref purl, i)) => {
+                            compiled.insert(i);
+                            Some(purl.clone())
+                        }
+                        None => None,
+                    },
+                    Some(Target::Purl(p)) => Some(p),
+                    None if own(&inc) => continue,
+                    None => None,
+                };
+                match to {
+                    Some(purl) => {
+                        edges.insert((owner_file.clone(), purl));
+                    }
+                    None => {
+                        unresolved.insert(inc);
+                    }
+                }
+            }
+        }
+    }
+    for i in compiled {
+        if let Some(v) = entries[i].extra_annotations.get_mut(build_tree::ANN_CMAKE_BUILD_SETTLEMENT) {
+            let mut basis: BTreeSet<String> =
+                v["basis"].as_array().into_iter().flatten().filter_map(|x| x.as_str().map(str::to_string)).collect();
+            basis.insert(build_tree::settle::EvidenceKind::CompileInclude.as_str().to_string());
+            v["basis"] = serde_json::json!(basis);
+        }
+    }
+    // `compile-edges` is set once owners are resolved, in
+    // `scan_fs::cmake_fetch_attach::attach_compile` (#1717 review).
+    bt.include_dirs_unresolved = unresolved.len();
+    edges.into_iter().collect()
 }
 
 /// Spec 1618 research R5: with `--include-vendored`, a `third_party/<n>` or

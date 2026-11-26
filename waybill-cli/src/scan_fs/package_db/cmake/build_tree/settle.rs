@@ -39,6 +39,8 @@ pub(crate) enum EvidenceKind {
     CachePackageDir,
     DownloadStamp,
     StampDirOnly,
+    /// US3: the project compiled against it. Never changes the state.
+    CompileInclude,
 }
 
 impl EvidenceKind {
@@ -51,6 +53,7 @@ impl EvidenceKind {
             Self::CachePackageDir => "cache-package-dir",
             Self::DownloadStamp => "download-stamp",
             Self::StampDirOnly => "stamp-dir-only",
+            Self::CompileInclude => "compile-include",
         }
     }
 }
@@ -181,6 +184,9 @@ mod tests {
             populations: pops.iter().map(|s| s.to_string()).collect(),
             downloads: downloads.iter().map(|s| s.to_string()).collect(),
             stamp_dirs: stamps.iter().map(|s| s.to_string()).collect(),
+            ep_sources: Default::default(),
+            package_dirs: Default::default(),
+            units: Vec::new(),
         }
     }
 

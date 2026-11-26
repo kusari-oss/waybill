@@ -203,7 +203,7 @@
 
 ### Tests (write first; must fail before T029)
 
-- [ ] T027 [US3] Add to `IT`:
+- [X] T027 [US3] Add to `IT`:
   - **`FX/fetch`**: edge `app-project → hdronly` in CycloneDX `dependencies`, SPDX 2.3 `DEPENDS_ON` and SPDX 3; C245 basis includes `compile-include`; C246 `compile-edges` ≥ 1.
   - **`FX/system`**: same edge via the prefix.
   - **No compile database** (delete it from a copy): no compile edges; C246 `compile-edges` = 0; no failure.
@@ -212,16 +212,22 @@
 
 ### Implementation
 
-- [ ] T028 [P] [US3] **Parsing.** In `BT/compile_db.rs`, `include_dirs(json: &str) -> Result<BTreeSet<PathBuf>, _>`. It reads `-I`, `-I <dir>`, `-isystem`, `-iquote`, `/I` (MSVC), and both the `command` and `arguments` forms. Relative directories are resolved against each entry's `directory`. Unit tests use the probe's `compile_commands.json`.
-- [ ] T029 [US3] **Resolution.** In `BT/compile_db.rs`, `resolve(dir, &BuildDir, components) -> Option<Purl>`, trying in order:
+- [X] T028 [P] [US3] **Parsing.** In `BT/compile_db.rs`, `include_dirs(json: &str) -> Result<BTreeSet<PathBuf>, _>`. It reads `-I`, `-I <dir>`, `-isystem`, `-iquote`, `/I` (MSVC), and both the `command` and `arguments` forms. Relative directories are resolved against each entry's `directory`. Unit tests use the probe's `compile_commands.json`.
+- [X] T029 [US3] **Resolution.** In `BT/compile_db.rs`, `resolve(dir, &BuildDir, components) -> Option<Purl>`, trying in order:
   1. under `_deps/<lc>-src/`: that declaration's component;
   2. under an ExternalProject source directory (sibling of its stamp directory): that component;
   3. under a `<name>_DIR` install prefix (`<prefix>/include`): the component whose name matches `<name>`;
   4. under a git submodule path or an installed-library prefix the scan already has a component for;
   5. otherwise unresolved.
-- [ ] T030 [US3] **Edges.** In `CM::finalize`, for each `BuildDir`, add a `Relationship` from spec 1618's CMake project component for `home` (C55 `cmake-project`) to each resolved component. If there is no project component, attach to the main module as spec 1618 does. Add `compile-include` to the target's C245 basis, without changing its state or scope. Count `compile_edges` and `include_dirs_unresolved`.
+- [X] T030 [US3] **Edges.** In `CM::finalize`, for each `BuildDir`, add a `Relationship` from spec 1618's CMake project component for `home` (C55 `cmake-project`) to each resolved component. If there is no project component, attach to the main module as spec 1618 does. Add `compile-include` to the target's C245 basis, without changing its state or scope. Count `compile_edges` and `include_dirs_unresolved`.
 
 **Checkpoint**: T027 passes; T014 and T022 still pass.
+
+**US3 implementation notes** (where the code differs from the task text):
+- **T028** returns per-unit `Unit { file, includes }`, not one set: the unit's own file decides whose include it is. `/I` is a flag only when the compiler is `cl`/`clang-cl`, so a Unix path beginning `/I` is not read as one. `-idirafter` is read too.
+- **T029** rule 3 takes the deepest prefix up to three levels above `<name>_DIR` (`lib/cmake/<n>`, `share/<n>/cmake`) and resolves only when one package names it; a shared install prefix is unresolved. Rule 2 uses the default `<prefix>/src/<name>` layout; an ExternalProject with a moved `SOURCE_DIR` (TheRock's `therock_subproject_fetch`) is not resolved by it. Rule 4 covers git submodules; installed-library records are built after the CMake reader runs, so they are not yet a target (follow-up).
+- **T030** edges are attached in `scan_fs::cmake_fetch_attach::attach_compile`, after the declaration edges and through the same `OwnerIndex`, from the owner of the build's `CMakeLists.txt` (spec 1618's project component when there is one). `CM::finalize` returns them as (file, PURL) pairs, because relationships do not exist yet at that point. Only the project's own translation units count: a unit inside a dependency is that dependency compiling itself (no dependency→dependency edges in this spec). Include directories inside the build or its source are the project's own and are not counted as unresolved. `compile-edges` counts distinct (build, component) pairs, including those a declaration edge already gives; on the probe fixtures every compile edge duplicates one.
+- **Mutation (run):** with `attach_compile`'s edges discarded, `an_include_inside_a_submodule_is_an_edge_to_it` fails and the other 21 pass, since on the probe fixtures every compile edge duplicates a declaration edge. The population and prefix tests assert `compile-include` in the basis directly.
 
 ## Phase 6: User Story 4 - The file API is used when present (P4)
 

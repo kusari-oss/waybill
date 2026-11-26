@@ -44,6 +44,10 @@ pub(crate) struct CacheEntry {
 #[derive(Debug, Clone, Default)]
 pub(crate) struct CacheView {
     entries: HashMap<String, CacheEntry>,
+    /// The `//` help comment CMake writes above an entry, lines joined by a
+    /// space. #1717 review: a `find_package` package directory is told apart
+    /// from a Find-module variable by it ([`Self::help`]).
+    help: HashMap<String, String>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -55,9 +59,16 @@ pub(crate) enum CacheError {
 impl CacheView {
     pub(crate) fn parse(text: &str) -> Result<Self, CacheError> {
         let mut entries = HashMap::new();
+        let mut help = HashMap::new();
+        let mut pending: Vec<&str> = Vec::new();
         for raw in text.lines() {
             let line = raw.trim_end_matches('\r');
-            if line.is_empty() || line.starts_with('#') || line.starts_with("//") {
+            if let Some(h) = line.strip_prefix("//") {
+                pending.push(h);
+                continue;
+            }
+            let comment = std::mem::take(&mut pending);
+            if line.is_empty() || line.starts_with('#') {
                 continue;
             }
             let Some(eq) = line.find('=') else { continue };
@@ -69,16 +80,24 @@ impl CacheView {
             if name.is_empty() {
                 continue;
             }
+            if !comment.is_empty() {
+                help.insert(name.to_string(), comment.join(" "));
+            }
             entries.insert(name.to_string(), CacheEntry { kind, value: value.to_string() });
         }
         if entries.is_empty() {
             return Err(CacheError::NoEntries);
         }
-        Ok(Self { entries })
+        Ok(Self { entries, help })
     }
 
     pub(crate) fn get(&self, name: &str) -> Option<&CacheEntry> {
         self.entries.get(name)
+    }
+
+    /// The help comment CMake wrote above `name`, if any.
+    pub(crate) fn help(&self, name: &str) -> Option<&str> {
+        self.help.get(name).map(String::as_str)
     }
 
     pub(crate) fn contains(&self, name: &str) -> bool {
@@ -91,7 +110,11 @@ impl CacheView {
         self.entries.iter().filter(move |(k, _)| k.eq_ignore_ascii_case(name)).map(|(_, e)| e.value.as_str())
     }
 
-    /// `CMAKE_HOME_DIRECTORY`: the source directory this build was configured from.
+    /// Every entry whose name `pick` accepts, as (name, value).
+    pub(crate) fn entries_named<'a>(&'a self, pick: impl Fn(&str) -> bool + 'a) -> impl Iterator<Item = (&'a str, &'a str)> + 'a {
+        self.entries.iter().filter(move |(k, _)| pick(k)).map(|(k, e)| (k.as_str(), e.value.as_str()))
+    }
+
     /// Entries a condition may read (contracts/settlement.md, configured
     /// values): `BOOL`, `STRING`, `UNINITIALIZED` and untyped.
     pub(crate) fn condition_inputs(&self) -> impl Iterator<Item = (&str, &str)> {
@@ -101,6 +124,7 @@ impl CacheView {
         })
     }
 
+    /// `CMAKE_HOME_DIRECTORY`: the source directory this build was configured from.
     pub(crate) fn home(&self) -> Option<&str> {
         self.get("CMAKE_HOME_DIRECTORY").map(|e| e.value.as_str()).filter(|v| !v.is_empty())
     }
@@ -145,6 +169,27 @@ mod tests {
         assert_eq!(c.get("B").unwrap().value, "x");
         assert_eq!(CacheView::parse("").unwrap_err(), CacheError::NoEntries);
         assert_eq!(CacheView::parse("# only a comment\n").unwrap_err(), CacheError::NoEntries);
+    }
+
+    /// Measured with CMake 4.4.5 (#1717 review): `find_package` in config
+    /// mode, the same variable set with `-D`, and a Find-module `find_path`.
+    #[test]
+    fn help_comments_are_kept_per_entry() {
+        let c = CacheView::parse(
+            "//Path to a file.\n\
+             ZZ_INCLUDE_DIR:PATH=/usr/include\n\
+             //The directory containing a CMake configuration file for Foo.\n\
+             Foo_DIR:PATH=/p/lib/cmake/Foo\n\
+             //No help, variable specified on the command line.\n\
+             Bar_DIR:UNINITIALIZED=/p/lib/cmake/Bar\n\
+             \n\
+             NoComment:STRING=x\n",
+        )
+        .unwrap();
+        assert_eq!(c.help("ZZ_INCLUDE_DIR"), Some("Path to a file."));
+        assert_eq!(c.help("Foo_DIR"), Some("The directory containing a CMake configuration file for Foo."));
+        assert_eq!(c.help("Bar_DIR"), Some("No help, variable specified on the command line."));
+        assert_eq!(c.help("NoComment"), None);
     }
 
     #[test]
