@@ -56,18 +56,18 @@
 
 **Independent test**: `ci.tsv` has 2 runs per setting per lane, with a recorded decision.
 
-- [ ] T007 [US2] Run the gate (`./scripts/gate.sh` with both CLAUDE.md `--expect` patterns, around `prepr -- ./scripts/pre-pr.sh`), commit T003–T006, and open the PR (Refs #1719). This "full" commit is the baseline. Record its CI run and one re-run in `ci.tsv`: for Linux, macOS and Windows, the test-build `Finished` time and `Tests`-step seconds (use `specs/1658-nextest-trial/measurements/ci_steps.py`), and the backtrace test's pass or fail.
-- [ ] T008 [US2] Push a measurement commit adding `CARGO_PROFILE_DEV_DEBUG: line-tables-only` and `CARGO_PROFILE_TEST_DEBUG: line-tables-only` to the top-level `env:` of `.github/workflows/ci.yml`. Record its run and one re-run. The backtrace test's result and captured stderr go in `ci.md`.
-- [ ] T009 [US2] Push a measurement commit setting both to `0`. Record its run and one re-run. The backtrace test is expected to fail here, and that failure is the measurement. Record it rather than fixing it. Also record **every** failing test in these runs, with its cause. Self-scan and binary-ID tests read waybill's own binary and might depend on debug info. A failure other than the backtrace test counts against this setting in T010.
-- [ ] T010 [US2] Decide per research R4. Windows is recorded but doesn't decide, because the lane is non-blocking (#210). Adopt a setting only if its 2 test-build times are below both of full's on Linux and macOS *and* the backtrace test passes. Revert the measurement commits so the workflow has either no new `env` line or only the adopted one. If one is adopted, confirm in the final run that the eBPF lane passes too. Write the decision and the numbers in `ci.md`.
+- [x] T007 [US2] Run the gate (`./scripts/gate.sh` with both CLAUDE.md `--expect` patterns, around `prepr -- ./scripts/pre-pr.sh`), commit T003–T006, and open the PR (Refs #1719). This "full" commit is the baseline. Record its CI run and one re-run in `ci.tsv`: for Linux, macOS and Windows, the test-build `Finished` time and `Tests`-step seconds (use `specs/1658-nextest-trial/measurements/ci_steps.py`), and the backtrace test's pass or fail.
+- [x] T008 [US2] Push a measurement commit adding `CARGO_PROFILE_DEV_DEBUG: line-tables-only` and `CARGO_PROFILE_TEST_DEBUG: line-tables-only` to the top-level `env:` of `.github/workflows/ci.yml`. Record its run and one re-run. The backtrace test's result and captured stderr go in `ci.md`.
+- [x] T009 [US2] Push a measurement commit setting both to `0`. Record its run and one re-run. The backtrace test is expected to fail here, and that failure is the measurement. Record it rather than fixing it. Also record **every** failing test in these runs, with its cause. Self-scan and binary-ID tests read waybill's own binary and might depend on debug info. A failure other than the backtrace test counts against this setting in T010.
+- [x] T010 [US2] Decide per research R4. Windows is recorded but doesn't decide, because the lane is non-blocking (#210). Adopt a setting only if its 2 test-build times are below both of full's on Linux and macOS *and* the backtrace test passes. Revert the measurement commits so the workflow has either no new `env` line or only the adopted one. If one is adopted, confirm in the final run that the eBPF lane passes too. Write the decision and the numbers in `ci.md`.
 
 ## Phase 5: User Story 3, guidance (P3)
 
-- [ ] T011 [US3] In `CLAUDE.md`, under "Pre-PR verification", add a short note:
+- [x] T011 [US3] In `CLAUDE.md`, under "Pre-PR verification", add a short note:
   - what `.cargo/config.toml` does and why (with the numbers);
   - that `RUSTFLAGS` overrides it;
   - that a directory which grew before this change needs one `cargo clean`.
-- [ ] T012 [US3] Update the memory notes `keep-target-dir-clean.md` and `project_prepr_slow_investigation.md`, and their `MEMORY.md` index lines, under `/Users/mlieberman/.claude/projects/-Users-mlieberman-Projects-mikebom/memory/`. Name the cause (unpacked debug info leaving `*.rcgu.o` files, about 31k per rebuild) and the fix (`.cargo/config.toml`, spec 1661), and keep `cargo clean` only for the one-time cleanup.
+- [x] T012 [US3] Update the memory notes `keep-target-dir-clean.md` and `project_prepr_slow_investigation.md`, and their `MEMORY.md` index lines, under `/Users/mlieberman/.claude/projects/-Users-mlieberman-Projects-mikebom/memory/`. Name the cause (unpacked debug info leaving `*.rcgu.o` files, about 31k per rebuild) and the fix (`.cargo/config.toml`, spec 1661), and keep `cargo clean` only for the one-time cleanup.
 
 ## Phase 6: Ship
 

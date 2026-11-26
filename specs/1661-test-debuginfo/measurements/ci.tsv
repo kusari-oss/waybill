@@ -1,1 +1,19 @@
 run_id	lane	setting	test_build_s	tests_step_s	backtrace_test	file_line
+45772728602	linux-x86_64	full	2m 31s	414	PASS	yes
+45772728602	macos-latest	full	10m 33s	1221	PASS	yes
+45772728602	windows-latest	full	5m 05s	827	PASS	yes
+45772805602	linux-x86_64	line-tables-only	3m 41s	603	PASS	yes
+45772805602	macos-latest	line-tables-only	9m 02s	1088	PASS	yes
+45772805602	windows-latest	line-tables-only	3m 39s	697	PASS	yes
+45772809325	linux-x86_64	none	2m 03s	357	FAIL	no
+45772809325	macos-latest	none	7m 14s	965	FAIL	no
+45772809325	windows-latest	none	2m 17s	548	FAIL	no
+45776055752	linux-x86_64	full	3m 28s	620	PASS	yes
+45776055752	macos-latest	full	15m 53s	1514	PASS	yes
+45776055752	windows-latest	full	6m 06s	947	PASS	yes
+45776060230	linux-x86_64	line-tables-only	2m 09s	432	PASS	yes
+45776060230	macos-latest	line-tables-only	7m 49s	945	PASS	yes
+45776060230	windows-latest	line-tables-only	4m 40s	917	PASS	yes
+45776063895	linux-x86_64	none	3m 13s	550	FAIL	no
+45776063895	macos-latest	none	6m 27s	983	FAIL	no
+45776063895	windows-latest	none	53.16s	638	FAIL	no
