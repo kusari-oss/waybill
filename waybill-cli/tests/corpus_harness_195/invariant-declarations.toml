@@ -366,31 +366,6 @@ issue = 1207
 
 [[declaration]]
 invariant = "I7"
-target = "hpack-hs-opentelemetry"
-kind = "unreachable-and-unexplained"
-count_at_declaration = 1
-reason = """
-`pkg:generic/unknown@93a107557e8691ed5ca17beaee41e68222b142c48868fc8c04a4181fb233477d`:
-the Stack snapshot in `instrumentation/yesod/stack.yaml.lock`, pinned by URL
-(`original: {url: .../lts/18/8.yaml}`) rather than by resolver name. The reader
-names a snapshot from `original.resolver` alone, so this one is `unknown`, with
-its sha256 as the version, an empty source file, no edge and no orphan reason.
-"""
-issue = 1678
-
-[[declaration]]
-invariant = "I7"
-target = "hpack-hs-opentelemetry-no-generated-cabal"
-kind = "unreachable-and-unexplained"
-count_at_declaration = 1
-reason = """
-The same URL-pinned Stack snapshot as `hpack-hs-opentelemetry`: removing the
-hpack-generated `.cabal` (#1677) does not touch `stack.yaml.lock`.
-"""
-issue = 1678
-
-[[declaration]]
-invariant = "I7"
 target = "maven-guice"
 kind = "unreachable-and-unexplained"
 count_at_declaration = 3

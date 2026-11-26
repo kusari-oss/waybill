@@ -851,66 +851,6 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/co-log",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "instrumentation/co-log/hs-opentelemetry-instrumentation-co-log.cabal"
-          }
-        ]
-      },
-      "name": "co-log",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"instrumentation/co-log/hs-opentelemetry-instrumentation-co-log.cabal\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\">=0.6 && <0.8\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "offline"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"instrumentation/co-log\"]"
-        }
-      ],
-      "purl": "pkg:hackage/co-log",
-      "type": "library"
-    },
-    {
       "bom-ref": "pkg:hackage/co-log-core",
       "evidence": {
         "identity": [
@@ -969,6 +909,45 @@
       ],
       "purl": "pkg:hackage/co-log-core",
       "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/co-log@0.6.1.2",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "co-log",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        }
+      ],
+      "purl": "pkg:hackage/co-log@0.6.1.2",
+      "type": "library",
+      "version": "0.6.1.2"
     },
     {
       "bom-ref": "pkg:hackage/conduit",
@@ -2072,7 +2051,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2133,7 +2112,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2194,7 +2173,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2255,7 +2234,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2316,7 +2295,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2377,7 +2356,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2499,7 +2478,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2560,7 +2539,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2621,7 +2600,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2682,7 +2661,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2743,7 +2722,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2804,7 +2783,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2865,7 +2844,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2926,7 +2905,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2987,7 +2966,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3048,7 +3027,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3109,7 +3088,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3170,7 +3149,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3231,7 +3210,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3292,7 +3271,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3353,7 +3332,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3475,7 +3454,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3536,7 +3515,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3597,7 +3576,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3658,7 +3637,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3719,7 +3698,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3780,7 +3759,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3841,7 +3820,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3902,7 +3881,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -3963,7 +3942,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -4399,7 +4378,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -4857,7 +4836,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -5466,7 +5445,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -6019,7 +5998,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/proto-lens",
+      "bom-ref": "pkg:hackage/proto-lens-runtime@0.7.0.7",
       "evidence": {
         "identity": [
           {
@@ -6031,72 +6010,6 @@
                 "technique": "manifest-analysis"
               }
             ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "exporters/otlp/package.yaml"
-          }
-        ]
-      },
-      "name": "proto-lens",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"exporters/otlp/package.yaml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\">= 0.7.1.0\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "offline"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"exporters/otlp\"]"
-        }
-      ],
-      "purl": "pkg:hackage/proto-lens",
-      "type": "library"
-    },
-    {
-      "bom-ref": "pkg:hackage/proto-lens-runtime",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "otlp/package.yaml"
           }
         ]
       },
@@ -6104,35 +6017,63 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"otlp/package.yaml\"]"
+          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
+          "value": "hackage-stack-lock"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "offline"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"otlp\"]"
+          "value": "stack-yaml-lock"
         }
       ],
-      "purl": "pkg:hackage/proto-lens-runtime",
-      "type": "library"
+      "purl": "pkg:hackage/proto-lens-runtime@0.7.0.7",
+      "type": "library",
+      "version": "0.7.0.7"
+    },
+    {
+      "bom-ref": "pkg:hackage/proto-lens@0.7.1.6",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "proto-lens",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        }
+      ],
+      "purl": "pkg:hackage/proto-lens@0.7.1.6",
+      "type": "library",
+      "version": "0.7.1.6"
     },
     {
       "bom-ref": "pkg:hackage/random",
@@ -6953,7 +6894,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/thread-utils-context",
+      "bom-ref": "pkg:hackage/thread-utils-context@0.4.1.0",
       "evidence": {
         "identity": [
           {
@@ -6966,51 +6907,73 @@
               }
             ]
           }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "api/package.yaml"
-          }
         ]
       },
       "name": "thread-utils-context",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"api/package.yaml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\">= 0.3 && < 0.5\"]"
+          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
+          "value": "hackage-stack-lock"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "offline"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"api\"]"
+          "value": "stack-yaml-lock"
         }
       ],
-      "purl": "pkg:hackage/thread-utils-context",
-      "type": "library"
+      "purl": "pkg:hackage/thread-utils-context@0.4.1.0",
+      "type": "library",
+      "version": "0.4.1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/thread-utils-finalizers@0.1.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "thread-utils-finalizers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/thread-utils-finalizers@0.1.1.0",
+      "type": "library",
+      "version": "0.1.1.0"
     },
     {
       "bom-ref": "pkg:hackage/time",
@@ -7322,7 +7285,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/unix-compat",
+      "bom-ref": "pkg:hackage/unix-compat@0.7.1",
       "evidence": {
         "identity": [
           {
@@ -7335,51 +7298,30 @@
               }
             ]
           }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "sdk/package.yaml"
-          }
         ]
       },
       "name": "unix-compat",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"sdk/package.yaml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\">= 0.7.1\"]"
+          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
+          "value": "hackage-stack-lock"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "offline"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"sdk\"]"
+          "value": "stack-yaml-lock"
         }
       ],
-      "purl": "pkg:hackage/unix-compat",
-      "type": "library"
+      "purl": "pkg:hackage/unix-compat@0.7.1",
+      "type": "library",
+      "version": "0.7.1"
     },
     {
       "bom-ref": "pkg:hackage/unliftio",
@@ -8316,7 +8258,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -8547,11 +8489,11 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/co-log"
+      "ref": "pkg:hackage/co-log-core"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/co-log-core"
+      "ref": "pkg:hackage/co-log@0.6.1.2"
     },
     {
       "dependsOn": [],
@@ -8645,7 +8587,7 @@
         "pkg:hackage/tasty-bench",
         "pkg:hackage/template-haskell",
         "pkg:hackage/text",
-        "pkg:hackage/thread-utils-context",
+        "pkg:hackage/thread-utils-context@0.4.1.0",
         "pkg:hackage/transformers",
         "pkg:hackage/unliftio-core",
         "pkg:hackage/unordered-containers",
@@ -8694,7 +8636,7 @@
         "pkg:hackage/http-conduit",
         "pkg:hackage/http-types",
         "pkg:hackage/microlens",
-        "pkg:hackage/proto-lens",
+        "pkg:hackage/proto-lens@0.7.1.6",
         "pkg:hackage/random",
         "pkg:hackage/text",
         "pkg:hackage/time",
@@ -8767,8 +8709,8 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/co-log",
         "pkg:hackage/co-log-core",
+        "pkg:hackage/co-log@0.6.1.2",
         "pkg:hackage/hs-opentelemetry-api@1.0.0.0",
         "pkg:hackage/hs-opentelemetry-exporter-in-memory@1.0.0.0",
         "pkg:hackage/hs-opentelemetry-sdk@1.0.0.0",
@@ -9021,7 +8963,7 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/proto-lens-runtime"
+        "pkg:hackage/proto-lens-runtime@0.7.0.7"
       ],
       "ref": "pkg:hackage/hs-opentelemetry-otlp@1.0.0.0"
     },
@@ -9128,7 +9070,7 @@
         "pkg:hackage/time",
         "pkg:hackage/tls",
         "pkg:hackage/unix",
-        "pkg:hackage/unix-compat",
+        "pkg:hackage/unix-compat@0.7.1",
         "pkg:hackage/unordered-containers",
         "pkg:hackage/vector",
         "pkg:hackage/vector-builder",
@@ -9327,11 +9269,11 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/proto-lens"
+      "ref": "pkg:hackage/proto-lens-runtime@0.7.0.7"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/proto-lens-runtime"
+      "ref": "pkg:hackage/proto-lens@0.7.1.6"
     },
     {
       "dependsOn": [],
@@ -9379,7 +9321,11 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/thread-utils-context"
+      "ref": "pkg:hackage/thread-utils-context@0.4.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/thread-utils-finalizers@0.1.1.0"
     },
     {
       "dependsOn": [],
@@ -9403,7 +9349,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/unix-compat"
+      "ref": "pkg:hackage/unix-compat@0.7.1"
     },
     {
       "dependsOn": [],
@@ -9539,7 +9485,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":127,\"excluded_files\":6,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":22,\"with_candidates\":0}"
+        "value": "{\"addressable_without_cpe\":128,\"excluded_files\":6,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":22,\"with_candidates\":0}"
       },
       {
         "name": "waybill:git-submodule-coverage",
@@ -9547,7 +9493,7 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":0,\"resolved\":0,\"revision\":null,\"unresolved\":{\"offline\":90}}"
+        "value": "{\"disagreements\":0,\"resolved\":0,\"revision\":null,\"unresolved\":{\"offline\":85}}"
       },
       {
         "name": "waybill:file-inventory-skipped-build-dirs",
@@ -9579,7 +9525,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 21 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage"
+        "value": "orphaned-components-detected: 22 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",

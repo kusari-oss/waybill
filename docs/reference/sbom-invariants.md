@@ -373,6 +373,9 @@ it counted nearly everything reachable and coded nothing (0 codes against
 its graph through `graph_completeness::for_document`, as the three emitters
 do. Spec 1541 also adds `test-data-binary` and `unowned-binary` for
 components from binary analysis.
+Spec 1663 adds `edgeless-lock-pin`: a `stack.yaml.lock` package entry no
+declared package reaches. A Stack lock records no dependency edges, so the
+pin is almost always a transitive dependency nothing in the scan can name.
 
 **One population deliberately still fails I7**, and its declaration is the
 record of it rather than an oversight. It is waybill's own defect, so a

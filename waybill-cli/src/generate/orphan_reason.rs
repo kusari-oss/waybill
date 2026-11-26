@@ -257,6 +257,15 @@ pub enum OrphanReasonCode {
     /// prebuilt binary committed to the tree (212 GPU code objects on
     /// TheRock), or one in an install tree nothing owns.
     UnownedBinary,
+    /// Spec 1663 (#1678) — pinned by a lock file that records no dependency
+    /// edges (`stack.yaml.lock`), and no package the scan declares depends on
+    /// it. Almost always a transitive dependency the resolver needs: hs-
+    /// opentelemetry's root lock pins `thread-utils-finalizers`, lootbox's
+    /// pins `bytebuild`, `zigzag` and nine more, none named by any manifest.
+    /// The lock cannot say what needs it, and an offline scan cannot either.
+    /// It does NOT claim the pin is unused, which is what
+    /// `dead-lockfile-entry` would say.
+    EdgelessLockPin,
 }
 
 impl OrphanReasonCode {
@@ -278,6 +287,7 @@ impl OrphanReasonCode {
             Self::ClosureMemberNotAnEdgeEndpoint => "closure-member-not-an-edge-endpoint",
             Self::TestDataBinary => "test-data-binary",
             Self::UnownedBinary => "unowned-binary",
+            Self::EdgelessLockPin => "edgeless-lock-pin",
         }
     }
 }
@@ -299,6 +309,7 @@ pub struct OrphanReasonCounts {
     pub closure_member_not_an_edge_endpoint: usize,
     pub test_data_binary: usize,
     pub unowned_binary: usize,
+    pub edgeless_lock_pin: usize,
 }
 
 impl OrphanReasonCounts {
@@ -329,6 +340,7 @@ impl OrphanReasonCounts {
             }
             OrphanReasonCode::TestDataBinary => self.test_data_binary += 1,
             OrphanReasonCode::UnownedBinary => self.unowned_binary += 1,
+            OrphanReasonCode::EdgelessLockPin => self.edgeless_lock_pin += 1,
         }
     }
 }
@@ -624,6 +636,20 @@ pub fn classify_orphans(
                     .any(|n| sourced_from_file_named(c, n));
                 if has_reachable_sibling && from_lockfile {
                     OrphanReasonCode::DeadLockfileEntry
+                } else if c.source_type.as_deref() == Some("hackage-snapshot") {
+                    // Spec 1663 (research R2): a Stack snapshot or compiler
+                    // pin, recognised by what it is. The three-condition test
+                    // below infers the same thing from a `design` tier and no
+                    // source files, which a lock-file snapshot never has: it
+                    // carries its sha256 (`source` tier) and, since spec 1663,
+                    // its lock file. A URL-pinned snapshot fell through to no
+                    // reason at all (I7, #1678).
+                    OrphanReasonCode::BuildToolchain
+                } else if c.source_type.as_deref() == Some("hackage-stack-lock") {
+                    // Spec 1663 — a `stack.yaml.lock` package entry no
+                    // declared package reaches. The lock records no edges, so
+                    // nothing here can say what needs it (`EdgelessLockPin`).
+                    OrphanReasonCode::EdgelessLockPin
                 } else if c.sbom_tier.as_deref() == Some("design")
                     && c.evidence.source_file_paths
                         .iter()
@@ -827,6 +853,7 @@ pub fn classify_orphans_pre_emit(
         orphan_reason_unreferenced_lock_node = counts.unreferenced_lock_node,
         orphan_reason_test_data_binary = counts.test_data_binary,
         orphan_reason_unowned_binary = counts.unowned_binary,
+        orphan_reason_edgeless_lock_pin = counts.edgeless_lock_pin,
         "orphan-reason classification complete"
     );
 
@@ -1212,6 +1239,46 @@ mod tests {
 
         assert_eq!(reason_of(&comps[0]), Some("build-toolchain"));
         assert_eq!(counts.build_toolchain, 1);
+    }
+
+    /// Spec 1663 (#1678): a lock-file snapshot is `source` tier (it carries
+    /// its sha256) and names its lock file. It is still a toolchain pin,
+    /// recognised by its source type. A non-snapshot component with the same
+    /// tier and source file is not.
+    #[test]
+    fn spec1663_a_source_tier_snapshot_with_a_lock_file_is_a_toolchain_pin() {
+        let mut snap = mk("pkg:generic/stackage-lts-18.8@93a10755");
+        snap.sbom_tier = Some("source".to_string());
+        snap.source_type = Some("hackage-snapshot".to_string());
+        snap.evidence.source_file_paths = vec!["instrumentation/yesod/stack.yaml.lock".to_string()];
+        let mut other = mk("pkg:generic/something@1.0");
+        other.sbom_tier = Some("source".to_string());
+        other.evidence.source_file_paths = vec!["instrumentation/yesod/stack.yaml.lock".to_string()];
+        let mut comps = vec![snap, other];
+
+        classify_orphans(&mut comps, &HashSet::new());
+
+        assert_eq!(reason_of(&comps[0]), Some("build-toolchain"));
+        assert_ne!(reason_of(&comps[1]), Some("build-toolchain"));
+    }
+
+    /// Spec 1663: an unreachable `stack.yaml.lock` package entry is an
+    /// edgeless lock pin. Another source type with the same evidence is not.
+    #[test]
+    fn spec1663_an_unreached_stack_lock_pin_is_edgeless() {
+        let mut pin = mk("pkg:hackage/waybill-fixture-transitive@1.0.0");
+        pin.source_type = Some("hackage-stack-lock".to_string());
+        pin.sbom_tier = Some("source".to_string());
+        let mut other = mk("pkg:hackage/waybill-fixture-other@1.0.0");
+        other.source_type = Some("hackage-freeze".to_string());
+        other.sbom_tier = Some("source".to_string());
+        let mut comps = vec![pin, other];
+
+        let counts = classify_orphans(&mut comps, &HashSet::new());
+
+        assert_eq!(reason_of(&comps[0]), Some("edgeless-lock-pin"));
+        assert_ne!(reason_of(&comps[1]), Some("edgeless-lock-pin"));
+        assert_eq!(counts.edgeless_lock_pin, 1);
     }
 
     /// Feature 1218 T027 — mechanism E must not fire on a `source`-tier

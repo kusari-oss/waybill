@@ -15,13 +15,19 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "test/wrapper/testdata/stack-with-dist-newstyle/stack.yaml"
+          }
         ]
       },
       "name": "ghc-9.6.5",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"\"]"
+          "value": "[\"test/wrapper/testdata/stack-with-dist-newstyle/stack.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -42,6 +48,10 @@
         {
           "name": "waybill:stackage-resolver",
           "value": "ghc-9.6.5"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"test/wrapper/testdata/stack-with-dist-newstyle\"]"
         }
       ],
       "purl": "pkg:generic/ghc-9.6.5@unspecified",
@@ -62,13 +72,19 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "stack.yaml"
+          }
         ]
       },
       "name": "lts-23.28",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"\"]"
+          "value": "[\"stack.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -89,6 +105,10 @@
         {
           "name": "waybill:stackage-resolver",
           "value": "lts-23.28"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:generic/stackage-lts-23.28@unspecified",
@@ -27447,7 +27467,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"docs\",\"ghcide\",\"hls-graph\",\"hls-plugin-api\",\"hls-test-utils\",\"shake-bench\"]"
+        "value": "[\".\",\"docs\",\"ghcide\",\"hls-graph\",\"hls-plugin-api\",\"hls-test-utils\",\"shake-bench\",\"test/wrapper/testdata/stack-with-dist-newstyle\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",

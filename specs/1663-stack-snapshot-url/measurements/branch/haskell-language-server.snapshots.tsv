@@ -1,0 +1,2 @@
+pkg:generic/ghc-9.6.5@unspecified	["test/wrapper/testdata/stack-with-dist-newstyle/stack.yaml"]	unreachable	build-toolchain
+pkg:generic/stackage-lts-23.28@unspecified	["stack.yaml"]	unreachable	build-toolchain

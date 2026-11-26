@@ -1,0 +1,1 @@
+pkg:generic/haskell-aeson@682162c
