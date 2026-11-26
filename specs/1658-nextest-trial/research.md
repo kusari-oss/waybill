@@ -16,11 +16,12 @@ Probes ran on 2026-11-25, macOS, against cargo-nextest 0.9.152 installed by Home
 **Decision:** the gate expects a nextest summary that names no failure:
 
 ```
-^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed(, [0-9]+ skipped)?$
+^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$
 ```
 
 - **Anchoring:** the line ends right after `passed` or `skipped`. A run that also failed, timed out, was flaky or leaked writes `, N failed` (or similar) and does not match.
 - **`[1-9]`:** zero tests run does not count as a pass.
+- **`( \([0-9]+ slow\))?`:** added after the first CI run (PR #1724, Linux): nextest appends `(1 slow)` after `passed` when a test runs past its 60 s slow threshold (`sbom_edit_filter::i1454…` on that runner), so the first pattern would have failed a fully green run. `a_slow_test_still_passes_the_summary_gate` covers it.
 
 The existing `>>> all pre-PR checks passed.` expectation stays. The gate is given both with `--expect`, which is repeatable.
 

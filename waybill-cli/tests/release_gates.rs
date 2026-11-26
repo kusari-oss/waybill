@@ -305,14 +305,18 @@ fn an_expected_signal_is_not_satisfied_by_the_gates_own_footer() {
 /// byte-identical to the documented one by
 /// `the_documented_gate_invocation_uses_this_summary_pattern`.
 const NEXTEST_SUMMARY: &str =
-    r"^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed(, [0-9]+ skipped)?$";
+    r"^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$";
 
 const PASSING_LIB: &str = "#[test] fn a() {}\n#[test] fn b() {}\n#[test] #[ignore] fn c() {}\n";
 
 /// A scratch crate holding `lib_rs`, outside the workspace, with its own
 /// target directory.
-fn scratch_crate(lib_rs: &str) -> tempfile::TempDir {
+fn scratch_crate(lib_rs: &str, nextest_toml: Option<&str>) -> tempfile::TempDir {
     let dir = tempfile::tempdir().expect("tempdir");
+    if let Some(cfg) = nextest_toml {
+        std::fs::create_dir(dir.path().join(".config")).expect("mkdir .config");
+        std::fs::write(dir.path().join(".config/nextest.toml"), cfg).expect("write nextest.toml");
+    }
     std::fs::create_dir(dir.path().join("src")).expect("mkdir src");
     std::fs::write(
         dir.path().join("Cargo.toml"),
@@ -329,8 +333,14 @@ fn scratch_crate(lib_rs: &str) -> tempfile::TempDir {
 /// summary expectation can fail the gate. That is the case the expectation
 /// exists for (a caller or wrapper that loses the status), and it is what
 /// makes each test below able to fail when the expectation is removed.
-fn nextest_gate(lib_rs: &str, nextest_args: &str, env: &[(&str, &str)], expect: bool) -> Gate {
-    let krate = scratch_crate(lib_rs);
+fn nextest_gate(
+    lib_rs: &str,
+    nextest_toml: Option<&str>,
+    nextest_args: &str,
+    env: &[(&str, &str)],
+    expect: bool,
+) -> Gate {
+    let krate = scratch_crate(lib_rs, nextest_toml);
     let logs = tempfile::tempdir().expect("tempdir");
     let mut cmd = Command::new(repo_root().join("scripts/gate.sh"));
     if expect {
@@ -379,7 +389,7 @@ fn nextest_installed() {
 #[test]
 fn a_passing_nextest_run_passes_the_summary_gate() {
     nextest_installed();
-    let g = nextest_gate(PASSING_LIB, "", &[], true);
+    let g = nextest_gate(PASSING_LIB, None, "", &[], true);
     assert!(g.log.contains("GATE_RESULT=pass"), "{}", g.log);
     assert!(
         g.log.contains("2 tests run: 2 passed, 1 skipped"),
@@ -392,7 +402,7 @@ fn a_passing_nextest_run_passes_the_summary_gate() {
 fn a_failing_test_fails_the_summary_gate_even_with_exit_zero() {
     nextest_installed();
     let lib = "#[test] fn a() {}\n#[test] fn b() { panic!(\"boom\") }\n";
-    let g = nextest_gate(lib, "", &[], true);
+    let g = nextest_gate(lib, None, "", &[], true);
     assert!(g.log.contains("GATE_EXIT=0"), "the status was hidden: {}", g.log);
     assert!(g.log.contains("GATE_RESULT=fail"), "{}", g.log);
     assert!(
@@ -405,7 +415,7 @@ fn a_failing_test_fails_the_summary_gate_even_with_exit_zero() {
 #[test]
 fn a_build_that_does_not_compile_fails_the_summary_gate() {
     nextest_installed();
-    let g = nextest_gate("#[test] fn a() { undefined_name }\n", "", &[], true);
+    let g = nextest_gate("#[test] fn a() { undefined_name }\n", None, "", &[], true);
     assert!(g.log.contains("GATE_RESULT=fail"), "{}", g.log);
     assert!(
         !g.log.lines().any(|l| l.trim_start().starts_with("Summary [")),
@@ -420,7 +430,7 @@ fn a_run_of_zero_tests_fails_the_summary_gate() {
     // `--no-tests=pass` makes nextest itself exit 0 on an empty run, so the
     // `[1-9]` in the pattern is the only thing standing between "no tests ran"
     // and a pass.
-    let g = nextest_gate(PASSING_LIB, "--no-tests=pass -E 'test(=no_such_test)'", &[], true);
+    let g = nextest_gate(PASSING_LIB, None, "--no-tests=pass -E 'test(=no_such_test)'", &[], true);
     assert!(g.log.contains("0 tests run"), "{}", g.log);
     assert!(g.log.contains("GATE_RESULT=fail"), "{}", g.log);
 }
@@ -430,7 +440,21 @@ fn forced_colour_does_not_break_the_summary_gate() {
     nextest_installed();
     // CI sets CARGO_TERM_COLOR=always (ci.yml). `--color never` must win, or
     // escape codes inside the Summary line would fail every green run.
-    let g = nextest_gate(PASSING_LIB, "", &[("CARGO_TERM_COLOR", "always")], true);
+    let g = nextest_gate(PASSING_LIB, None, "", &[("CARGO_TERM_COLOR", "always")], true);
+    assert!(g.log.contains("GATE_RESULT=pass"), "{}", g.log);
+}
+
+/// Nextest marks a test that outlives its slow threshold and appends
+/// `(N slow)` after `passed` in the summary. A slow test is still a pass; the
+/// first version of the pattern rejected it, which CI's first run showed
+/// (`9304 passed (1 slow), 56 skipped`, Linux, PR #1724).
+#[test]
+fn a_slow_test_still_passes_the_summary_gate() {
+    nextest_installed();
+    let lib = "#[test] fn a() {}\n#[test] fn b() { std::thread::sleep(std::time::Duration::from_millis(1500)) }\n";
+    let cfg = "[profile.default]\nslow-timeout = { period = \"500ms\" }\n";
+    let g = nextest_gate(lib, Some(cfg), "", &[], true);
+    assert!(g.log.contains("(1 slow)"), "the probe must actually be slow: {}", g.log);
     assert!(g.log.contains("GATE_RESULT=pass"), "{}", g.log);
 }
 

@@ -1000,7 +1000,7 @@ not one, not a subset, ALL THREE:
 | Step | Command | Passing condition |
 |------|---------|-------------------|
 | 1 | `cargo clippy --workspace --all-targets -- -D warnings` | Zero errors and zero warnings |
-| 2 | `cargo nextest run --workspace --no-fail-fast --color never` | The run ends with `Summary [ … ] N tests run: N passed[, K skipped]`, N ≥ 1, naming no failed, timed-out or leaky test |
+| 2 | `cargo nextest run --workspace --no-fail-fast --color never` | The run ends with `Summary [ … ] N tests run: N passed[ (S slow)][, K skipped]`, N ≥ 1, naming no failed, timed-out or leaky test |
 | 3 | `cargo test --workspace --doc` | Every doctest suite reports `ok. N passed; 0 failed` |
 
 These are the exact commands CI executes (`.github/workflows/ci.yml`),

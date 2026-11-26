@@ -586,7 +586,7 @@ not a subset, ALL THREE (constitution 4.1.0, spec 1658):
 
 1. `cargo clippy --workspace --all-targets` — zero errors
 2. `cargo nextest run --workspace --no-fail-fast --color never` — the
-   `Summary [ … ] N tests run: N passed[, K skipped]` line, naming no failure
+   `Summary [ … ] N tests run: N passed[ (S slow)][, K skipped]` line, naming no failure
 3. `cargo test --workspace --doc` — every doctest suite `ok. N passed; 0 failed`
 
 Nextest runs test binaries in parallel; `cargo test` ran them one at a
@@ -647,7 +647,7 @@ it kept losing to the one-step broken form:
 ```sh
 ./scripts/gate.sh \
   --expect '>>> all pre-PR checks passed\.' \
-  --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed(, [0-9]+ skipped)?$' \
+  --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$' \
   prepr -- ./scripts/pre-pr.sh
 ```
 

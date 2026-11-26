@@ -81,3 +81,13 @@ Control after revert:
 ```
 
 M3 first survived because the mutated script then failed at its first step for lack of `python3`, so both original assertions held. The test now also asserts that no step started.
+
+## M4: the pre-CI pattern, without `( \([0-9]+ slow\))?`
+
+```
+            PASS [   0.005s] (1/2) gate-probe a
+            PASS [   1.516s] (2/2) gate-probe b
+        FAIL  a_slow_test_still_passes_the_summary_gate
+        FAIL  the_documented_gate_invocation_uses_this_summary_pattern
+```
+reverted: cmp ok. The slow-test case fails, and so does the documented-pattern check (CLAUDE.md now carries the new pattern).

@@ -5,3 +5,6 @@ run_id	lane	phase	tests_s	doctests_s
 45713592591	Lint + test (windows-latest)	before	876 (success)	
 45713592591	Lint + test (macos-latest)	before	1059 (success)	
 45713592591	Lint + test (linux-x86_64)	before	842 (success)	
+45728714707	Lint + test (windows-latest)	after	887 (success)	2 (success)
+45728714707	Lint + test (linux-x86_64)	after	551 (success)	1 (success)
+45728714707	Lint + test (macos-latest)	after	976 (success)	3 (success)

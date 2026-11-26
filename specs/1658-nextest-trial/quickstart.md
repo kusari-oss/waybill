@@ -12,7 +12,7 @@ cargo nextest --version           # 0.9.152 or later
 ```sh
 ./scripts/gate.sh \
   --expect '>>> all pre-PR checks passed\.' \
-  --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed(, [0-9]+ skipped)?$' \
+  --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$' \
   prepr -- ./scripts/pre-pr.sh
 ```
 
