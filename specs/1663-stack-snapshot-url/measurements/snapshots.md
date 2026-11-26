@@ -67,3 +67,10 @@ Decisions (maintainer): (1) a `stack.yaml.lock` governs the packages its sibling
 - haskell-language-server: `stackage-lts-23.28` gains `stack.yaml`; `ghc-9.6.5` gains `test/wrapper/testdata/stack-with-dist-newstyle/stack.yaml`. That one comes from test data and was emitted before too; recording the file makes it visible.
 
 Unexplained differences: 0.
+
+## Corpus goldens (T015)
+
+Run 45900795766 regenerated the goldens on `46baca62` and passed. It reports 16 golden files changed:
+- **15 are the expected ones:** haskell-language-server, and hpack-hs-opentelemetry and hpack-lootbox with their variants, each in three formats.
+- **Content checks out:** for the hpack targets, the sorted `purl` differences match the table above exactly. haskell-language-server's components are unchanged; only its snapshots' source files changed.
+- **The 16th, `hpack-hs-temporal-sdk/spdx-3.json`, was not committed.** It adds one `Organization "Microsoft"` that nothing references. That target has no Stack files, and neither binary produces it locally (#1738).

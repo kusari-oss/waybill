@@ -403,6 +403,135 @@
       "type": "library"
     },
     {
+      "bom-ref": "pkg:hackage/bytebuild@0.3.12.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "bytebuild",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/bytebuild@0.3.12.0",
+      "type": "library",
+      "version": "0.3.12.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/byteslice@0.2.9.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "byteslice",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/byteslice@0.2.9.0",
+      "type": "library",
+      "version": "0.2.9.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/bytesmith@0.3.9.1",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "bytesmith",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/bytesmith@0.3.9.1",
+      "type": "library",
+      "version": "0.3.9.1"
+    },
+    {
       "bom-ref": "pkg:hackage/bytestring",
       "evidence": {
         "identity": [
@@ -523,7 +652,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/co-log",
+      "bom-ref": "pkg:hackage/cborg@0.2.8.0",
       "evidence": {
         "identity": [
           {
@@ -535,47 +664,38 @@
                 "technique": "manifest-analysis"
               }
             ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/package.yaml"
           }
         ]
       },
-      "name": "co-log",
+      "name": "cborg",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/package.yaml\"]"
+          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
+          "value": "hackage-stack-lock"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
+          "value": "stack-yaml-lock"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"code/log\"]"
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
         }
       ],
-      "purl": "pkg:hackage/co-log",
-      "type": "library"
+      "purl": "pkg:hackage/cborg@0.2.8.0",
+      "type": "library",
+      "version": "0.2.8.0"
     },
     {
-      "bom-ref": "pkg:hackage/co-log-core",
+      "bom-ref": "pkg:hackage/chronos@1.1.5",
       "evidence": {
         "identity": [
           {
@@ -588,11 +708,48 @@
               }
             ]
           }
-        ],
-        "occurrences": [
+        ]
+      },
+      "name": "chronos",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/chronos@1.1.5",
+      "type": "library",
+      "version": "1.1.5"
+    },
+    {
+      "bom-ref": "pkg:hackage/co-log-core@0.3.2.0",
+      "evidence": {
+        "identity": [
           {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/package.yaml"
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
           }
         ]
       },
@@ -600,34 +757,27 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/package.yaml\"]"
+          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
+          "value": "hackage-stack-lock"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"code/log\"]"
+          "value": "stack-yaml-lock"
         }
       ],
-      "purl": "pkg:hackage/co-log-core",
-      "type": "library"
+      "purl": "pkg:hackage/co-log-core@0.3.2.0",
+      "type": "library",
+      "version": "0.3.2.0"
     },
     {
-      "bom-ref": "pkg:hackage/co-log-sys",
+      "bom-ref": "pkg:hackage/co-log-sys@0.1.1.0",
       "evidence": {
         "identity": [
           {
@@ -639,12 +789,6 @@
                 "technique": "manifest-analysis"
               }
             ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/package.yaml"
           }
         ]
       },
@@ -652,34 +796,27 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/package.yaml\"]"
+          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
+          "value": "hackage-stack-lock"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"code/log\"]"
+          "value": "stack-yaml-lock"
         }
       ],
-      "purl": "pkg:hackage/co-log-sys",
-      "type": "library"
+      "purl": "pkg:hackage/co-log-sys@0.1.1.0",
+      "type": "library",
+      "version": "0.1.1.0"
     },
     {
-      "bom-ref": "pkg:hackage/componentm",
+      "bom-ref": "pkg:hackage/co-log@0.5.0.0",
       "evidence": {
         "identity": [
           {
@@ -692,11 +829,44 @@
               }
             ]
           }
-        ],
-        "occurrences": [
+        ]
+      },
+      "name": "co-log",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        }
+      ],
+      "purl": "pkg:hackage/co-log@0.5.0.0",
+      "type": "library",
+      "version": "0.5.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/componentm@0.0.0.2",
+      "evidence": {
+        "identity": [
           {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/log/package.yaml"
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
           }
         ]
       },
@@ -704,31 +874,24 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/log/package.yaml\"]"
+          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
+          "value": "hackage-stack-lock"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"code/log\"]"
+          "value": "stack-yaml-lock"
         }
       ],
-      "purl": "pkg:hackage/componentm",
-      "type": "library"
+      "purl": "pkg:hackage/componentm@0.0.0.2",
+      "type": "library",
+      "version": "0.0.0.2"
     },
     {
       "bom-ref": "pkg:hackage/containers",
@@ -785,6 +948,49 @@
       ],
       "purl": "pkg:hackage/containers",
       "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/contiguous@0.6.3.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "contiguous",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/contiguous@0.6.3.0",
+      "type": "library",
+      "version": "0.6.3.0"
     },
     {
       "bom-ref": "pkg:hackage/cryptonite",
@@ -1491,7 +1697,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1552,7 +1758,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1613,7 +1819,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1666,7 +1872,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1727,7 +1933,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1788,7 +1994,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1849,7 +2055,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
@@ -2249,6 +2455,49 @@
       "type": "library"
     },
     {
+      "bom-ref": "pkg:hackage/primitive@0.7.4.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "primitive",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/primitive@0.7.4.0",
+      "type": "library",
+      "version": "0.7.4.0"
+    },
+    {
       "bom-ref": "pkg:hackage/random",
       "evidence": {
         "identity": [
@@ -2353,6 +2602,49 @@
       "type": "library"
     },
     {
+      "bom-ref": "pkg:hackage/run-st@0.1.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "run-st",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/run-st@0.1.1.0",
+      "type": "library",
+      "version": "0.1.1.0"
+    },
+    {
       "bom-ref": "pkg:hackage/safe-exceptions",
       "evidence": {
         "identity": [
@@ -2409,7 +2701,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/serialise",
+      "bom-ref": "pkg:hackage/serialise@0.2.6.0",
       "evidence": {
         "identity": [
           {
@@ -2422,43 +2714,30 @@
               }
             ]
           }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "code/network/package.yaml"
-          }
         ]
       },
       "name": "serialise",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"code/network/package.yaml\"]"
+          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
+          "value": "hackage-stack-lock"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"code/network\"]"
+          "value": "stack-yaml-lock"
         }
       ],
-      "purl": "pkg:hackage/serialise",
-      "type": "library"
+      "purl": "pkg:hackage/serialise@0.2.6.0",
+      "type": "library",
+      "version": "0.2.6.0"
     },
     {
       "bom-ref": "pkg:hackage/singletons",
@@ -3014,6 +3293,49 @@
       "type": "library"
     },
     {
+      "bom-ref": "pkg:hackage/teardown@0.5.0.1",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "teardown",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/teardown@0.5.0.1",
+      "type": "library",
+      "version": "0.5.0.1"
+    },
+    {
       "bom-ref": "pkg:hackage/text",
       "evidence": {
         "identity": [
@@ -3184,6 +3506,49 @@
       ],
       "purl": "pkg:hackage/time",
       "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/typerep-map@0.5.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "typerep-map",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/typerep-map@0.5.0.0",
+      "type": "library",
+      "version": "0.5.0.0"
     },
     {
       "bom-ref": "pkg:hackage/universum",
@@ -3508,6 +3873,49 @@
       ],
       "purl": "pkg:hackage/zeromq4-haskell",
       "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/zigzag@0.0.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "zigzag",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-stack-lock"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "edgeless-lock-pin"
+        }
+      ],
+      "purl": "pkg:hackage/zigzag@0.0.1.0",
+      "type": "library",
+      "version": "0.0.1.0"
     }
   ],
   "compositions": [
@@ -3567,6 +3975,18 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:hackage/bytebuild@0.3.12.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/byteslice@0.2.9.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/bytesmith@0.3.9.1"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:hackage/bytestring"
     },
     {
@@ -3575,23 +3995,35 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/co-log"
+      "ref": "pkg:hackage/cborg@0.2.8.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/co-log-core"
+      "ref": "pkg:hackage/chronos@1.1.5"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/co-log-sys"
+      "ref": "pkg:hackage/co-log-core@0.3.2.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/componentm"
+      "ref": "pkg:hackage/co-log-sys@0.1.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/co-log@0.5.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/componentm@0.0.0.2"
     },
     {
       "dependsOn": [],
       "ref": "pkg:hackage/containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/contiguous@0.6.3.0"
     },
     {
       "dependsOn": [],
@@ -3714,10 +4146,10 @@
         "pkg:hackage/base-noprelude",
         "pkg:hackage/bytestring",
         "pkg:hackage/caps",
-        "pkg:hackage/co-log",
-        "pkg:hackage/co-log-core",
-        "pkg:hackage/co-log-sys",
-        "pkg:hackage/componentm",
+        "pkg:hackage/co-log-core@0.3.2.0",
+        "pkg:hackage/co-log-sys@0.1.1.0",
+        "pkg:hackage/co-log@0.5.0.0",
+        "pkg:hackage/componentm@0.0.0.2",
         "pkg:hackage/dlist",
         "pkg:hackage/fmt",
         "pkg:hackage/hedgehog",
@@ -3759,7 +4191,7 @@
         "pkg:hackage/random",
         "pkg:hackage/reflection",
         "pkg:hackage/safe-exceptions",
-        "pkg:hackage/serialise",
+        "pkg:hackage/serialise@0.2.6.0",
         "pkg:hackage/singletons",
         "pkg:hackage/singletons-base",
         "pkg:hackage/stm",
@@ -3812,6 +4244,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:hackage/primitive@0.7.4.0"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:hackage/random"
     },
     {
@@ -3820,11 +4256,15 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:hackage/run-st@0.1.1.0"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:hackage/safe-exceptions"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/serialise"
+      "ref": "pkg:hackage/serialise@0.2.6.0"
     },
     {
       "dependsOn": [],
@@ -3864,6 +4304,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:hackage/teardown@0.5.0.1"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:hackage/text"
     },
     {
@@ -3873,6 +4317,10 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/time"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/typerep-map@0.5.0.0"
     },
     {
       "dependsOn": [],
@@ -3897,6 +4345,10 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/zeromq4-haskell"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/zigzag@0.0.1.0"
     }
   ],
   "metadata": {
@@ -3929,6 +4381,9 @@
     "lifecycles": [
       {
         "phase": "design"
+      },
+      {
+        "phase": "pre-build"
       }
     ],
     "properties": [
@@ -3942,7 +4397,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":62,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":1,\"with_candidates\":0}"
+        "value": "{\"addressable_without_cpe\":73,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":1,\"with_candidates\":0}"
       },
       {
         "name": "waybill:os-release-missing-fields",
@@ -3970,11 +4425,11 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 1 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage"
+        "value": "orphaned-components-detected: 12 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\"code/base\",\"code/config\",\"code/crypto\",\"code/demo\",\"code/log\",\"code/network\",\"code/prelude\"]"
+        "value": "[\".\",\"code/base\",\"code/config\",\"code/crypto\",\"code/demo\",\"code/log\",\"code/network\",\"code/prelude\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",

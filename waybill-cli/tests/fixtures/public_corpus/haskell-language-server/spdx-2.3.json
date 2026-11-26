@@ -71,7 +71,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"docs\\\",\\\"ghcide\\\",\\\"hls-graph\\\",\\\"hls-plugin-api\\\",\\\"hls-test-utils\\\",\\\"shake-bench\\\"]\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"docs\\\",\\\"ghcide\\\",\\\"hls-graph\\\",\\\"hls-plugin-api\\\",\\\"hls-test-utils\\\",\\\"shake-bench\\\",\\\"test/wrapper/testdata/stack-with-dist-newstyle\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -178,13 +178,19 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"test/wrapper/testdata/stack-with-dist-newstyle/stack.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"test/wrapper/testdata/stack-with-dist-newstyle/stack.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -197,6 +203,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:stackage-resolver\",\"value\":\"ghc-9.6.5\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"test/wrapper/testdata/stack-with-dist-newstyle\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -238,13 +250,19 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"stack.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"stack.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -257,6 +275,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:stackage-resolver\",\"value\":\"lts-23.28\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",

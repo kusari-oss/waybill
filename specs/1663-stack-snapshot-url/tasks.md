@@ -85,7 +85,7 @@
   ```
 
   Check for `GATE_RESULT=pass` and the summary line.
-- [ ] T015 Open the PR (Refs #1678) and enumerate every CI job's result. Dispatch `public-corpus.yml` with `regen_goldens=true`, and read the golden diff against T013's table: `hpack-*` goldens move only in `pkg:hackage`. Commit the goldens.
+- [X] T015 Open the PR (Refs #1678) and enumerate every CI job's result. Dispatch `public-corpus.yml` with `regen_goldens=true`, and read the golden diff against T013's table: `hpack-*` goldens move only in `pkg:hackage`. Commit the goldens.
 - [X] T016 File the side finding as an issue: lock-file package components record an empty `source_path` (`haskell.rs:2407`). Add a "Recent Changes" line to CLAUDE.md.
 
 ## Added at implementation (after the first corpus run)
