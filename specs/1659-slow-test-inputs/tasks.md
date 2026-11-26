@@ -49,7 +49,7 @@
 
 **Independent test**: `self_scan_guards` passes, and each R4 mutation fails it with the guard's name.
 
-- [ ] T006 [P] [US2] Create `waybill-cli/tests/self_scan_guards.rs` with one test, `waybill_self_scan_guards`.
+- [x] T006 [P] [US2] Create `waybill-cli/tests/self_scan_guards.rs` with one test, `waybill_self_scan_guards`.
   - **The scan:** copy `env!("CARGO_BIN_EXE_waybill")` into a tempdir as `waybill-under-test`, then run `sbom scan --path <dir> --output <dir>/out.cdx.json --no-deep-hash`, the same arguments as all four originals. Parse the output once.
   - **The guards:** four functions taking `&Value` and returning `Result<Option<String>, String>`, where `Ok(Some(note))` is a skip. Each carries over its original test's logic and failure message exactly:
     - `guard_no_openssl_cpe`, from `cpe_binary_id.rs`;
@@ -57,12 +57,12 @@
     - `guard_build_provenance`, from `binary_build_provenance.rs`, including its ELF, Mach-O and PE branches and its skip.
   - **Reporting:** collect `(name, result)`, print any skips with `eprintln!`, then one `assert!` over all failures that names each.
   - **Helpers:** copy `property_value` and `find_file_level` from the originals. Add the `#[cfg_attr(test, allow(clippy::unwrap_used))]` convention only if it's needed; integration test crates follow the existing files' style.
-- [ ] T007 [US2] Mutations R4, recorded in `measurements/mutations.md`. In the test, temporarily insert defects into the parsed SBOM before evaluation, and run once per mutation:
+- [x] T007 [US2] Mutations R4, recorded in `measurements/mutations.md`. In the test, temporarily insert defects into the parsed SBOM before evaluation, and run once per mutation:
   - **One per guard:** a CPE `cpe:2.3:a:openssl:openssl:…` on any component; a component with PURL `pkg:generic/zlib@1.2.13`; a component with PURL `pkg:generic/openssl`; the format-specific provenance property removed from the file-level component. Each must fail and name its guard.
   - **Two together:** must give one failure naming both.
   - **Product side:** first read how a CPE reaches a component in a binary scan, and record the path in `mutations.md`. Then pick the mutation on that path that makes the real scan of waybill emit `openssl:openssl`: for example, loosening the `openssl` version-string anchor so it matches a string in the debug binary, found with `strings`. The test must fail. If no single change in waybill can produce it, record why, and rely on the injected-defect mutations for this guard.
   - **Revert** everything with `cp`, check with `cmp`, and rebuild.
-- [ ] T008 [US2] Delete the four original tests:
+- [x] T008 [US2] Delete the four original tests:
   - `cpe_binary_id.rs`: `mikebom_self_scan_emits_no_spurious_openssl_cpe`;
   - `binary_id_enrich.rs`: the two `mikebom_itself_*` tests;
   - `binary_build_provenance.rs`: `mikebom_self_scan_emits_build_provenance_properties`.
@@ -73,7 +73,7 @@
 
 ## Phase 5: Measure and ship
 
-- [ ] T009 After timings. Run `self_scan_guards::waybill_self_scan_guards`, i1454 and `us4` alone 3 times each, and record them as phase `after`. Compare with SC-001 (i1454 plus `us4` at 12 s or less, median) and SC-002 (one scan: the combined test against the sum of the four originals).
+- [x] T009 After timings. Run `self_scan_guards::waybill_self_scan_guards`, i1454 and `us4` alone 3 times each, and record them as phase `after`. Compare with SC-001 (i1454 plus `us4` at 12 s or less, median) and SC-002 (one scan: the combined test against the sum of the four originals).
 - [ ] T010 Run the gate: `./scripts/gate.sh` with both `--expect` patterns from CLAUDE.md, around `prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass`, the summary line, and the test count. Expected: before − 4 + 1, with no other change; explain any other difference.
 - [ ] T011 Write `measurements/after.md`, commit, and open the PR (Refs #1719, #1716, #1725).
 - [ ] T012 CI: collect the `Tests` step and nextest summed time for Linux, from 2 PR runs against 2 recent `main` runs. Use `specs/1658-nextest-trial/measurements/ci_steps.py` and the per-test sum method from spec 1658. Add them to `after.md` and the PR. Enumerate every job's conclusion.
