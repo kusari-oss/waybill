@@ -18,7 +18,7 @@
 - [ ] T002 Settle research R1 by experiment, not assumption, and write the results in `measurements/local.md`:
   - **(a)** Add `[profile.dev] split-debuginfo = "packed"` under a `[target.'cfg(target_os = "macos")']` table in a scratch `.cargo/config.toml`, and record whether cargo rejects or ignores it. Expected: profiles can't be scoped by target.
   - **(b)** Confirm the rustflags route reaches rustc. With `[target.'cfg(target_os = "macos")'] rustflags = ["-C", "split-debuginfo=packed"]` in place, run `cargo build -p waybill-common -v` and check that the `rustc` command lines contain `-C split-debuginfo=packed`.
-  - **(c)** Confirm it does *not* apply to other targets: `cargo build -p waybill-common -v --target x86_64-unknown-linux-gnu` (check only; add the target with rustup if it's missing, or use `cargo check -v`), and check the flag is absent.
+  - **(c)** Confirm it does *not* apply to other targets: run `rustup target add x86_64-unknown-linux-gnu` (this adds the standard-library component only; the pinned toolchain is unchanged), then `cargo check -p waybill-common -v --target x86_64-unknown-linux-gnu`, and check the flag is absent from every `rustc` line. Record the command and the count of lines carrying the flag, which must be 0.
   - Remove the scratch file afterwards.
 
 ## Phase 3: User Story 1, local rebuilds stop slowing down (P1)
@@ -38,7 +38,7 @@
   - that `RUSTFLAGS` overrides it;
   - that release builds carry no debug info, so they're unaffected.
 
-  Then check the release build: run `cargo build --release -p waybill -v 2>&1` and check the flag is present but release has `debug = false`. Record the release binary's size before and after; it should be unchanged within noise.
+  Then check the release build: run `cargo build --release -p waybill -v 2>&1` and check the flag is present but release has `debug = false`. Record the release binary's size before and after; it should be unchanged within noise. Also confirm from the `-v` output that the release `rustc` lines carry no debug info, either `-C debuginfo=0` or no `debuginfo` flag at all. That's the property the spec's edge case claims.
 - [ ] T005 [US1] Measure locally, in a fresh `CARGO_TARGET_DIR=target/dbgcheck`: a warm `cargo nextest run --workspace --no-run`, then 3 × (touch `waybill-cli/src/lib.rs`, `waybill-common/src/lib.rs` and `waybill-cli/src/main.rs`; rebuild; record the `ls target/dbgcheck/debug/deps | wc -l` entry count and the seconds) into `local.tsv` as setting `packed-config`.
   - **Expected:** entry counts within 1% of each other (SC-001), and the 3rd time no more than the run-to-run spread above the 1st (SC-002).
   - **Then** run T003's test against this target dir (SC-003), and remove the target dir.
@@ -58,8 +58,8 @@
 
 - [ ] T007 [US2] Run the gate (`./scripts/gate.sh` with both CLAUDE.md `--expect` patterns, around `prepr -- ./scripts/pre-pr.sh`), commit T003–T006, and open the PR (Refs #1719). This "full" commit is the baseline. Record its CI run and one re-run in `ci.tsv`: for Linux, macOS and Windows, the test-build `Finished` time and `Tests`-step seconds (use `specs/1658-nextest-trial/measurements/ci_steps.py`), and the backtrace test's pass or fail.
 - [ ] T008 [US2] Push a measurement commit adding `CARGO_PROFILE_DEV_DEBUG: line-tables-only` and `CARGO_PROFILE_TEST_DEBUG: line-tables-only` to the top-level `env:` of `.github/workflows/ci.yml`. Record its run and one re-run. The backtrace test's result and captured stderr go in `ci.md`.
-- [ ] T009 [US2] Push a measurement commit setting both to `0`. Record its run and one re-run. The backtrace test is expected to fail here, and that failure is the measurement. Record it rather than fixing it.
-- [ ] T010 [US2] Decide per research R4: adopt a setting only if its 2 test-build times are below both of full's on Linux and macOS *and* the backtrace test passes. Revert the measurement commits so the workflow has either no new `env` line or only the adopted one. If one is adopted, confirm in the final run that the eBPF lane passes too. Write the decision and the numbers in `ci.md`.
+- [ ] T009 [US2] Push a measurement commit setting both to `0`. Record its run and one re-run. The backtrace test is expected to fail here, and that failure is the measurement. Record it rather than fixing it. Also record **every** failing test in these runs, with its cause. Self-scan and binary-ID tests read waybill's own binary and might depend on debug info. A failure other than the backtrace test counts against this setting in T010.
+- [ ] T010 [US2] Decide per research R4. Windows is recorded but doesn't decide, because the lane is non-blocking (#210). Adopt a setting only if its 2 test-build times are below both of full's on Linux and macOS *and* the backtrace test passes. Revert the measurement commits so the workflow has either no new `env` line or only the adopted one. If one is adopted, confirm in the final run that the eBPF lane passes too. Write the decision and the numbers in `ci.md`.
 
 ## Phase 5: User Story 3, guidance (P3)
 

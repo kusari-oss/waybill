@@ -61,7 +61,7 @@ Each commit gets 2 runs: its own run plus one re-run.
 - the test build's `Finished \`test\` profile … in` time;
 - R3's test result, and the backtrace text it captured.
 
-**Decision rule (FR-005):** adopt a setting only if both of these hold:
+**Decision rule (FR-005):** Windows is recorded but doesn't decide, because the lane is non-blocking (#210). Adopt a setting only if both of these hold:
 - its 2 test-build times are both below both of full's, on Linux and macOS;
 - R3 passes, with file and line present.
 
