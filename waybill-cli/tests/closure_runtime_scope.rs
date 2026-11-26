@@ -2299,7 +2299,9 @@ fn us4_backport_claim(cve: &str) -> BTreeSet<(String, String)> {
 ///
 /// VEX about a kept member survives and VEX about a dropped member goes. Only
 /// CycloneDX carries VEX in the document; SPDX's OpenVEX sidecar is not
-/// edited (`docs/user-guide/sbom-edit.md`, "Limits").
+/// edited (`docs/user-guide/sbom-edit.md`, "Limits"). The edit does remove the SPDX
+/// documents' reference to that sidecar (#1454), so this test is also the
+/// conformance check for a reference-removing edit (#1725).
 #[test]
 fn us4_drop_scope_excluded_yields_valid_runtime_document() {
     let closure = us4_closure();
@@ -2322,11 +2324,27 @@ fn us4_drop_scope_excluded_yields_valid_runtime_document() {
         let marked = us4_not_in_artifact(doc);
         assert!(!marked.is_empty(), "{label}: the scan marked nothing, so the recipe would have nothing to drop");
 
+        // CONTROL (#1725): the SPDX inputs reference their OpenVEX sidecar, so
+        // this test is the conformance check for an edit that removes that
+        // reference. i1454 makes the same edit on an 8 MB golden without
+        // re-running the validator.
+        if label != "cdx" {
+            assert_eq!(
+                sbom_edit_support::openvex_refs(doc).len(),
+                1,
+                "{label}: the input must reference its OpenVEX sidecar, or nothing below removes one"
+            );
+        }
+
         let input = dir.path().join(file);
         std::fs::write(&input, serde_json::to_string_pretty(doc).unwrap()).unwrap();
         let e = sbom_edit_support::edit(&input, &["--drop", "scope=excluded"]);
         e.assert_ok();
         let out = e.json();
+        if label != "cdx" {
+            assert_eq!(sbom_edit_support::openvex_refs(&out), Vec::<String>::new(), "{label}: the sidecar reference survived the edit");
+            assert!(e.stderr.contains("OpenVEX sidecar reference removed"), "{label}: the edit report must say the reference went: {}", e.stderr);
+        }
 
         assert_eq!(
             sbom_edit_support::schema_errors(&out),
