@@ -11,11 +11,11 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `specs/1661-test-debuginfo/measurements/` with `local.tsv` (header: setting, rebuild, deps_entries, seconds) and `ci.tsv` (header: run_id, lane, setting, test_build_s, tests_step_s, backtrace_test, file_line).
+- [x] T001 Create `specs/1661-test-debuginfo/measurements/` with `local.tsv` (header: setting, rebuild, deps_entries, seconds) and `ci.tsv` (header: run_id, lane, setting, test_build_s, tests_step_s, backtrace_test, file_line).
 
 ## Phase 2: Foundational
 
-- [ ] T002 Settle research R1 by experiment, not assumption, and write the results in `measurements/local.md`:
+- [x] T002 Settle research R1 by experiment, not assumption, and write the results in `measurements/local.md`:
   - **(a)** Add `[profile.dev] split-debuginfo = "packed"` under a `[target.'cfg(target_os = "macos")']` table in a scratch `.cargo/config.toml`, and record whether cargo rejects or ignores it. Expected: profiles can't be scoped by target.
   - **(b)** Confirm the rustflags route reaches rustc. With `[target.'cfg(target_os = "macos")'] rustflags = ["-C", "split-debuginfo=packed"]` in place, run `cargo build -p waybill-common -v` and check that the `rustc` command lines contain `-C split-debuginfo=packed`.
   - **(c)** Confirm it does *not* apply to other targets: run `rustup target add x86_64-unknown-linux-gnu` (this adds the standard-library component only; the pinned toolchain is unchanged), then `cargo check -p waybill-common -v --target x86_64-unknown-linux-gnu`, and check the flag is absent from every `rustc` line. Record the command and the count of lines carrying the flag, which must be 0.
@@ -27,22 +27,22 @@
 
 **Independent test**: 3 rebuilds in a fresh target directory hold a flat entry count with no upward time trend, and the backtrace test passes.
 
-- [ ] T003 [P] [US1] Create `waybill-cli/tests/backtrace_resolves_source.rs` per research R3. It holds one test, `a_panic_backtrace_names_this_file_and_line`:
+- [x] T003 [P] [US1] Create `waybill-cli/tests/backtrace_resolves_source.rs` per research R3. It holds one test, `a_panic_backtrace_names_this_file_and_line`:
   - **Child mode:** if the env var `WAYBILL_BACKTRACE_PROBE_CHILD=1` is set, panic with the message `backtrace probe`.
   - **Parent mode:** otherwise, run `std::env::current_exe()` with the arguments `["--exact", "a_panic_backtrace_names_this_file_and_line", "--nocapture"]`, the env `WAYBILL_BACKTRACE_PROBE_CHILD=1` and `RUST_BACKTRACE=1`. Assert the child exited non-zero, and that its stderr matches the regex `backtrace_resolves_source\.rs:\d+`, using `regex`, which is already a dependency. The failure message includes the stderr.
   - **Clippy:** follow the crate's `unwrap_used` convention with `#![allow(clippy::unwrap_used)]`, as the other integration tests do.
   - **Platforms:** must work on all three. Use no Unix-only APIs.
-- [ ] T004 [US1] Create `.cargo/config.toml` with only the macOS rustflags table and a comment block covering:
+- [x] T004 [US1] Create `.cargo/config.toml` with only the macOS rustflags table and a comment block covering:
   - why it exists (the `*.rcgu.o` accumulation, with the numbers from #1719);
   - why it's in rustflags and not a profile (T002(a));
   - that `RUSTFLAGS` overrides it;
   - that release builds carry no debug info, so they're unaffected.
 
   Then check the release build: run `cargo build --release -p waybill -v 2>&1` and check the flag is present but release has `debug = false`. Record the release binary's size before and after; it should be unchanged within noise. Also confirm from the `-v` output that the release `rustc` lines carry no debug info, either `-C debuginfo=0` or no `debuginfo` flag at all. That's the property the spec's edge case claims.
-- [ ] T005 [US1] Measure locally, in a fresh `CARGO_TARGET_DIR=target/dbgcheck`: a warm `cargo nextest run --workspace --no-run`, then 3 × (touch `waybill-cli/src/lib.rs`, `waybill-common/src/lib.rs` and `waybill-cli/src/main.rs`; rebuild; record the `ls target/dbgcheck/debug/deps | wc -l` entry count and the seconds) into `local.tsv` as setting `packed-config`.
+- [x] T005 [US1] Measure locally, in a fresh `CARGO_TARGET_DIR=target/dbgcheck`: a warm `cargo nextest run --workspace --no-run`, then 3 × (touch `waybill-cli/src/lib.rs`, `waybill-common/src/lib.rs` and `waybill-cli/src/main.rs`; rebuild; record the `ls target/dbgcheck/debug/deps | wc -l` entry count and the seconds) into `local.tsv` as setting `packed-config`.
   - **Expected:** entry counts within 1% of each other (SC-001), and the 3rd time no more than the run-to-run spread above the 1st (SC-002).
   - **Then** run T003's test against this target dir (SC-003), and remove the target dir.
-- [ ] T006 [US1] Positive and negative controls for the backtrace test, recorded in `local.md`:
+- [x] T006 [US1] Positive and negative controls for the backtrace test, recorded in `local.md`:
   - with `CARGO_PROFILE_TEST_DEBUG=0 CARGO_PROFILE_DEV_DEBUG=0` in a separate fresh target dir, the test must **fail** (no file:line);
   - with the default, it must pass.
 
