@@ -1,0 +1,15 @@
+label	target	pin	hackage	snapshots	lock_parse_warnings
+branch	haskell-aeson	682162c	61	0	0
+branch	haskell-security-advisories	4dc0b9b	59	0	0
+branch	haskell-language-server	1b4b3c6	128	2	0
+branch	hpack-hs-opentelemetry	25f5b2d	133	2	0
+branch	hpack-hs-opentelemetry-no-generated-cabal	25f5b2d	133	2	0
+branch	hpack-lootbox	2cd7b1e	78	1	0
+branch	hpack-lootbox-no-generated-cabal	2cd7b1e	78	1	0
+branch	hpack-hs-temporal-sdk	d24313e	70	0	0
+branch	hpack-ogmios	435189a	102	0	0
+branch	hpack-ogmios-no-generated-cabal	435189a	102	0	0
+branch	nix-closure-moat	d069055	no-stack-files	-	-
+branch	nix-closure-slack-web	7b46273	no-stack-files	-	-
+branch	nix-closure-openai	8a35713	no-stack-files	-	-
+branch	nix-closure-slacklinker	72af26a	no-stack-files	-	-

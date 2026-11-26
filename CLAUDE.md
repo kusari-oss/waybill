@@ -778,6 +778,7 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1663-stack-snapshot-url: `stack.yaml.lock` reads `original` as a string (`lts-24.35`, the form Stack writes) or a map; the string form used to reject the whole file. A snapshot pinned by URL is named from the stackage layout or keeps its URL (`pkg:generic/stack-snapshot@<sha>?download_url=`), never `unknown`; every snapshot records its lock file and is `build-toolchain` when unreachable. **Zero new Cargo dependencies.**
 - 1662-hpack-project-membership: #1032's `cabal.project` membership rule now covers `package.yaml` (each manifest matched as the `.cabal` hpack would generate), and membership is the union of `cabal.project` and a `stack.yaml` beside it, for both readers. ogmios loses `json-via-show`. **Zero new Cargo dependencies.**
 - 1658-nextest-trial: tests run under cargo-nextest (constitution 4.1.0); `pre-pr.sh` 383 s → 143 s locally (median of 3). Doctests are a separate `cargo test --workspace --doc` step. **Zero new Cargo dependencies.**
 - 1657-test-time-first-slice: Added Rust stable 1.98.1 (pinned); no `+toolchain`. **Dependencies**: none new.

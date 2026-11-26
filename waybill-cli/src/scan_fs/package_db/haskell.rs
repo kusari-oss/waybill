@@ -92,7 +92,7 @@ use regex::Regex;
 use serde::Deserialize;
 
 use waybill_common::resolution::LifecycleScope;
-use waybill_common::types::purl::Purl;
+use waybill_common::types::purl::{encode_purl_segment, Purl};
 use waybill_common::types::license::SpdxExpression;
 
 use super::exclude_path::ExclusionSet;
@@ -325,8 +325,54 @@ struct StackLockEntry {
 
 #[derive(Debug, Clone)]
 struct StackSnapshot {
-    resolver: String,
+    id: SnapshotId,
     sha256: Option<String>,
+    /// The lock file or `stack.yaml` that named it (spec 1663 FR-004).
+    source: PathBuf,
+}
+
+/// What a snapshot is called (spec 1663, research R3–R5).
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum SnapshotId {
+    /// A resolver name: `lts-18.8`, `nightly-2024-05-07`, `ghc-9.6.5`, or a
+    /// custom snapshot file named as `resolver:` in `stack.yaml`.
+    Resolver(String),
+    /// A URL outside the stackage-snapshots layout.
+    Url(String),
+}
+
+/// Spec 1663 research R3: a stackage-snapshots path, matched on its last
+/// segments whatever the host or ref. The repository's paths are not
+/// zero-padded (`nightly/2024/5/7.yaml`, measured), Stack's resolver names
+/// are (`nightly-2024-05-07`). Every part must be all digits.
+fn stackage_name_from_url(url: &str) -> Option<String> {
+    let path = url.split(['?', '#']).next().unwrap_or(url);
+    let segs: Vec<&str> = path.trim_end_matches('/').rsplit('/').take(4).collect();
+    let digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    let file = segs.first()?.strip_suffix(".yaml")?;
+    match segs.as_slice() {
+        [_, major, "lts", ..] if digits(major) && digits(file) => Some(format!("lts-{major}.{file}")),
+        [_, month, year, "nightly"] if digits(year) && digits(month) && digits(file) => {
+            let (m, d) = (month.parse::<u32>().ok()?, file.parse::<u32>().ok()?);
+            Some(format!("nightly-{year}-{m:02}-{d:02}"))
+        }
+        _ => None,
+    }
+}
+
+/// Spec 1663 research R5: `original` first (what the project wrote), then
+/// `completed.url`. A URL in the stackage layout is named as its resolver
+/// (FR-001, FR-002); any other URL keeps the URL (FR-003). `None` when
+/// neither says anything: no snapshot is invented, and none is `unknown`.
+fn snapshot_identity(original: Option<&StackSnapshotOriginal>, completed_url: Option<&str>) -> Option<SnapshotId> {
+    let from_url = |u: &str| stackage_name_from_url(u).map(SnapshotId::Resolver).unwrap_or_else(|| SnapshotId::Url(u.to_string()));
+    let nonempty = |s: &String| !s.trim().is_empty();
+    match original {
+        Some(StackSnapshotOriginal::Resolver(r)) if nonempty(r) => Some(SnapshotId::Resolver(r.trim().to_string())),
+        Some(StackSnapshotOriginal::Map { resolver: Some(r), .. }) if nonempty(r) => Some(SnapshotId::Resolver(r.trim().to_string())),
+        Some(StackSnapshotOriginal::Map { url: Some(u), .. }) if nonempty(u) => Some(from_url(u.trim())),
+        _ => completed_url.map(str::trim).filter(|u| !u.is_empty()).map(from_url),
+    }
 }
 
 /// Which file a `CabalManifest` was read from (milestone 1273, FR-002).
@@ -458,11 +504,20 @@ struct StackSnapshotCompleted {
     url: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Default)]
-#[serde(default)]
-#[allow(dead_code)]
-struct StackSnapshotOriginal {
-    resolver: Option<String>,
+/// Stack writes a snapshot pinned by name as a plain string
+/// (`original: lts-24.35`) and one pinned by URL as a map
+/// (`original: {url: …}`). Spec 1663 FR-000: the struct-only form rejected the
+/// string, and with it the whole lock file.
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum StackSnapshotOriginal {
+    Resolver(String),
+    Map {
+        #[serde(default)]
+        resolver: Option<String>,
+        #[serde(default)]
+        url: Option<String>,
+    },
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -1209,10 +1264,21 @@ pub(crate) fn finalize(
             out.push(component);
         }
     }
+    // Spec 1663 FR-004: a snapshot several lock files name is one component
+    // listing every one of them, not the first with the rest dropped.
+    let mut snapshot_at: HashMap<String, usize> = HashMap::new();
     for snapshot in &stack_snapshots {
         let component = build_snapshot_placeholder(snapshot);
         let purl_key = component.purl.as_str().to_string();
-        if seen_purls.insert(purl_key) {
+        if let Some(&i) = snapshot_at.get(&purl_key) {
+            let c: &mut PackageDbEntry = &mut out[i];
+            let src = component.source_path;
+            if src != c.source_path && !c.extra_source_paths.contains(&src) {
+                c.extra_source_paths.push(src);
+                c.extra_source_paths.sort();
+            }
+        } else if seen_purls.insert(purl_key.clone()) {
+            snapshot_at.insert(purl_key, out.len());
             out.push(component);
         }
     }
@@ -1625,13 +1691,13 @@ fn parse_stack_lock(
 
     let mut snapshots: Vec<StackSnapshot> = Vec::new();
     for snap_yaml in &lock.snapshots {
-        let resolver = snap_yaml
-            .original
-            .as_ref()
-            .and_then(|o| o.resolver.clone())
-            .unwrap_or_else(|| "unknown".to_string());
+        let completed_url = snap_yaml.completed.as_ref().and_then(|c| c.url.as_deref());
+        let Some(id) = snapshot_identity(snap_yaml.original.as_ref(), completed_url) else {
+            tracing::debug!(path = %path.display(), "haskell: a stack.yaml.lock snapshot names nothing; skipped");
+            continue;
+        };
         let sha256 = snap_yaml.completed.as_ref().and_then(|c| c.sha256.clone());
-        snapshots.push(StackSnapshot { resolver, sha256 });
+        snapshots.push(StackSnapshot { id, sha256, source: path.to_path_buf() });
     }
 
     let mut entries: Vec<StackLockEntry> = Vec::new();
@@ -1680,8 +1746,9 @@ fn extract_resolver_from_stack_yaml(path: &Path) -> anyhow::Result<Option<StackS
     let parsed: StackYaml = serde_yaml::from_str(&text)
         .map_err(|e| anyhow::anyhow!("YAML parse failed: {e}"))?;
     Ok(parsed.resolver.map(|r| StackSnapshot {
-        resolver: r,
+        id: SnapshotId::Resolver(r),
         sha256: None,
+        source: path.to_path_buf(),
     }))
 }
 
@@ -2437,18 +2504,17 @@ fn build_snapshot_placeholder(snapshot: &StackSnapshot) -> PackageDbEntry {
         .sha256
         .clone()
         .unwrap_or_else(|| "unspecified".to_string());
-    let purl_str = if snapshot.resolver.starts_with("lts-")
-        || snapshot.resolver.starts_with("nightly-")
-    {
-        format!(
-            "pkg:generic/stackage-{}@{}",
-            snapshot.resolver, version_slot
-        )
-    } else if snapshot.resolver.starts_with("ghc-") {
-        format!("pkg:generic/{}@{}", snapshot.resolver, version_slot)
-    } else {
-        // Defensive fallback — unknown resolver shape.
-        format!("pkg:generic/{}@{}", snapshot.resolver, version_slot)
+    let (purl_str, name) = match &snapshot.id {
+        SnapshotId::Resolver(r) if r.starts_with("lts-") || r.starts_with("nightly-") => {
+            (format!("pkg:generic/stackage-{r}@{version_slot}"), r.clone())
+        }
+        SnapshotId::Resolver(r) => (format!("pkg:generic/{r}@{version_slot}"), r.clone()),
+        // Spec 1663 research R4: purl-spec's `download_url` qualifier keeps
+        // the URL; the sha256 keeps distinct snapshots distinct.
+        SnapshotId::Url(u) => (
+            format!("pkg:generic/stack-snapshot@{version_slot}?download_url={}", encode_purl_segment(u)),
+            "stack-snapshot".to_string(),
+        ),
     };
     let purl = Purl::new(&purl_str).unwrap_or_else(|_| fallback_purl());
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
@@ -2456,10 +2522,9 @@ fn build_snapshot_placeholder(snapshot: &StackSnapshot) -> PackageDbEntry {
         "waybill:source-type".to_string(),
         serde_json::Value::String("hackage-snapshot".to_string()),
     );
-    extra_annotations.insert(
-        "waybill:stackage-resolver".to_string(),
-        serde_json::Value::String(snapshot.resolver.clone()),
-    );
+    if let SnapshotId::Resolver(r) = &snapshot.id {
+        extra_annotations.insert("waybill:stackage-resolver".to_string(), serde_json::Value::String(r.clone()));
+    }
     let sbom_tier = if snapshot.sha256.is_some() {
         "source"
     } else {
@@ -2469,10 +2534,10 @@ fn build_snapshot_placeholder(snapshot: &StackSnapshot) -> PackageDbEntry {
         extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
-        name: snapshot.resolver.clone(),
+        name,
         version: version_slot,
         arch: None,
-        source_path: String::new(),
+        source_path: snapshot.source.to_string_lossy().into_owned(),
         depends: Vec::new(),
         maintainer: None,
         licenses: Vec::new(),
@@ -3034,7 +3099,7 @@ packages:
         .unwrap();
         let (entries, snapshots) = parse_stack_lock(&p).unwrap();
         assert_eq!(snapshots.len(), 1);
-        assert_eq!(snapshots[0].resolver, "lts-22.0");
+        assert_eq!(snapshots[0].id, SnapshotId::Resolver("lts-22.0".to_string()));
         assert_eq!(snapshots[0].sha256.as_deref(), Some("abc123"));
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[0].name, "aeson");
@@ -3053,6 +3118,30 @@ packages:
     fn validate_stack_lock_shape_accepts_valid() {
         let v: serde_yaml::Value = serde_yaml::from_str("snapshots: []\npackages: []").unwrap();
         assert!(validate_stack_lock_shape(&v));
+    }
+
+    /// Spec 1663 FR-000 (research R1): Stack writes a resolver as a plain
+    /// string, `original: lts-24.35`, in hs-opentelemetry's root lock and
+    /// lootbox's. The struct-only form rejected the whole file, packages too.
+    #[test]
+    fn parse_stack_lock_reads_a_string_original() {
+        let dir = tempfile::tempdir().unwrap();
+        let p = dir.path().join("stack.yaml.lock");
+        std::fs::write(
+            &p,
+            "snapshots:\n\
+             - completed:\n    sha256: 6406d803\n    size: 728959\n    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/35.yaml\n  original: lts-24.35\n\
+             packages:\n\
+             - completed:\n    hackage: aeson-2.2.0.0@sha256:def,200\n  original:\n    hackage: aeson-2.2.0.0\n",
+        )
+        .unwrap();
+        let (entries, snapshots) = parse_stack_lock(&p).unwrap();
+        assert_eq!(snapshots.len(), 1);
+        assert_eq!(snapshots[0].id, SnapshotId::Resolver("lts-24.35".to_string()));
+        assert_eq!(snapshots[0].source, p);
+        assert_eq!(snapshots[0].sha256.as_deref(), Some("6406d803"));
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "aeson");
     }
 
     #[test]
@@ -3085,7 +3174,7 @@ packages:
         let p = dir.path().join("stack.yaml");
         std::fs::write(&p, "resolver: lts-22.0\npackages:\n- .\n").unwrap();
         let snap = extract_resolver_from_stack_yaml(&p).unwrap().unwrap();
-        assert_eq!(snap.resolver, "lts-22.0");
+        assert_eq!(snap.id, SnapshotId::Resolver("lts-22.0".to_string()));
         assert!(snap.sha256.is_none());
     }
 
@@ -3237,11 +3326,78 @@ version: 0.1.0
         assert!(!c.extra_annotations.contains_key("waybill:ghc-stdlib"));
     }
 
+    // ------------------------------------------------------------------
+    // Spec 1663: snapshot identity (research R3–R5)
+    // ------------------------------------------------------------------
+
+    const SS: &str = "https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master";
+
+    fn res(s: &str) -> Option<SnapshotId> {
+        Some(SnapshotId::Resolver(s.to_string()))
+    }
+
+    fn map_url(u: &str) -> StackSnapshotOriginal {
+        StackSnapshotOriginal::Map { resolver: None, url: Some(u.to_string()) }
+    }
+
+    #[test]
+    fn spec1663_a_stackage_url_is_named_as_its_resolver() {
+        assert_eq!(snapshot_identity(Some(&map_url(&format!("{SS}/lts/18/8.yaml"))), None), res("lts-18.8"));
+        // The repository's nightly paths are unpadded; Stack's names are padded.
+        assert_eq!(snapshot_identity(Some(&map_url(&format!("{SS}/nightly/2026/4/4.yaml"))), None), res("nightly-2026-04-04"));
+        assert_eq!(snapshot_identity(Some(&map_url(&format!("{SS}/nightly/2024/11/23.yaml"))), None), res("nightly-2024-11-23"));
+        // A mirror or another ref: matched on the path's last segments.
+        assert_eq!(snapshot_identity(Some(&map_url("https://mirror.invalid/snaps/lts/22/44.yaml")), None), res("lts-22.44"));
+    }
+
+    #[test]
+    fn spec1663_any_other_url_keeps_the_url() {
+        for u in [
+            "https://example.invalid/waybill-fixture-snap.yaml",
+            "https://example.invalid/lts/x/8.yaml",
+            "https://example.invalid/nightly/2024/may/7.yaml",
+            "https://example.invalid/lts/18/8.yml",
+        ] {
+            assert_eq!(snapshot_identity(Some(&map_url(u)), None), Some(SnapshotId::Url(u.to_string())), "{u}");
+        }
+    }
+
+    #[test]
+    fn spec1663_which_field_names_the_snapshot() {
+        let s = StackSnapshotOriginal::Resolver("lts-24.35".to_string());
+        assert_eq!(snapshot_identity(Some(&s), Some(&format!("{SS}/lts/18/8.yaml"))), res("lts-24.35"));
+        let m = StackSnapshotOriginal::Map { resolver: Some("lts-22.0".to_string()), url: None };
+        assert_eq!(snapshot_identity(Some(&m), None), res("lts-22.0"));
+        // `original.url` wins over a differing `completed.url`.
+        assert_eq!(snapshot_identity(Some(&map_url(&format!("{SS}/lts/18/8.yaml"))), Some(&format!("{SS}/lts/19/2.yaml"))), res("lts-18.8"));
+        // Neither in `original`: `completed.url`.
+        let empty = StackSnapshotOriginal::Map { resolver: None, url: None };
+        assert_eq!(snapshot_identity(Some(&empty), Some(&format!("{SS}/lts/19/2.yaml"))), res("lts-19.2"));
+        assert_eq!(snapshot_identity(None, None), None);
+        assert_eq!(snapshot_identity(Some(&StackSnapshotOriginal::Resolver("  ".to_string())), None), None);
+    }
+
+    #[test]
+    fn spec1663_a_url_snapshot_purl_keeps_its_url() {
+        let snap = StackSnapshot {
+            id: SnapshotId::Url("https://example.invalid/waybill-fixture-snap.yaml".to_string()),
+            sha256: Some("abc123".to_string()),
+            source: PathBuf::from("pkg/stack.yaml.lock"),
+        };
+        let c = build_snapshot_placeholder(&snap);
+        let purl = c.purl.as_str();
+        assert!(purl.starts_with("pkg:generic/stack-snapshot@abc123?download_url="), "{purl}");
+        assert!(purl.contains("example.invalid"), "{purl}");
+        assert!(!c.extra_annotations.contains_key("waybill:stackage-resolver"));
+        assert_eq!(c.source_path, "pkg/stack.yaml.lock");
+    }
+
     #[test]
     fn build_snapshot_placeholder_lts_purl_shape() {
         let snap = StackSnapshot {
-            resolver: "lts-22.0".to_string(),
+            id: SnapshotId::Resolver("lts-22.0".to_string()),
             sha256: Some("abc123".to_string()),
+            source: PathBuf::from("stack.yaml.lock"),
         };
         let c = build_snapshot_placeholder(&snap);
         assert_eq!(c.purl.as_str(), "pkg:generic/stackage-lts-22.0@abc123");
@@ -3250,8 +3406,9 @@ version: 0.1.0
     #[test]
     fn build_snapshot_placeholder_nightly_purl_shape() {
         let snap = StackSnapshot {
-            resolver: "nightly-2024-01-15".to_string(),
+            id: SnapshotId::Resolver("nightly-2024-01-15".to_string()),
             sha256: Some("xyz789".to_string()),
+            source: PathBuf::from("stack.yaml.lock"),
         };
         let c = build_snapshot_placeholder(&snap);
         assert_eq!(c.purl.as_str(), "pkg:generic/stackage-nightly-2024-01-15@xyz789");
@@ -3260,8 +3417,9 @@ version: 0.1.0
     #[test]
     fn build_snapshot_placeholder_ghc_no_stackage_prefix() {
         let snap = StackSnapshot {
-            resolver: "ghc-9.6.4".to_string(),
+            id: SnapshotId::Resolver("ghc-9.6.4".to_string()),
             sha256: None,
+            source: PathBuf::from("stack.yaml.lock"),
         };
         let c = build_snapshot_placeholder(&snap);
         assert_eq!(c.purl.as_str(), "pkg:generic/ghc-9.6.4@unspecified");

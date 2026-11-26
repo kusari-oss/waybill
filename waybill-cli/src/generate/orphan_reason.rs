@@ -624,6 +624,15 @@ pub fn classify_orphans(
                     .any(|n| sourced_from_file_named(c, n));
                 if has_reachable_sibling && from_lockfile {
                     OrphanReasonCode::DeadLockfileEntry
+                } else if c.source_type.as_deref() == Some("hackage-snapshot") {
+                    // Spec 1663 (research R2): a Stack snapshot or compiler
+                    // pin, recognised by what it is. The three-condition test
+                    // below infers the same thing from a `design` tier and no
+                    // source files, which a lock-file snapshot never has: it
+                    // carries its sha256 (`source` tier) and, since spec 1663,
+                    // its lock file. A URL-pinned snapshot fell through to no
+                    // reason at all (I7, #1678).
+                    OrphanReasonCode::BuildToolchain
                 } else if c.sbom_tier.as_deref() == Some("design")
                     && c.evidence.source_file_paths
                         .iter()
@@ -1212,6 +1221,27 @@ mod tests {
 
         assert_eq!(reason_of(&comps[0]), Some("build-toolchain"));
         assert_eq!(counts.build_toolchain, 1);
+    }
+
+    /// Spec 1663 (#1678): a lock-file snapshot is `source` tier (it carries
+    /// its sha256) and names its lock file. It is still a toolchain pin,
+    /// recognised by its source type. A non-snapshot component with the same
+    /// tier and source file is not.
+    #[test]
+    fn spec1663_a_source_tier_snapshot_with_a_lock_file_is_a_toolchain_pin() {
+        let mut snap = mk("pkg:generic/stackage-lts-18.8@93a10755");
+        snap.sbom_tier = Some("source".to_string());
+        snap.source_type = Some("hackage-snapshot".to_string());
+        snap.evidence.source_file_paths = vec!["instrumentation/yesod/stack.yaml.lock".to_string()];
+        let mut other = mk("pkg:generic/something@1.0");
+        other.sbom_tier = Some("source".to_string());
+        other.evidence.source_file_paths = vec!["instrumentation/yesod/stack.yaml.lock".to_string()];
+        let mut comps = vec![snap, other];
+
+        classify_orphans(&mut comps, &HashSet::new());
+
+        assert_eq!(reason_of(&comps[0]), Some("build-toolchain"));
+        assert_ne!(reason_of(&comps[1]), Some("build-toolchain"));
     }
 
     /// Feature 1218 T027 — mechanism E must not fire on a `source`-tier
