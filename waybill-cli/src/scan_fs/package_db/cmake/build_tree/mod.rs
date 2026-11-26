@@ -64,6 +64,9 @@ pub(crate) struct BuildTreeCoverage {
     pub(crate) compile_edges: usize,
     pub(crate) include_dirs_unresolved: usize,
     pub(crate) file_api_replies: usize,
+    /// #1735 review: replies set aside because their cache disagreed with
+    /// `CMakeCache.txt`, which a failed generate leaves behind.
+    pub(crate) file_api_stale_replies: usize,
     pub(crate) conflicts: usize,
     pub(crate) signal_disagreements: usize,
     pub(crate) source_mismatch: usize,
@@ -88,6 +91,7 @@ impl BuildTreeCoverage {
                 "taken": decl("taken"),
             },
             "file-api-replies": self.file_api_replies,
+            "file-api-stale-replies": self.file_api_stale_replies,
             "include-dirs-unresolved": self.include_dirs_unresolved,
             "signal-disagreements": self.signal_disagreements,
             "source-mismatch": self.source_mismatch,
@@ -144,13 +148,33 @@ impl BuildEvidence {
                     file_api::Loaded::Absent => (None, false),
                     file_api::Loaded::Malformed => (None, true),
                 };
+                let file_cache: Result<CacheView, ()> =
+                    std::fs::read_to_string(c).map_err(|_| ()).and_then(|t| CacheView::parse(&t).map_err(|_| ()));
+                // #1735 review: a reply whose cache disagrees with
+                // `CMakeCache.txt` is from an earlier run (a configure whose
+                // generate failed). Set it aside, whole, for the files.
+                if let (Some(rc), Ok(fc)) = (reply.as_ref().and_then(|r| r.cache.as_ref()), file_cache.as_ref()) {
+                    let differ = rc.disagreements_with(fc);
+                    if !differ.is_empty() {
+                        tracing::warn!(
+                            build_dir = %root.display(),
+                            entries = ?differ,
+                            "cmake build tree: the file-API reply disagrees with CMakeCache.txt and is stale; using the files"
+                        );
+                        coverage.file_api_stale_replies += 1;
+                        reply = None;
+                    }
+                }
                 let from_reply = reply.as_mut().and_then(|r| r.cache.take());
-                let cache = match from_reply.ok_or(()).or_else(|()| {
-                    std::fs::read_to_string(c).map_err(|_| ()).and_then(|t| CacheView::parse(&t).map_err(|_| ()))
-                }) {
+                let cache = match from_reply.ok_or(()).or(file_cache) {
                     Ok(v) => v,
                     Err(()) => {
                         coverage.unreadable_files += 1;
+                        // #1735 review: a malformed reply is counted even
+                        // when the cache it would replace is unreadable too.
+                        if reply_malformed {
+                            coverage.unreadable_files += 1;
+                        }
                         continue;
                     }
                 };
@@ -233,6 +257,8 @@ impl BuildEvidence {
             build_dirs = ev.coverage.build_dirs,
             source_mismatch = ev.coverage.source_mismatch,
             unreadable_files = ev.coverage.unreadable_files,
+            file_api_replies = ev.coverage.file_api_replies,
+            file_api_stale_replies = ev.coverage.file_api_stale_replies,
             "cmake build tree: read (spec 1653)"
         );
         ev

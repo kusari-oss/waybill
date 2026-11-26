@@ -12,7 +12,7 @@
 use std::path::{Path, PathBuf};
 
 use super::cache::{CacheKind, CacheView};
-use super::compile_db::{absolute, Unit};
+use super::compile_db::{absolute, fragment_include_dirs, is_windows_dir, Unit};
 
 /// What a reply supplies. Each part is `None` when the index names no
 /// such object, and the caller falls back to the file it replaces.
@@ -33,7 +33,13 @@ pub(crate) enum Loaded {
 
 pub(crate) fn load(build_root: &Path) -> Loaded {
     let dir = build_root.join(".cmake/api/v1/reply");
-    let Ok(rd) = std::fs::read_dir(&dir) else { return Loaded::Absent };
+    // Only a reply directory that isn't there is absent. One that exists but
+    // can't be listed is a reply that could not be read (#1735 review).
+    let rd = match std::fs::read_dir(&dir) {
+        Ok(rd) => rd,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Loaded::Absent,
+        Err(_) => return Loaded::Malformed,
+    };
     // Index names carry a sortable timestamp: the greatest is the newest.
     let index = rd
         .flatten()
@@ -86,14 +92,19 @@ fn read(dir: &Path, index_name: &str) -> Result<Option<FileApiReply>, Malformed>
 
 /// `cache-v2`'s `entries[]` as a [`CacheView`].
 fn cache_view(v: &serde_json::Value) -> Result<CacheView, Malformed> {
-    let entries = v["entries"].as_array().ok_or(Malformed)?.iter().filter_map(|e| {
+    // An entry without a string name and value is a reply CMake did not
+    // write: the whole reply is malformed rather than silently partial
+    // (#1735 review), so the intact `CMakeCache.txt` is used instead.
+    let mut entries = Vec::new();
+    for e in v["entries"].as_array().ok_or(Malformed)? {
+        let (Some(name), Some(value)) = (e["name"].as_str(), e["value"].as_str()) else { return Err(Malformed) };
         let help = e["properties"]
             .as_array()
             .and_then(|ps| ps.iter().find(|p| p["name"] == "HELPSTRING"))
             .and_then(|p| p["value"].as_str())
             .map(str::to_string);
-        Some((e["name"].as_str()?.to_string(), CacheKind::parse(e["type"].as_str().unwrap_or("")), e["value"].as_str()?.to_string(), help))
-    });
+        entries.push((name.to_string(), CacheKind::parse(e["type"].as_str().unwrap_or("")), value.to_string(), help));
+    }
     CacheView::from_entries(entries).map_err(|_| Malformed)
 }
 
@@ -102,6 +113,8 @@ fn cache_view(v: &serde_json::Value) -> Result<CacheView, Malformed> {
 /// directory unless absolute.
 fn units(dir: &Path, codemodel: &serde_json::Value) -> Result<Vec<Unit>, Malformed> {
     let source = PathBuf::from(codemodel["paths"]["source"].as_str().ok_or(Malformed)?);
+    let build = codemodel["paths"]["build"].as_str().map(PathBuf::from).unwrap_or_else(|| source.clone());
+    let windows = is_windows_dir(&source);
     let mut out: Vec<Unit> = Vec::new();
     for cfg in codemodel["configurations"].as_array().ok_or(Malformed)? {
         for t in cfg["targets"].as_array().into_iter().flatten() {
@@ -111,7 +124,18 @@ fn units(dir: &Path, codemodel: &serde_json::Value) -> Result<Vec<Unit>, Malform
                 .into_iter()
                 .flatten()
                 .map(|g| {
-                    g["includes"].as_array().into_iter().flatten().filter_map(|i| i["path"].as_str()).map(|p| absolute(&source, p)).collect()
+                    let mut inc: Vec<PathBuf> =
+                        g["includes"].as_array().into_iter().flatten().filter_map(|i| i["path"].as_str()).map(|p| absolute(&source, p)).collect();
+                    // Flags-passed includes, relative to the build directory
+                    // as in a compile command (#1735 review).
+                    let frags = g["compileCommandFragments"].as_array().into_iter().flatten().filter_map(|f| f["fragment"].as_str());
+                    for d in fragment_include_dirs(frags, windows) {
+                        let p = absolute(&build, &d);
+                        if !inc.contains(&p) {
+                            inc.push(p);
+                        }
+                    }
+                    inc
                 })
                 .collect();
             for s in target["sources"].as_array().into_iter().flatten() {
@@ -167,6 +191,54 @@ mod tests {
             r.units.unwrap(),
             [Unit { file: "/src/main.cpp".into(), includes: vec!["/b/_deps/urldep-src".into(), "/p/include".into()] }]
         );
+    }
+
+    /// #1735 review: flags-passed includes in `compileCommandFragments`,
+    /// relative ones against the build directory, both quoting styles.
+    #[test]
+    fn fragment_includes_are_read() {
+        let d = tempfile::tempdir().unwrap();
+        let r = reply(d.path());
+        write(&r, "target-app-x.json", serde_json::json!({
+            "compileGroups": [{"includes": [{"path": "/b/_deps/urldep-src"}],
+                "compileCommandFragments": [{"fragment": "-O2"}, {"fragment": "-I/dep/include -isystem rel/inc"}, {"fragment": "-I\"/sp ace\""}]}],
+            "sources": [{"path": "main.cpp", "compileGroupIndex": 0}]}));
+        let Loaded::Read(rep) = load(d.path()) else { panic!("not read") };
+        assert_eq!(
+            rep.units.unwrap()[0].includes,
+            vec![PathBuf::from("/b/_deps/urldep-src"), "/dep/include".into(), "/b/rel/inc".into(), "/sp ace".into()]
+        );
+    }
+
+    /// #1735 review: an entry CMake would never write makes the reply
+    /// malformed, not silently partial.
+    #[test]
+    fn a_cache_entry_without_a_string_value_is_malformed() {
+        let d = tempfile::tempdir().unwrap();
+        let r = reply(d.path());
+        // One intact entry beside it, so the reply is not malformed merely
+        // for being empty once the bad entry is dropped.
+        write(&r, "cache-v2-x.json", serde_json::json!({"entries": [
+            {"name": "CMAKE_HOME_DIRECTORY", "type": "INTERNAL", "value": "/src"},
+            {"name": "foo_DIR", "value": null}]}));
+        assert!(matches!(load(d.path()), Loaded::Malformed));
+    }
+
+    /// #1735 review: a reply directory that exists but can't be listed is
+    /// not absent.
+    #[cfg(unix)]
+    #[test]
+    fn an_unlistable_reply_directory_is_malformed() {
+        use std::os::unix::fs::PermissionsExt;
+        let d = tempfile::tempdir().unwrap();
+        let r = reply(d.path());
+        std::fs::set_permissions(&r, std::fs::Permissions::from_mode(0o000)).unwrap();
+        let got = load(d.path());
+        std::fs::set_permissions(&r, std::fs::Permissions::from_mode(0o755)).unwrap();
+        // Root can list it anyway; only assert where the permission held.
+        if std::fs::read_dir("/root").is_err() {
+            assert!(matches!(got, Loaded::Malformed), "{got:?}");
+        }
     }
 
     #[test]

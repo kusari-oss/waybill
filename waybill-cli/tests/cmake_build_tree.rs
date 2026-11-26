@@ -760,23 +760,59 @@ fn a_file_api_reply_is_read_and_agrees_with_the_files() {
     assert_eq!(cdx_edges(&with.cdx), cdx_edges(&without.cdx));
 }
 
-/// Where the reply and `CMakeCache.txt` disagree, the reply is used. A
-/// package search under `if(BACKEND STREQUAL "B")`: the cache says B.
-#[test]
-fn the_reply_cache_is_preferred_over_cmakecache() {
-    let f = materialise("system");
+/// Sets `name`'s value in the reply's `cache-v2` through its JSON, not its
+/// byte layout (#1735 review).
+fn set_reply_cache(f: &Fixture, name: &str, value: &str) {
+    let path = reply_file(f, "cache-v2-");
+    let mut v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    let e = v["entries"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|e| e["name"] == name)
+        .unwrap_or_else(|| panic!("fixture drift: {name} in the reply"));
+    e["value"] = serde_json::json!(value);
+    std::fs::write(&path, serde_json::to_string_pretty(&v).unwrap()).unwrap();
+}
+
+fn with_backend_search(f: &Fixture) {
     let lists = f.src.join("CMakeLists.txt");
     let text = std::fs::read_to_string(&lists).unwrap() + "if(BACKEND STREQUAL \"B\")\n  find_package(WaybillFixtureSearched)\nendif()\n";
     std::fs::write(&lists, text).unwrap();
+}
+
+/// What `CMakeCache.txt` lacks, the reply supplies. A package search under
+/// `if(BACKEND STREQUAL "B")`, with `BACKEND` only in the reply.
+#[test]
+fn the_reply_cache_is_preferred_over_cmakecache() {
+    let f = materialise("system");
+    with_backend_search(&f);
     let s = checked(&f, &[&f.build]);
     assert_eq!(scope(named(&s, "waybillfixturesearched")), "required", "both say B");
-    let cache = reply_file(&f, "cache-v2-");
+    let cache = f.build.join("CMakeCache.txt");
     let text = std::fs::read_to_string(&cache).unwrap();
-    let b = "\"type\" : \"STRING\",\n\t\t\t\"value\" : \"B\"";
-    assert!(text.contains(b), "fixture drift: BACKEND=B in the reply");
-    std::fs::write(&cache, text.replacen(b, "\"type\" : \"STRING\",\n\t\t\t\"value\" : \"A\"", 1)).unwrap();
+    assert!(text.contains("BACKEND:STRING=B"), "fixture drift: BACKEND in CMakeCache.txt");
+    std::fs::write(&cache, text.replace("BACKEND:STRING=B\n", "")).unwrap();
+    set_reply_cache(&f, "BACKEND", "A");
     let s = checked(&f, &[&f.build]);
-    assert_eq!(scope(named(&s, "waybillfixturesearched")), "excluded", "the reply says A");
+    assert_eq!(scope(named(&s, "waybillfixturesearched")), "excluded", "only the reply has BACKEND, and it says A");
+    assert_eq!(coverage_bt(&s).unwrap()["file-api-replies"], 1);
+}
+
+/// #1735 review: a reply that disagrees with `CMakeCache.txt` is from an
+/// earlier run (measured, CMake 4.4.5: a configure whose generate failed
+/// leaves the old reply, while 0 of 82 shared entries differ after a
+/// successful run). It is set aside and counted, and the files decide.
+#[test]
+fn a_reply_that_disagrees_with_cmakecache_is_stale() {
+    let f = materialise("system");
+    with_backend_search(&f);
+    set_reply_cache(&f, "BACKEND", "A");
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(scope(named(&s, "waybillfixturesearched")), "required", "CMakeCache.txt says B");
+    let cov = coverage_bt(&s).unwrap();
+    assert_eq!(cov["file-api-stale-replies"], 1, "{cov}");
+    assert_eq!(cov["file-api-replies"], 0, "{cov}");
 }
 
 /// A malformed reply is counted, and the files are used instead.
@@ -802,6 +838,46 @@ fn the_reply_codemodel_gives_compile_edges_without_a_database() {
     let s = checked(&f, &[&f.build]);
     assert_eq!(coverage_bt(&s).unwrap()["compile-edges"], 2);
     assert_eq!(outcome(&s), good);
+}
+
+/// #1735 review: an include passed as a flag (`add_compile_options(-I…)`,
+/// `CMAKE_<LANG>_FLAGS`) is in a compile group's `compileCommandFragments`,
+/// not its `includes[]` (measured, CMake 4.4.5). Moving every include of the
+/// app target into fragments must give the same edges as before.
+#[test]
+fn includes_passed_as_flags_in_the_reply_are_read() {
+    let f = materialise("system");
+    let good = outcome(&checked(&f, &[&f.build]));
+    std::fs::remove_file(f.build.join("compile_commands.json")).unwrap();
+    let path = reply_file(&f, "target-app-");
+    let mut v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    let mut moved = 0;
+    for g in v["compileGroups"].as_array_mut().unwrap() {
+        let incs: Vec<String> =
+            g["includes"].as_array().into_iter().flatten().filter_map(|i| i["path"].as_str().map(str::to_string)).collect();
+        moved += incs.len();
+        let frags = g["compileCommandFragments"].as_array().cloned().unwrap_or_default();
+        let mut frags: Vec<serde_json::Value> = frags;
+        frags.extend(incs.iter().map(|i| serde_json::json!({"fragment": format!("-isystem {i}")})));
+        g["compileCommandFragments"] = serde_json::Value::Array(frags);
+        g["includes"] = serde_json::json!([]);
+    }
+    assert!(moved > 0, "fixture drift: the app target has no includes");
+    std::fs::write(&path, serde_json::to_string_pretty(&v).unwrap()).unwrap();
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(coverage_bt(&s).unwrap()["compile-edges"], 2);
+    assert_eq!(outcome(&s), good);
+}
+
+/// #1735 review: a malformed reply is counted even when `CMakeCache.txt`
+/// cannot be read either.
+#[test]
+fn a_malformed_reply_beside_an_unreadable_cache_is_counted_twice() {
+    let f = materialise("system");
+    std::fs::write(reply_file(&f, "codemodel-v2-"), "{\"configurations\": [").unwrap();
+    std::fs::write(f.build.join("CMakeCache.txt"), "").unwrap();
+    let s = scan_bt(&f, &[&f.build]);
+    assert_eq!(coverage_bt(&s).unwrap()["unreadable-files"], 2);
 }
 
 #[test]

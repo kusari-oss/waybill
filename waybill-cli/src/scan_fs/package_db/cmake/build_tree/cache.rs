@@ -109,6 +109,23 @@ impl CacheView {
         Ok(Self { entries: map, help })
     }
 
+    /// Names both caches hold with different values, sorted. #1735 review:
+    /// a file-API reply is stale exactly when its cache disagrees with
+    /// `CMakeCache.txt`. Measured with CMake 4.4.5 on a probe build: after a
+    /// successful configure and generate, 0 of 82 shared entries differ;
+    /// after a configure whose generate failed, exactly the changed entry
+    /// does, because the reply is from the previous run.
+    pub(crate) fn disagreements_with(&self, other: &CacheView) -> Vec<String> {
+        let mut out: Vec<String> = self
+            .entries
+            .iter()
+            .filter(|(k, e)| other.entries.get(*k).is_some_and(|o| o.value != e.value))
+            .map(|(k, _)| k.clone())
+            .collect();
+        out.sort();
+        out
+    }
+
     pub(crate) fn get(&self, name: &str) -> Option<&CacheEntry> {
         self.entries.get(name)
     }
