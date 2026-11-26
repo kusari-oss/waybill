@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-25
+Auto-generated from all feature plans. Last updated: 2026-11-26
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -510,6 +510,9 @@ Auto-generated from all feature plans. Last updated: 2026-11-25
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`. **Zero new Cargo dependencies.** (1654-parity-verdict)
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (C247), `tracing`; milestone 966's `boot_table`, spec 1653's `boot_dependencies`, the closure's `ClosureCompilers`. **Zero new Cargo dependencies.** (1655-reachable-boot-libraries)
 - N/A. Both tables are already embedded; no scan-time network, store or package-database read (FR-010). (1655-reachable-boot-libraries)
+- Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. **Zero new Cargo dependencies.** (1656-closure-read-completeness)
+- N/A. The inputs are already computed in process. (1656-closure-read-completeness)
+- Rust stable 1.98.1 (pinned); no `+toolchain`. **Dependencies**: none new. (1657-test-time-first-slice)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -578,18 +581,28 @@ tests/
 
 ### Pre-PR verification (MANDATORY)
 
-Before opening any PR, BOTH of these MUST pass locally — not one, not
-a subset, BOTH:
+Before opening any PR, ALL THREE of these MUST pass locally — not one,
+not a subset, ALL THREE (constitution 4.1.0, spec 1658):
 
 1. `cargo clippy --workspace --all-targets` — zero errors
-2. `cargo test --workspace --no-fail-fast` — every suite `ok. N passed; 0 failed`
+2. `cargo nextest run --workspace --no-fail-fast --color never` — the
+   `Summary [ … ] N tests run: N passed[ (S slow)][, K skipped]` line, naming no failure
+3. `cargo test --workspace --doc` — every doctest suite `ok. N passed; 0 failed`
 
-`./scripts/pre-pr.sh` runs both in order and exits non-zero on the
+Nextest runs test binaries in parallel; `cargo test` ran them one at a
+time (measured 124 s against 352 s, median of 3, same machine). Nextest
+does not run doctests, hence step 3. `--color never` is load-bearing: CI
+sets `CARGO_TERM_COLOR=always`, which would put escape codes inside the
+summary line the gate matches. Install with `brew install cargo-nextest`
+or `cargo install cargo-nextest --locked`; `pre-pr.sh` refuses to run
+without it rather than falling back to `cargo test`.
+
+`./scripts/pre-pr.sh` runs them in order and exits non-zero on the
 first failure — preferred over invoking them by hand so the flag
 set stays aligned with CI.
 
 These are the exact commands CI runs (`.github/workflows/ci.yml`), on the
-exact compiler: neither invocation names a toolchain, so both resolve
+exact compiler: no invocation names a toolchain, so all resolve
 through `rust-toolchain.toml`. They carried `+stable` until #1189, which
 overrode the pin and silently ran the gate on whatever the stable channel
 was that day — 1.99.0 locally and in CI while the pin said 1.98.1. Do not
@@ -632,7 +645,10 @@ Both halves of the fix are one command, because the four-step version of
 it kept losing to the one-step broken form:
 
 ```sh
-./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh
+./scripts/gate.sh \
+  --expect '>>> all pre-PR checks passed\.' \
+  --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$' \
+  prepr -- ./scripts/pre-pr.sh
 ```
 
 `scripts/gate.sh` runs the command to a log, exits with the command's own
@@ -643,8 +659,9 @@ exits 0 without printing it **fails**. Mutation tests for both behaviours
 are in `waybill-cli/tests/release_gates.rs`.
 
 Assert on a **positive** signal, never on absence: the
-`>>> all pre-PR checks passed.` line, and the per-target
-`test result: ok. N passed; 0 failed` lines. The absence of the word
+`>>> all pre-PR checks passed.` line, nextest's `Summary` line (which the
+second `--expect` requires to name at least one passed test and no
+failure), and the doctest `test result: ok. N passed; 0 failed` lines. The absence of the word
 FAILED is not evidence — a build that never compiled also contains no
 failures, and its summary (`targets= passed= failed=`) reads like a
 formatting quirk rather than the alarm it is.
@@ -665,6 +682,25 @@ counts and content, not exit codes and "it compiled". Checking the
 status of a script that compares content is exactly right; that is
 what a gate is. Checking a status when nothing compared content is
 not a check at all.
+
+### `.cargo/config.toml`: macOS debug-info packing (spec 1661)
+
+On macOS, cargo's default `split-debuginfo = "unpacked"` left about 31,100 new
+`*.rcgu.o` files in `target/debug/deps` on every rebuild (65,923 → 97,032 → 128,141
+entries), and rebuilds slowed 29 → 33 → 42 s until `cargo clean`. That directory
+size is also what made `pre-pr.sh` slow (see the memory note on slow `pre-pr.sh`).
+`.cargo/config.toml` now passes `-C split-debuginfo=packed` for macOS targets only.
+`deps/` holds steady across rebuilds and full debug info is kept. It's set as
+rustflags because cargo silently ignores `profile.*` under a `[target.…]` table,
+and a plain profile setting would change Linux and Windows. A `RUSTFLAGS`
+environment variable overrides it. A `target/` that grew before this change needs
+one `cargo clean`. Version bumps still leave stale binary generations, so check
+`ls target/debug/deps | wc -l` when a gate is slow.
+
+`waybill-cli/tests/backtrace_resolves_source.rs` fails if a test build loses
+file:line in backtraces. CI's debug info was measured and left unchanged:
+runner-to-runner noise (38–51% for one setting) exceeded any setting's effect
+(`specs/1661-test-debuginfo/measurements/ci.md`).
 
 ### Run the gate in the configuration that can fail
 
@@ -742,9 +778,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
-- 1655-reachable-boot-libraries: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (C247), `tracing`; milestone 966's `boot_table`, spec 1653's `boot_dependencies`, the closure's `ClosureCompilers`. **Zero new Cargo dependencies.**
-- 1654-parity-verdict: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`. **Zero new Cargo dependencies.**
-- 1653-cmake-build-tree: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
+- 1662-hpack-project-membership: #1032's `cabal.project` membership rule now covers `package.yaml` (each manifest matched as the `.cabal` hpack would generate), and membership is the union of `cabal.project` and a `stack.yaml` beside it, for both readers. ogmios loses `json-via-show`. **Zero new Cargo dependencies.**
+- 1658-nextest-trial: tests run under cargo-nextest (constitution 4.1.0); `pre-pr.sh` 383 s → 143 s locally (median of 3). Doctests are a separate `cargo test --workspace --doc` step. **Zero new Cargo dependencies.**
+- 1657-test-time-first-slice: Added Rust stable 1.98.1 (pinned); no `+toolchain`. **Dependencies**: none new.
 
 
 <!-- MANUAL ADDITIONS START -->

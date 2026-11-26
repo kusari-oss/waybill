@@ -63,7 +63,7 @@ use super::harness::EmittedPaths;
 
 /// Extract the waybill:graph-completeness value from CDX
 /// `.metadata.properties[]`.
-fn cdx_graph_completeness(cdx: &serde_json::Value) -> Option<String> {
+pub(crate) fn cdx_graph_completeness(cdx: &serde_json::Value) -> Option<String> {
     cdx.get("metadata")?
         .get("properties")?
         .as_array()?
@@ -73,7 +73,7 @@ fn cdx_graph_completeness(cdx: &serde_json::Value) -> Option<String> {
 }
 
 /// True if any component's purl matches a given predicate.
-fn cdx_has_component_purl(cdx: &serde_json::Value, matches: impl Fn(&str) -> bool) -> bool {
+pub(crate) fn cdx_has_component_purl(cdx: &serde_json::Value, matches: impl Fn(&str) -> bool) -> bool {
     cdx.get("components")
         .and_then(|c| c.as_array())
         .map(|arr| {
@@ -89,7 +89,7 @@ fn cdx_has_component_purl(cdx: &serde_json::Value, matches: impl Fn(&str) -> boo
 
 /// True if any component carries a property `waybill:<name>` whose
 /// value matches the predicate.
-fn cdx_has_component_property(
+pub(crate) fn cdx_has_component_property(
     cdx: &serde_json::Value,
     name: &str,
     matches: impl Fn(&str) -> bool,
@@ -116,7 +116,7 @@ fn cdx_has_component_property(
 }
 
 /// True if any dependency edge from `from_pred(ref)` targets `to_pred`.
-fn cdx_has_edge(
+pub(crate) fn cdx_has_edge(
     cdx: &serde_json::Value,
     from_pred: impl Fn(&str) -> bool,
     to_pred: impl Fn(&str) -> bool,
@@ -229,7 +229,7 @@ pub fn go_cobra_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailur
 // -----------------------------------------------------------------------
 
 /// `go.sum` locations in a component's `evidence.occurrences`.
-fn go_sum_occurrences(c: &serde_json::Value) -> usize {
+pub(crate) fn go_sum_occurrences(c: &serde_json::Value) -> usize {
     c.pointer("/evidence/occurrences")
         .and_then(|o| o.as_array())
         .map(|os| {
@@ -334,7 +334,7 @@ pub fn go_opentelemetry_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
 // nix-closure-moat — the `--nix-closure` target
 // -----------------------------------------------------------------------
 
-fn nix_fail(check_name: &'static str, observed: String, expected: &str, suggested_action: &'static str) -> AssertionFailure {
+pub(crate) fn nix_fail(check_name: &'static str, observed: String, expected: &str, suggested_action: &'static str) -> AssertionFailure {
     AssertionFailure {
         check_name,
         format: FailureFormat::Cdx,
@@ -1266,7 +1266,7 @@ pub fn pants_clojure_polyglot_expectations(sboms: &EmittedSboms) -> Result<(), A
 }
 
 /// The document-scope `waybill:resolve-ownership` value (C161), parsed.
-fn cdx_resolve_ownership(cdx: &serde_json::Value) -> Option<serde_json::Value> {
+pub(crate) fn cdx_resolve_ownership(cdx: &serde_json::Value) -> Option<serde_json::Value> {
     cdx.get("metadata")?
         .get("properties")?
         .as_array()?
@@ -1763,7 +1763,7 @@ pub fn haskell_security_advisories_expectations(
 // -----------------------------------------------------------------------
 
 /// Document-scope property value, or `None`.
-fn cdx_doc_property(cdx: &serde_json::Value, name: &str) -> Option<String> {
+pub(crate) fn cdx_doc_property(cdx: &serde_json::Value, name: &str) -> Option<String> {
     cdx.get("metadata")?
         .get("properties")?
         .as_array()?
@@ -1775,7 +1775,7 @@ fn cdx_doc_property(cdx: &serde_json::Value, name: &str) -> Option<String> {
 }
 
 /// Every `pkg:hackage/*` component, with its properties flattened.
-fn hackage_components(
+pub(crate) fn hackage_components(
     cdx: &serde_json::Value,
 ) -> Vec<(&serde_json::Value, std::collections::BTreeMap<String, String>)> {
     cdx.get("components")
@@ -2139,7 +2139,7 @@ pub fn layer0_document_integrity(
 }
 
 /// Out-edges of the CycloneDX primary component (`metadata.component`).
-fn cdx_root_out_edges(cdx: &serde_json::Value) -> usize {
+pub(crate) fn cdx_root_out_edges(cdx: &serde_json::Value) -> usize {
     let Some(root) = cdx
         .get("metadata")
         .and_then(|m| m.get("component"))
@@ -2168,7 +2168,7 @@ fn cdx_root_out_edges(cdx: &serde_json::Value) -> usize {
 /// Counts both directions, because SPDX 2.3 says "the root depends on X"
 /// two ways: `root DEPENDS_ON X`, and the reverse-direction scoped
 /// spellings `X <SCOPE>_DEPENDENCY_OF root` that carry lifecycle scope.
-fn spdx23_root_out_edges(spdx: &serde_json::Value) -> usize {
+pub(crate) fn spdx23_root_out_edges(spdx: &serde_json::Value) -> usize {
     let roots: std::collections::HashSet<&str> = spdx
         .get("documentDescribes")
         .and_then(|d| d.as_array())
@@ -2207,7 +2207,7 @@ fn spdx23_root_out_edges(spdx: &serde_json::Value) -> usize {
 /// dependency edge, and it is the overwhelming majority of them. The
 /// `relationshipType` comparison is case-sensitive and must stay exactly
 /// `dependsOn` — a lowercased `contains` check silently matches nothing.
-fn spdx3_root_out_edges(spdx3: &serde_json::Value) -> usize {
+pub(crate) fn spdx3_root_out_edges(spdx3: &serde_json::Value) -> usize {
     let Some(graph) = spdx3.get("@graph").and_then(|g| g.as_array()) else {
         return 0;
     };
@@ -2249,95 +2249,6 @@ fn spdx3_root_out_edges(spdx3: &serde_json::Value) -> usize {
 // here: issue #881's whole cause was a filter validated only against
 // hand-built JSON that shared the filter's own wrong assumption.
 // ------------------------------------------------------------------
-#[cfg(test)]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod i3_tests {
-    use super::*;
-
-    fn golden(target: &str, file: &str) -> serde_json::Value {
-        let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/fixtures/public_corpus")
-            .join(target)
-            .join(file);
-        serde_json::from_str(&std::fs::read_to_string(&p).unwrap_or_else(|e| {
-            panic!("read {}: {e}", p.display())
-        }))
-        .unwrap()
-    }
-
-    fn counts(target: &str) -> (usize, usize, usize) {
-        (
-            cdx_root_out_edges(&golden(target, "cdx.json")),
-            spdx23_root_out_edges(&golden(target, "spdx-2.3.json")),
-            spdx3_root_out_edges(&golden(target, "spdx-3.json")),
-        )
-    }
-
-    /// A target where all three formats agree. Guards the counters
-    /// themselves: each must find the root and its edges in a real
-    /// document, in three different encodings.
-    #[test]
-    fn counters_agree_on_rust_ripgrep() {
-        assert_eq!(counts("rust-ripgrep"), (10, 10, 10));
-    }
-
-    /// Two more agreeing targets in different ecosystems, so a counter
-    /// that only works for one encoding can't pass by luck.
-    #[test]
-    fn counters_agree_on_maven_and_haskell() {
-        assert_eq!(counts("maven-guice"), (16, 16, 16));
-        assert_eq!(counts("haskell-aeson"), (6, 6, 6));
-    }
-
-    /// #1022 / #1108: the Pants targets that used to sit on the SPDX 3
-    /// divergence allowlist now agree. Each count is the root's owning
-    /// component(s) plus whatever only the root fallback reaches: django's
-    /// 12 unversioned requirements and a file-tier `get-pants.sh`.
-    ///
-    /// Spec 1537: neither example has a project of its own, so the root
-    /// `requirements.txt` belongs to the subject, and the root also depends
-    /// directly on what that file pins and the resolve locks: django `mypy`
-    /// (14 -> 15), python `ansicolors` and `pytest` (2 -> 4).
-    #[test]
-    fn pants_targets_agree_across_formats() {
-        assert_eq!(counts("pants-example-django"), (15, 15, 15));
-        assert_eq!(counts("pants-example-python"), (4, 4, 4));
-        assert_eq!(counts("pants-example-jvm"), (2, 2, 2));
-        assert_eq!(counts("pants-clojure-polyglot"), (4, 4, 4));
-    }
-
-    #[test]
-    fn i3_fires_when_cdx_and_spdx23_disagree() {
-        let sboms = EmittedSboms {
-            cdx: serde_json::json!({
-                "metadata": {"component": {"bom-ref": "root@1"}},
-                "components": [{"bom-ref": "pkg:npm/a@1"}],
-                "dependencies": [{"ref": "root@1", "dependsOn": []}]
-            }),
-            spdx_2_3: serde_json::json!({
-                "SPDXID": "SPDXRef-DOCUMENT",
-                "documentDescribes": ["SPDXRef-Root"],
-                "packages": [{"SPDXID": "SPDXRef-Root"}, {"SPDXID": "SPDXRef-A"}],
-                "relationships": [
-                    {"spdxElementId": "SPDXRef-Root", "relatedSpdxElement": "SPDXRef-A",
-                     "relationshipType": "DEPENDS_ON"}
-                ]
-            }),
-            spdx_3: serde_json::json!({"@graph": []}),
-            paths: EmittedPaths {
-                cdx: std::path::PathBuf::new(),
-                spdx_2_3: std::path::PathBuf::new(),
-                spdx_3: std::path::PathBuf::new(),
-            },
-        };
-        let err = layer0_document_integrity("synthetic", &sboms)
-            .expect_err("I3 did not fire on a 0-vs-1 root-edge disagreement");
-        assert_eq!(err.check_name, "l3-root-out-edge-count-agrees-across-formats");
-        assert!(err.observed.contains("CycloneDX=0"), "{}", err.observed);
-        assert!(err.observed.contains("SPDX 2.3=1"), "{}", err.observed);
-    }
-}
-
 // -----------------------------------------------------------------------
 // Feature 1283 — the IFD targets: the document records the allowance, and
 // the runtime-only view recalls the committed truth (research R7,
@@ -2357,10 +2268,10 @@ pub fn nix_closure_slacklinker_expectations(sboms: &EmittedSboms) -> Result<(), 
 }
 
 /// Recall must reach this share of the truth (SC-001–SC-003).
-const RECALL_FLOOR_NUM: usize = 9;
-const RECALL_FLOOR_DEN: usize = 10;
+pub(crate) const RECALL_FLOOR_NUM: usize = 9;
+pub(crate) const RECALL_FLOOR_DEN: usize = 10;
 
-fn nix_closure_ifd_expectations(sboms: &EmittedSboms, target: &str) -> Result<(), AssertionFailure> {
+pub(crate) fn nix_closure_ifd_expectations(sboms: &EmittedSboms, target: &str) -> Result<(), AssertionFailure> {
     ifd_document_checks(&sboms.cdx)?;
     let pin = super::manifest::TARGETS
         .iter()
@@ -2382,7 +2293,7 @@ fn nix_closure_ifd_expectations(sboms: &EmittedSboms, target: &str) -> Result<()
 
 /// C190 absent, C217 `allowed` and verified, C216 present. Without these the
 /// recall number below would be measuring a degraded scan.
-fn ifd_document_checks(cdx: &serde_json::Value) -> Result<(), AssertionFailure> {
+pub(crate) fn ifd_document_checks(cdx: &serde_json::Value) -> Result<(), AssertionFailure> {
     if let Some(c190) = cdx_doc_property(cdx, "waybill:nix-closure-degraded") {
         return Err(nix_fail(
             "1283-no-nix-degradation",
@@ -2419,7 +2330,7 @@ fn ifd_document_checks(cdx: &serde_json::Value) -> Result<(), AssertionFailure> 
     Ok(())
 }
 
-fn recall_truth_path(target: &str) -> std::path::PathBuf {
+pub(crate) fn recall_truth_path(target: &str) -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/public_corpus")
         .join(target)
@@ -2429,7 +2340,7 @@ fn recall_truth_path(target: &str) -> std::path::PathBuf {
 /// Score `cdx` against the truth at `path`. A truth file that is absent,
 /// unreadable, for another commit or empty FAILS: a recall check that did
 /// not run must not read as one that passed.
-fn check_recall(
+pub(crate) fn check_recall(
     cdx: &serde_json::Value,
     target: &str,
     pin: &str,
@@ -2495,14 +2406,14 @@ fn check_recall(
 }
 
 #[derive(Debug)]
-struct RecallOutcome {
-    total: usize,
-    recalled: usize,
-    misses: Vec<String>,
+pub(crate) struct RecallOutcome {
+    pub(crate) total: usize,
+    pub(crate) recalled: usize,
+    pub(crate) misses: Vec<String>,
 }
 
 impl RecallOutcome {
-    fn ratio(&self) -> f64 {
+    pub(crate) fn ratio(&self) -> f64 {
         if self.total == 0 {
             0.0
         } else {
@@ -2513,7 +2424,7 @@ impl RecallOutcome {
 
 /// Lower-case and strip a leading `python3-` / `python3.N-` — `norm_name` in
 /// `specs/1283-nix-allow-ifd/measurements/recall/classify.py`.
-fn recall_norm_name(n: &str) -> String {
+pub(crate) fn recall_norm_name(n: &str) -> String {
     let lower = n.to_lowercase();
     if let Some(rest) = lower.strip_prefix("python3") {
         if let Some(after) = rest.strip_prefix('-') {
@@ -2532,7 +2443,7 @@ fn recall_norm_name(n: &str) -> String {
 }
 
 /// `vendor:product`, fields 4–5 of a CPE 2.3 formatted string.
-fn cpe_vendor_product(cpe: &str) -> Option<String> {
+pub(crate) fn cpe_vendor_product(cpe: &str) -> Option<String> {
     let f: Vec<&str> = cpe.split(':').collect();
     if f.len() > 4 && f[0] == "cpe" && f[1] == "2.3" {
         Some(format!("{}:{}", f[3], f[4]))
@@ -2541,14 +2452,14 @@ fn cpe_vendor_product(cpe: &str) -> Option<String> {
     }
 }
 
-fn purl_without_qualifiers(p: &str) -> &str {
+pub(crate) fn purl_without_qualifiers(p: &str) -> &str {
     let end = p.find(['?', '#']).unwrap_or(p.len());
     &p[..end]
 }
 
 /// Every CycloneDX component, recursively; with `runtime_only`, a component
 /// with `scope: excluded` is dropped together with what nests under it.
-fn walk_components(cdx: &serde_json::Value, runtime_only: bool) -> Vec<&serde_json::Value> {
+pub(crate) fn walk_components(cdx: &serde_json::Value, runtime_only: bool) -> Vec<&serde_json::Value> {
     fn walk<'a>(cs: &'a serde_json::Value, runtime_only: bool, out: &mut Vec<&'a serde_json::Value>) {
         for c in cs.as_array().into_iter().flatten() {
             if runtime_only && c["scope"] == "excluded" {
@@ -2565,7 +2476,7 @@ fn walk_components(cdx: &serde_json::Value, runtime_only: bool) -> Vec<&serde_js
 
 /// The vendor:product pairs a component offers: its `cpe`, and every
 /// `waybill:cpe-candidates` value (a JSON array in a string, or one CPE).
-fn component_vendor_products(c: &serde_json::Value) -> std::collections::BTreeSet<String> {
+pub(crate) fn component_vendor_products(c: &serde_json::Value) -> std::collections::BTreeSet<String> {
     let mut cpes: Vec<String> = c["cpe"].as_str().map(str::to_string).into_iter().collect();
     for p in c["properties"].as_array().into_iter().flatten() {
         if p["name"] != "waybill:cpe-candidates" {
@@ -2581,7 +2492,7 @@ fn component_vendor_products(c: &serde_json::Value) -> std::collections::BTreeSe
 }
 
 /// A matcher value: one string, or a list of strings, any of which matches.
-fn one_or_many(v: &serde_json::Value) -> Result<Vec<String>, String> {
+pub(crate) fn one_or_many(v: &serde_json::Value) -> Result<Vec<String>, String> {
     match v {
         serde_json::Value::Null => Ok(Vec::new()),
         serde_json::Value::String(s) => Ok(vec![s.clone()]),
@@ -2602,7 +2513,7 @@ fn one_or_many(v: &serde_json::Value) -> Result<Vec<String>, String> {
 ///   ignored (the name step is skipped; the purl decides).
 ///
 /// Either satisfies a finding that carries both.
-fn recall_proxy(cdx: &serde_json::Value, truth: &serde_json::Value) -> Result<RecallOutcome, String> {
+pub(crate) fn recall_proxy(cdx: &serde_json::Value, truth: &serde_json::Value) -> Result<RecallOutcome, String> {
     if truth["schema"] != 1 {
         return Err(format!("unsupported schema {}", truth["schema"]));
     }
@@ -2673,177 +2584,6 @@ fn recall_proxy(cdx: &serde_json::Value, truth: &serde_json::Value) -> Result<Re
     Ok(RecallOutcome { total: findings.len(), recalled, misses })
 }
 
-#[cfg(test)]
-#[cfg_attr(test, allow(clippy::unwrap_used))]
-mod recall_proxy_tests {
-    use super::*;
-    use serde_json::json;
-
-    /// One CPE hit (openssl, through a candidate CPE), one purl hit (aeson,
-    /// nested and carrying qualifiers), one miss (zlib, present only with
-    /// `scope: excluded`).
-    const TRUTH: &str = r#"{
-      "schema": 1,
-      "produced": "2026-11-11",
-      "tools": {"grype": "0.120.0"},
-      "target-pin": "7b46273d3723ba37da26e4c4f7a3c5575ae9e837",
-      "findings": [
-        {"id": "CVE-2026-0001", "name": "openssl", "version": "3.6.0", "matcher": {"cpe": "openssl:openssl"}},
-        {"id": "HSEC-2026-0007", "name": "aeson", "version": "2.2.3.0", "matcher": {"purl": "pkg:hackage/aeson@2.2.3.0"}},
-        {"id": "CVE-2026-0002", "name": "zlib", "version": "1.3.1", "matcher": {"cpe": "zlib:zlib"}}
-      ],
-      "excluded": []
-    }"#;
-
-    fn cdx() -> serde_json::Value {
-        json!({
-            "bomFormat": "CycloneDX",
-            "components": [
-                {"name": "openssl", "version": "3.6.0", "purl": "pkg:nix/openssl@3.6.0",
-                 "properties": [{"name": "waybill:cpe-candidates",
-                                 "value": "[\"cpe:2.3:a:openssl_project:openssl:3.6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:openssl:openssl:3.6.0:*:*:*:*:*:*:*\"]"}]},
-                {"name": "slack-web", "version": "2.3.0.0", "purl": "pkg:hackage/slack-web@2.3.0.0",
-                 "components": [
-                     {"name": "aeson", "version": "2.2.3.0",
-                      "purl": "pkg:hackage/aeson@2.2.3.0?repository_url=https://hackage.haskell.org"}
-                 ]},
-                {"name": "zlib", "version": "1.3.1", "scope": "excluded",
-                 "cpe": "cpe:2.3:a:zlib:zlib:1.3.1:*:*:*:*:*:*:*"}
-            ]
-        })
-    }
-
-    fn truth_file() -> (tempfile::TempDir, std::path::PathBuf) {
-        let d = tempfile::tempdir().unwrap();
-        let p = d.path().join("recall-truth.json");
-        std::fs::write(&p, TRUTH).unwrap();
-        (d, p)
-    }
-
-    #[test]
-    fn three_finding_truth_recalls_two_of_three() {
-        let (_d, p) = truth_file();
-        let truth: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&p).unwrap()).unwrap();
-        let o = recall_proxy(&cdx(), &truth).unwrap();
-        assert_eq!((o.recalled, o.total), (2, 3), "{o:?}");
-        assert!((o.ratio() - 0.667).abs() < 0.001, "{}", o.ratio());
-        assert_eq!(o.misses.len(), 1, "{o:?}");
-        assert!(o.misses[0].starts_with("CVE-2026-0002 zlib@1.3.1"), "{}", o.misses[0]);
-        assert!(o.misses[0].contains("scope=excluded"), "{}", o.misses[0]);
-    }
-
-    #[test]
-    fn below_the_floor_fails_and_lists_the_miss() {
-        let (_d, p) = truth_file();
-        let err = check_recall(&cdx(), "nix-closure-slack-web", "7b46273d3723ba37da26e4c4f7a3c5575ae9e837", &p)
-            .unwrap_err();
-        assert_eq!(err.check_name, "1283-runtime-recall-floor");
-        assert!(err.observed.contains("recalled 2 of 3"), "{}", err.observed);
-        assert!(err.observed.contains("CVE-2026-0002 zlib@1.3.1"), "{}", err.observed);
-    }
-
-    #[test]
-    fn at_the_floor_passes() {
-        // Ten findings, nine of them the openssl one: 9/10 is exactly 0.90.
-        let mut t: serde_json::Value = serde_json::from_str(TRUTH).unwrap();
-        let hit = t["findings"][0].clone();
-        let miss = t["findings"][2].clone();
-        let mut fs = vec![miss];
-        fs.extend(std::iter::repeat_n(hit, 9));
-        t["findings"] = json!(fs);
-        let d = tempfile::tempdir().unwrap();
-        let p = d.path().join("recall-truth.json");
-        std::fs::write(&p, t.to_string()).unwrap();
-        check_recall(&cdx(), "nix-closure-slack-web", "7b46273d3723ba37da26e4c4f7a3c5575ae9e837", &p).unwrap();
-    }
-
-    #[test]
-    fn an_absent_truth_file_fails_naming_the_dispatch() {
-        let d = tempfile::tempdir().unwrap();
-        let err = check_recall(&cdx(), "nix-closure-openai", "x", &d.path().join("recall-truth.json"))
-            .unwrap_err();
-        assert_eq!(err.check_name, "1283-recall-truth-present");
-        assert!(
-            err.expected.contains("gh workflow run recall-truth.yml")
-                && err.expected.contains("-f targets=nix-closure-openai"),
-            "{}",
-            err.expected
-        );
-    }
-
-    #[test]
-    fn truth_for_another_commit_fails() {
-        let (_d, p) = truth_file();
-        let err = check_recall(&cdx(), "nix-closure-slack-web", "0000000000000000000000000000000000000000", &p)
-            .unwrap_err();
-        assert_eq!(err.check_name, "1283-recall-truth-matches-pin");
-    }
-
-    #[test]
-    fn an_empty_truth_is_an_error_not_a_pass() {
-        let t = json!({"schema": 1, "target-pin": "x", "findings": []});
-        assert!(recall_proxy(&cdx(), &t).unwrap_err().contains("empty"));
-    }
-
-    #[test]
-    fn the_cpe_matcher_needs_name_and_version_but_the_purl_matcher_does_not() {
-        let t = |m: serde_json::Value, name: &str, version: &str| {
-            json!({"schema": 1, "findings": [{"id": "X", "name": name, "version": version, "matcher": m}]})
-        };
-        let c = cdx();
-        // Right vendor:product, wrong version: no.
-        let o = recall_proxy(&c, &t(json!({"cpe": "openssl:openssl"}), "openssl", "3.5.0")).unwrap();
-        assert_eq!(o.recalled, 0);
-        // Right name and version, wrong vendor:product: no.
-        let o = recall_proxy(&c, &t(json!({"cpe": "zlib:zlib"}), "openssl", "3.6.0")).unwrap();
-        assert_eq!(o.recalled, 0);
-        // Purl decides, whatever the finding's name says.
-        let o = recall_proxy(&c, &t(json!({"purl": "pkg:hackage/aeson@2.2.3.0"}), "Aeson-renamed", "0")).unwrap();
-        assert_eq!(o.recalled, 1);
-        // A list matcher: any member matches.
-        let o = recall_proxy(&c, &t(json!({"cpe": ["nope:nope", "openssl:openssl"]}), "openssl", "3.6.0")).unwrap();
-        assert_eq!(o.recalled, 1);
-    }
-
-    #[test]
-    fn names_normalize_like_classify_py() {
-        assert_eq!(recall_norm_name("Python3.12-Requests"), "requests");
-        assert_eq!(recall_norm_name("python3-six"), "six");
-        assert_eq!(recall_norm_name("python3x-six"), "python3x-six");
-        assert_eq!(recall_norm_name("python3.-six"), "python3.-six");
-        assert_eq!(recall_norm_name("OpenSSL"), "openssl");
-    }
-
-    #[test]
-    fn document_checks_need_c217_allowed_verified_and_no_c190() {
-        let doc = |props: serde_json::Value| json!({"metadata": {"properties": props}, "components": []});
-        let c216 = json!({"name": "waybill:closure-scope-method", "value": "{\"method\":\"runtime-closure\"}"});
-        let c217 = |ifd: &str, verified: bool| {
-            json!({"name": "waybill:nix-evaluation-policy",
-                   "value": json!({"import-from-derivation": ifd, "sandbox": "true", "schema": 1, "verified": verified}).to_string()})
-        };
-        ifd_document_checks(&doc(json!([c216, c217("allowed", true)]))).unwrap();
-        assert_eq!(
-            ifd_document_checks(&doc(json!([c216, c217("refused", true)]))).unwrap_err().check_name,
-            "1283-ifd-allowed-and-verified"
-        );
-        assert_eq!(
-            ifd_document_checks(&doc(json!([c216, c217("allowed", false)]))).unwrap_err().check_name,
-            "1283-ifd-allowed-and-verified"
-        );
-        assert_eq!(
-            ifd_document_checks(&doc(json!([c217("allowed", true)]))).unwrap_err().check_name,
-            "1283-scope-method-present"
-        );
-        let c190 = json!({"name": "waybill:nix-closure-degraded",
-                          "value": "{\"reason\":\"import-from-derivation-required\"}"});
-        assert_eq!(
-            ifd_document_checks(&doc(json!([c216, c217("allowed", true), c190]))).unwrap_err().check_name,
-            "1283-no-nix-degradation"
-        );
-    }
-}
-
 // -----------------------------------------------------------------------
 // #1677 — hpack monorepos
 // -----------------------------------------------------------------------
@@ -2851,7 +2591,14 @@ mod recall_proxy_tests {
 /// What an hpack target's documents must show however #1673–#1676 change
 /// them. Those fixes change how many `package.yaml` are read and what is
 /// recovered, never how many are seen, so `seen` is a stable count.
-struct HpackExpect {
+///
+/// Spec 1662: `seen` counts the manifests that belong to the project. A
+/// `package.yaml` that neither the governing `cabal.project` nor a
+/// `stack.yaml` beside it declares is dropped before C200 is recorded. That
+/// is why ogmios is 7 of the 8 on disk (`modules/json-via-show` is not in
+/// `server/cabal.project`) and hs-temporal-sdk is 6 of 7
+/// (`tools/tix-to-markdown` is outside `packages: */*.cabal`).
+pub(crate) struct HpackExpect {
     /// `manifests-seen` in C200 (`waybill:hpack-read-outcome`).
     seen: usize,
     /// `false` for a `Prepare::RemoveHpackGeneratedCabal` target.
@@ -2859,7 +2606,7 @@ struct HpackExpect {
 }
 
 /// Every CycloneDX component, nested ones included.
-fn all_cdx_components(cdx: &serde_json::Value) -> Vec<&serde_json::Value> {
+pub(crate) fn all_cdx_components(cdx: &serde_json::Value) -> Vec<&serde_json::Value> {
     let mut out = Vec::new();
     let mut stack: Vec<&serde_json::Value> = cdx["components"].as_array().into_iter().flatten().collect();
     while let Some(c) = stack.pop() {
@@ -2869,7 +2616,7 @@ fn all_cdx_components(cdx: &serde_json::Value) -> Vec<&serde_json::Value> {
     out
 }
 
-fn hpack_expectations(sboms: &EmittedSboms, e: HpackExpect) -> Result<(), AssertionFailure> {
+pub(crate) fn hpack_expectations(sboms: &EmittedSboms, e: HpackExpect) -> Result<(), AssertionFailure> {
     let c200 = sboms.cdx["metadata"]["properties"]
         .as_array()
         .into_iter()
@@ -2969,13 +2716,13 @@ pub fn hpack_lootbox_no_generated_cabal_expectations(sboms: &EmittedSboms) -> Re
 }
 
 pub fn hpack_hs_temporal_sdk_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: true })
+    hpack_expectations(sboms, HpackExpect { seen: 6, generated_cabal_present: true })
 }
 
 pub fn hpack_ogmios_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    hpack_expectations(sboms, HpackExpect { seen: 8, generated_cabal_present: true })
+    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: true })
 }
 
 pub fn hpack_ogmios_no_generated_cabal_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    hpack_expectations(sboms, HpackExpect { seen: 8, generated_cabal_present: false })
+    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: false })
 }

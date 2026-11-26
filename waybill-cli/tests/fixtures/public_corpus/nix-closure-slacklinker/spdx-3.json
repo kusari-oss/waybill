@@ -240884,7 +240884,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MVSJNKJPCFZTHVYE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 498 component(s) not reachable from root; transitive-edges-unresolvable: cargo\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 498 component(s) not reachable from root; transitive-edges-unresolvable: cargo; closure-declarations-unconsulted: 228 declaration(s) in 17 derivation(s); closure-contents-unread: 1153 of 2351 member(s)\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },

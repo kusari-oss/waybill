@@ -1,0 +1,9 @@
+gemfile_main_module
+mapping_doc_bidirectional
+openvex_sidecar_path
+openvex_sidecar
+sbom_type_signaling
+sbom_user_metadata
+spdx_schema_validation
+spdx3_schema_validation
+split_manifest_schema

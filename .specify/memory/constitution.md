@@ -2,6 +2,33 @@
   ============================================================
   SYNC IMPACT REPORT
   ============================================================
+  Version change: 4.0.2 → 4.1.0
+  Bump rationale: MINOR — no principle changes, but the Pre-PR
+  Verification gate (a mandated workflow section) changes its test
+  command and passing condition and gains a third step.
+
+  Why (spec 1658, #1718): `cargo test` runs test binaries one at a
+  time. `cargo nextest run` runs them in parallel. Measured on one
+  machine (18 cores, same tree, 3 runs each): 334.1 / 351.6 / 353.7 s
+  for `cargo test` against 123.0 / 124.4 / 126.0 s for nextest, with
+  identical counts (9,294 passed, 56 ignored) and no failure seen
+  under only nextest. See specs/1658-nextest-trial/measurements/.
+
+  Changes:
+    - Pre-PR table step 2: `cargo nextest run --workspace
+      --no-fail-fast --color never`; passing condition is nextest's
+      `Summary` line naming no failure.
+    - New step 3: `cargo test --workspace --doc`, because nextest
+      does not run doctests.
+    - Build & Test Commands: the unit-test row names both commands.
+    - `--color never` is required: CI sets CARGO_TERM_COLOR=always,
+      which would put escape codes in the Summary line.
+    - Last Amended field: 2026-10-29 → 2026-11-25.
+  Templates: none affected. CLAUDE.md's Pre-PR section updated in
+  the same change.
+  ============================================================
+  Previous report (4.0.0 → 4.0.1) follows.
+  ============================================================
   Version change: 4.0.0 → 4.0.1
   Bump rationale: PATCH — no principle is added, removed or
   redefined, and no guidance is materially expanded. The
@@ -961,32 +988,33 @@ the boundary, not an exemption from it:
 | Build user-space application | `cargo build --release` |
 | Lint | `cargo clippy --all-targets --all-features -- -D warnings` |
 | Format check | `cargo fmt -- --check` |
-| Unit tests | `cargo test --workspace` |
+| Unit tests | `cargo nextest run --workspace` (doctests: `cargo test --workspace --doc`) |
 | Run (requires root) | `sudo RUST_LOG=info target/release/waybill scan --target-pid <PID>` |
 
 ### Pre-PR Verification (MANDATORY)
 
-Before opening or updating ANY pull request, the author MUST run both
-of the following commands locally and confirm each passes clean — not
-one, not a subset, BOTH:
+Before opening or updating ANY pull request, the author MUST run all
+three of the following commands locally and confirm each passes clean —
+not one, not a subset, ALL THREE:
 
 | Step | Command | Passing condition |
 |------|---------|-------------------|
 | 1 | `cargo clippy --workspace --all-targets -- -D warnings` | Zero errors and zero warnings |
-| 2 | `cargo test --workspace --no-fail-fast` | Every suite reports `ok. N passed; 0 failed` |
+| 2 | `cargo nextest run --workspace --no-fail-fast --color never` | The run ends with `Summary [ … ] N tests run: N passed[ (S slow)][, K skipped]`, N ≥ 1, naming no failed, timed-out or leaky test |
+| 3 | `cargo test --workspace --doc` | Every doctest suite reports `ok. N passed; 0 failed` |
 
 These are the exact commands CI executes (`.github/workflows/ci.yml`),
-on the exact compiler. **Neither row names a toolchain**, so both
+on the exact compiler. **No row names a toolchain**, so all
 resolve through `rust-toolchain.toml`. They carried `+stable` until
 issue #1189: `cargo +stable` is a rustup dispatch that overrides the
 pin, so the gate ran on whatever the stable channel resolved to that
 day — 1.99.0 locally and in CI while the pin said 1.98.1. Three
 doctest targets failed with `error[E0514]: found crate ... compiled by
 an incompatible version of rustc`, and the tree had to be cleaned and
-rebuilt. A `+toolchain` argument in either row MUST NOT be
+rebuilt. A `+toolchain` argument in any row MUST NOT be
 reintroduced; it is the one edit that can make the first sentence of
 this paragraph false again. Step 2 carries `--no-fail-fast` because
-without it cargo stops at the first failing test binary, and the
+without it nextest stops at the first failing test, and the
 row's passing condition cannot be observed for suites that never ran.
 Note that the Build & Test Commands quick-reference immediately above
 documents a related-but-not-identical clippy invocation
@@ -1004,7 +1032,7 @@ module using `.unwrap()` MUST be guarded with
 `#[cfg_attr(test, allow(clippy::unwrap_used))]` on the `mod tests`
 item, matching the convention used throughout `waybill-cli/src/trace/`.
 
-A PR that has not passed both commands locally MUST NOT be opened or
+A PR that has not passed all three commands locally MUST NOT be opened or
 pushed for review. A passing per-crate `cargo test` is not evidence of
 CI-readiness and MUST NOT be cited as such in the PR description.
 
@@ -1050,4 +1078,4 @@ changes do not violate any principle. Violations require
 either a code fix or a constitution amendment — never silent
 deviation.
 
-**Version**: 4.0.2 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-10-29
+**Version**: 4.1.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-11-25

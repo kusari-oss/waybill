@@ -59,6 +59,9 @@ pub fn for_document(
     subject: &DocumentSubject<'_>,
     unread_manifests: UnreadManifests<'_>,
     scope_drop: Option<&crate::generate::project_discovery::ProjectDiscoveryDrop>,
+    // Spec 1656 (#1720): a partial closure read, appended after the scope
+    // drop. `None` from a caller that needs only the reachable set.
+    closure_read: Option<&super::ClosureReadGaps>,
 ) -> DocumentGraph {
     let root_override = subject.root_override;
     let drop_result = apply_main_module_drop_or_demote(components, root_override);
@@ -106,15 +109,18 @@ pub fn for_document(
     .chain(workspace_peer_edges.iter().cloned())
     .collect();
 
-    let completeness = super::apply_scope_drop(
-        compute_graph_completeness(
-            effective_components,
-            &relationships,
-            &selection,
-            &target_ref,
-            unread_manifests,
+    let completeness = super::apply_closure_read(
+        super::apply_scope_drop(
+            compute_graph_completeness(
+                effective_components,
+                &relationships,
+                &selection,
+                &target_ref,
+                unread_manifests,
+            ),
+            scope_drop,
         ),
-        scope_drop,
+        closure_read,
     );
 
     DocumentGraph {

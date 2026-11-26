@@ -131250,7 +131250,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MVSJNKJPCFZTHVYE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 493 component(s) not reachable from root; transitive-edges-unresolvable: hackage\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 493 component(s) not reachable from root; transitive-edges-unresolvable: hackage; closure-declarations-unconsulted: 211 declaration(s) in 16 derivation(s); closure-contents-unread: 1087 of 1590 member(s)\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },

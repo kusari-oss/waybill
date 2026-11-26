@@ -360,19 +360,21 @@ spec 1653 every boot library was a leaf.
 - **Checked:** the bindists' dependencies equal nixpkgs' installed package
   databases in 5 of 5 releases checked, including every compiler output the
   closure corpus has present in CI.
-- **Edges:** only between boot libraries of the same compiler (C218), and only
-  to components the document already has. None is synthesised.
+- **Edges:** to the component holding the version the depending library's
+  release ships, whatever its C218 label (one version is one component).
+  Since spec 1655 (#1696) every boot library a present one reaches is added,
+  at the version milestone 966's table gives its release.
 - **Provenance:** C247 `waybill:boot-library-dependencies` on each boot
-  library names the table and its date, and lists the dependencies that are
-  not components (`rts` and `ghc-internal` never are).
+  library names the table and its date, and lists any dependency the version
+  table lacks, so it could not be added. No Linux closure measured has one.
 - **Verdict:** a boot library with absent dependencies, or one the table does
   not cover, is counted by the completeness reason
-  `boot-library-edges-incomplete`. Every closure on the corpus carries it,
-  because `rts` is never a component.
+  `boot-library-edges-incomplete`. Since spec 1655 no closure on the corpus
+  carries it.
 
 ```sh
 jq -r '.components[] | select(.name=="ghc-prim") | .properties[] | select(.name=="waybill:boot-library-dependencies") | .value' app.cdx.json
-# {"absent":["rts"],"source":"ghc-boot-dependencies/2026-11-24"}
+# {"source":"ghc-boot-dependencies/2026-11-24"}
 ```
 
 This is what lets a vulnerability scanner see them. On the five Haskell

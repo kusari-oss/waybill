@@ -137301,7 +137301,11 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "complete"
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "closure-declarations-unconsulted: 211 declaration(s) in 16 derivation(s); closure-contents-unread: 1284 of 2045 member(s)"
       },
       {
         "name": "waybill:workspaces-detected",

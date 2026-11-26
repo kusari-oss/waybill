@@ -280,10 +280,6 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "sdk/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "tools/tix-to-markdown/package.yaml"
           }
         ]
       },
@@ -291,7 +287,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"protos/package.yaml\",\"sdk/package.yaml\",\"tools/tix-to-markdown/package.yaml\"]"
+          "value": "[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"protos/package.yaml\",\"sdk/package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
@@ -323,7 +319,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"codec-encryption\",\"codec-server\",\"core\",\"optimal-codec\",\"protos\",\"sdk\",\"tools/tix-to-markdown\"]"
+          "value": "[\"codec-encryption\",\"codec-server\",\"core\",\"optimal-codec\",\"protos\",\"sdk\"]"
         }
       ],
       "purl": "pkg:hackage/base",
@@ -548,10 +544,6 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "sdk/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "tools/tix-to-markdown/package.yaml"
           }
         ]
       },
@@ -559,11 +551,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"sdk/package.yaml\",\"tools/tix-to-markdown/package.yaml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\">= 0.6\"]"
+          "value": "[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"sdk/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -591,7 +579,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"codec-encryption\",\"codec-server\",\"core\",\"optimal-codec\",\"sdk\",\"tools/tix-to-markdown\"]"
+          "value": "[\"codec-encryption\",\"codec-server\",\"core\",\"optimal-codec\",\"sdk\"]"
         }
       ],
       "purl": "pkg:hackage/containers",
@@ -887,70 +875,6 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/filepath",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "tools/tix-to-markdown/package.yaml"
-          }
-        ]
-      },
-      "name": "filepath",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"tools/tix-to-markdown/package.yaml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\">= 1.4\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:ghc-stdlib",
-          "value": "true"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "offline"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"tools/tix-to-markdown\"]"
-        }
-      ],
-      "purl": "pkg:hackage/filepath",
-      "type": "library"
-    },
-    {
       "bom-ref": "pkg:hackage/first-class-families",
       "evidence": {
         "identity": [
@@ -1241,66 +1165,6 @@
       ],
       "purl": "pkg:hackage/hedgehog",
       "scope": "excluded",
-      "type": "library"
-    },
-    {
-      "bom-ref": "pkg:hackage/hpc",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "tools/tix-to-markdown/package.yaml"
-          }
-        ]
-      },
-      "name": "hpc",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"tools/tix-to-markdown/package.yaml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\">= 0.6\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "offline"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"tools/tix-to-markdown\"]"
-        }
-      ],
-      "purl": "pkg:hackage/hpc",
       "type": "library"
     },
     {
@@ -3628,67 +3492,6 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/tix-to-markdown@2025.10.1.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "tools/tix-to-markdown/package.yaml"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
-      "name": "tix-to-markdown",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"tools/tix-to-markdown/package.yaml\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"tools/tix-to-markdown\"]"
-        }
-      ],
-      "purl": "pkg:hackage/tix-to-markdown@2025.10.1.0",
-      "type": "library",
-      "version": "2025.10.1.0"
-    },
-    {
       "bom-ref": "pkg:hackage/transformers",
       "evidence": {
         "identity": [
@@ -5130,8 +4933,7 @@
         "pkg:hackage/temporal-sdk-codec-server@2025.10.1.0",
         "pkg:hackage/temporal-sdk-core@2025.10.1.0",
         "pkg:hackage/temporal-sdk-optimal-codec@2025.10.1.0",
-        "pkg:hackage/temporal-sdk@2025.10.1.0",
-        "pkg:hackage/tix-to-markdown@2025.10.1.0"
+        "pkg:hackage/temporal-sdk@2025.10.1.0"
       ],
       "ref": "hpack-hs-temporal-sdk@d24313e"
     },
@@ -5193,10 +4995,6 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/filepath"
-    },
-    {
-      "dependsOn": [],
       "ref": "pkg:hackage/first-class-families"
     },
     {
@@ -5214,10 +5012,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/hedgehog"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/hpc"
     },
     {
       "dependsOn": [],
@@ -5487,15 +5281,6 @@
       "ref": "pkg:hackage/time-compat"
     },
     {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/filepath",
-        "pkg:hackage/hpc"
-      ],
-      "ref": "pkg:hackage/tix-to-markdown@2025.10.1.0"
-    },
-    {
       "dependsOn": [],
       "ref": "pkg:hackage/transformers"
     },
@@ -5594,11 +5379,11 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":73,\"excluded_files\":6,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":12,\"with_candidates\":354}"
+        "value": "{\"addressable_without_cpe\":70,\"excluded_files\":6,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":12,\"with_candidates\":354}"
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":0,\"resolved\":0,\"revision\":null,\"unresolved\":{\"offline\":66}}"
+        "value": "{\"disagreements\":0,\"resolved\":0,\"revision\":null,\"unresolved\":{\"offline\":64}}"
       },
       {
         "name": "waybill:file-inventory-skipped-build-dirs",
@@ -5634,7 +5419,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"codec-encryption\",\"codec-server\",\"core\",\"core/rust\",\"optimal-codec\",\"protos\",\"sdk\",\"tools/tix-to-markdown\"]"
+        "value": "[\".\",\"codec-encryption\",\"codec-server\",\"core\",\"core/rust\",\"optimal-codec\",\"protos\",\"sdk\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",
@@ -5646,7 +5431,7 @@
       },
       {
         "name": "waybill:hpack-read-outcome",
-        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/temporal-codec-encryption.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/temporal-sdk-codec-server.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/temporal-sdk-core.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/temporal-sdk-optimal-codec.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/temporal-api-protos.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/temporal-sdk.cabal\"],\"includes-resolved\":[{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\",\"include\":\"../../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"}],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\"],\"manifests-unread\":[]}"
+        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/temporal-codec-encryption.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/temporal-sdk-codec-server.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/temporal-sdk-core.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/temporal-sdk-optimal-codec.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/temporal-api-protos.cabal\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/temporal-sdk.cabal\"],\"includes-resolved\":[{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\",\"include\":\"../hpack-defaults.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\"}],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\",\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\"],\"manifests-unread\":[]}"
       }
     ],
     "supplier": {

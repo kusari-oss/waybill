@@ -83,7 +83,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 498 component(s) not reachable from root; transitive-edges-unresolvable: cargo\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 498 component(s) not reachable from root; transitive-edges-unresolvable: cargo; closure-declarations-unconsulted: 228 declaration(s) in 17 derivation(s); closure-contents-unread: 1153 of 2351 member(s)\"}"
     },
     {
       "annotationDate": "<masked>",

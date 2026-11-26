@@ -1,0 +1,13 @@
+runner	host	commit	run	wall_s	summed_s	passed	failed	ignored	doctests
+cargo-test	m5max-18c	8c42ef8b	1	351.6	347.0	9293	1	56	0 passed, 1 ignored
+cargo-test	m5max-18c	8c42ef8b	2	353.7	349.1	9294	0	56	0 passed, 1 ignored
+cargo-test	m5max-18c	8c42ef8b	3	334.1	329.6	9294	0	56	0 passed, 1 ignored
+nextest	m5max-18c	8c42ef8b	1	124.4	2025.1	9294	0	56	0 passed, 1 ignored
+nextest	m5max-18c	8c42ef8b	2	126.0	2037.6	9294	0	56	0 passed, 1 ignored
+nextest	m5max-18c	8c42ef8b	3	123.0	1982.8	9294	0	56	0 passed, 1 ignored
+pre-pr-before	m5max-18c	8c42ef8b	1	399.1					
+pre-pr-before	m5max-18c	8c42ef8b	2	369.7					
+pre-pr-before	m5max-18c	8c42ef8b	3	382.7					
+pre-pr-after	m5max-18c	21074c47	1	143.0		9301	0	56	0 passed, 1 ignored
+pre-pr-after	m5max-18c	21074c47	2	142.6		9301	0	56	0 passed, 1 ignored
+pre-pr-after	m5max-18c	21074c47	3	148.8		9301	0	56	0 passed, 1 ignored

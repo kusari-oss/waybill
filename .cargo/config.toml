@@ -1,0 +1,19 @@
+# macOS: pack debug info so rebuilds stop accumulating object files (spec 1661).
+#
+# macOS's default for development builds is `split-debuginfo = "unpacked"`. It
+# leaves one `*.rcgu.o` per codegen unit beside every binary in
+# `target/debug/deps`, under new names on each rebuild, and nothing removes the
+# old ones. Measured (#1719): about 31,100 more files per workspace rebuild
+# (65,923 → 97,032 → 128,141 entries), with rebuilds slowing 29.3 → 33.1 → 42.2 s
+# until `cargo clean`. With `packed` the entry count holds at about 2,458 and
+# rebuilds stop slowing. Full debug info is kept, packaged once per binary.
+#
+# Why rustflags and not a profile: a profile setting can't be scoped to one OS.
+# Cargo silently ignores `profile.*` under a `[target.…]` table (measured, spec
+# 1661 measurements/local.md), and a plain `[profile.dev]` would change Linux and
+# Windows too, where debug info doesn't accumulate this way.
+#
+# `RUSTFLAGS` in the environment overrides this table. Release builds carry no
+# debug info by default, so the shipped binary is unaffected.
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "split-debuginfo=packed"]

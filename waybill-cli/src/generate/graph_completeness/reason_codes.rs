@@ -126,6 +126,18 @@ pub enum ReasonCode {
         incomplete: usize,
         unknown: usize,
     },
+    /// Spec 1656 (#1720) — the closure reader left store-path declarations
+    /// unconsulted (`waybill:nix-closure-read`, milestone 1278). Counts only:
+    /// the fields are named in that row, and this value is pinned by goldens
+    /// compared across hosts.
+    ClosureDeclarationsUnconsulted {
+        declarations: usize,
+        derivations: usize,
+        carrier_disagreements: usize,
+    },
+    /// Spec 1656 (#1720) — closure members whose contents this scan could not
+    /// read (C213 absent, partial or failed), out of all members.
+    ClosureContentsUnread { unread: usize, members: usize },
 }
 
 impl ReasonCode {
@@ -166,6 +178,18 @@ impl ReasonCode {
             Self::ManifestUnread { ecosystem, count } => format!(
                 "manifest-unread: {count} {ecosystem} manifest(s) found but not read"
             ),
+            Self::ClosureDeclarationsUnconsulted { declarations, derivations, carrier_disagreements } => {
+                let mut s = format!(
+                    "closure-declarations-unconsulted: {declarations} declaration(s) in {derivations} derivation(s)"
+                );
+                if *carrier_disagreements > 0 {
+                    s.push_str(&format!(", {carrier_disagreements} carrier disagreement(s)"));
+                }
+                s
+            }
+            Self::ClosureContentsUnread { unread, members } => {
+                format!("closure-contents-unread: {unread} of {members} member(s)")
+            }
             Self::BootLibraryEdgesIncomplete { incomplete, unknown } => format!(
                 "boot-library-edges-incomplete: {} hackage boot librar(ies), {incomplete} with dependencies not in the document, {unknown} without dependency data",
                 incomplete + unknown

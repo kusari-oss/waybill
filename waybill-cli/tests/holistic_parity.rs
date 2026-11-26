@@ -7,13 +7,12 @@
 //! the same observable values (per the row's `Directionality`).
 //!
 //! One `#[test]` per ecosystem (9) + one for the synthetic
-//! container-image fixture from `dual_format_perf::build_benchmark_fixture`.
+//! container-image fixture from `common::synthetic_image::build_benchmark_fixture`.
 //! Each test runs a single triple-format scan
 //! (`--format cyclonedx-json,spdx-2.3-json,spdx-3-json`) so the
 //! cross-format comparison is on outputs from one canonical
 //! traversal.
 
-mod dual_format_perf;
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -300,7 +299,7 @@ fn run_ecosystem(case: &EcosystemCase) {
 
 #[test]
 fn parity_synthetic_container_image() {
-    let (_keep_alive, image_path) = dual_format_perf::build_benchmark_fixture();
+    let (_keep_alive, image_path) = common::synthetic_image::build_benchmark_fixture();
     let scan = triple_scan_at_path(
         "synthetic-container-image",
         &image_path,
@@ -340,26 +339,26 @@ fn parity_synthetic_container_image() {
 #[test]
 fn parity_image_with_main_module_issue_1186() {
     let files = vec![
-        dual_format_perf::ImageFile {
+        common::synthetic_image::ImageFile {
             path: "etc/os-release",
             content: b"ID=alpine\nVERSION_ID=3.19.1\n".to_vec(),
         },
         // A main module at a genuine project root — not under
         // node_modules, which the root walker skips. No `dependencies`
         // key, so it has no outgoing edges of its own.
-        dual_format_perf::ImageFile {
+        common::synthetic_image::ImageFile {
             path: "usr/src/app/package.json",
             content: br#"{"name":"waybill-fixture-app","version":"0.1.0","license":"MIT"}"#
                 .to_vec(),
         },
         // A component in a different ecosystem that nothing depends on:
         // what the orphan-anchor fallback attaches to the graph root.
-        dual_format_perf::ImageFile {
+        common::synthetic_image::ImageFile {
             path: "usr/lib/python3.11/site-packages/waybill_fixture_lib-1.0.0.dist-info/METADATA",
             content: b"Metadata-Version: 2.1\nName: waybill-fixture-lib\nVersion: 1.0.0\nLicense: MIT\n".to_vec(),
         },
     ];
-    let (_keep_alive, image_path) = dual_format_perf::build_synthetic_image(&files);
+    let (_keep_alive, image_path) = common::synthetic_image::build_synthetic_image(&files);
     let scan = triple_scan_at_path(
         "image-with-main-module",
         &image_path,

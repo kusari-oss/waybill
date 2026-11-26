@@ -95289,7 +95289,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 12 component(s) not reachable from root"
+        "value": "orphaned-components-detected: 12 component(s) not reachable from root; closure-declarations-unconsulted: 198 declaration(s) in 16 derivation(s); closure-contents-unread: 471 of 1330 member(s)"
       },
       {
         "name": "waybill:workspaces-detected",

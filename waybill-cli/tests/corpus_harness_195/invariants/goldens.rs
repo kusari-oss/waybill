@@ -24,7 +24,7 @@ use std::path::PathBuf;
 
 use super::super::harness::{EmittedPaths, EmittedSboms};
 
-fn fixtures_root() -> PathBuf {
+pub(crate) fn fixtures_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests").join("fixtures").join("public_corpus")
 }
 

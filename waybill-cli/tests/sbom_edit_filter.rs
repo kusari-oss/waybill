@@ -496,32 +496,6 @@ fn us3_real_lifecycle_scopes_unchanged() {
 
 // ---------------------------------------------------------------- #1454
 
-/// The document's references to its OpenVEX sidecar: SPDX 2.3
-/// `externalDocumentRefs[]` entries naming one, SPDX 3 `SpdxDocument`
-/// `externalRef[]` entries of type `vulnerabilityExploitabilityAssessment`.
-fn openvex_refs(doc: &Value) -> Vec<String> {
-    match format_of(doc) {
-        "spdx23" => doc["externalDocumentRefs"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter_map(|r| r["spdxDocument"].as_str())
-            .filter(|d| d.ends_with(".openvex.json"))
-            .map(str::to_string)
-            .collect(),
-        _ => doc["@graph"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter(|e| e["type"] == "SpdxDocument")
-            .flat_map(|e| e["externalRef"].as_array().cloned().unwrap_or_default())
-            .filter(|r| r["externalRefType"] == "vulnerabilityExploitabilityAssessment")
-            .flat_map(|r| r["locator"].as_array().cloned().unwrap_or_default())
-            .filter_map(|l| l.as_str().map(str::to_string))
-            .collect(),
-    }
-}
-
 /// #1454: the runtime-only recipe on the nix-closure-moat golden. The edited
 /// SPDX documents used to keep pointing at the original sidecar, with its
 /// SHA-256, after the edit dropped every component its statements assess;
@@ -557,8 +531,8 @@ fn i1454_an_edit_that_drops_components_drops_the_openvex_reference() {
             e.stderr
         );
         assert!(schema_errors(&e.json()).is_empty(), "{file}: {:#?}", schema_errors(&e.json()));
-        if file == "spdx-3.json" {
-            spdx3_validate_or_skip(&e.path);
-        }
+        // spdx3-validate for a reference-removing edit runs in
+        // closure_runtime_scope::us4 on a 40 KB document; on this 8 MB one it
+        // took 24 s and caught nothing the schema check above does not (#1725).
     }
 }

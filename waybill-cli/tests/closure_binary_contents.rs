@@ -722,3 +722,32 @@ fn us4_go_and_rust_contents_are_both_flat_top_level_dependencies() {
         );
     }
 }
+
+/// Spec 1656 (#1720), the neither-gap control. `populated_store()` leaves
+/// `waybill-fixture-lib` absent (`measurements/controls-before.md`), so
+/// this test gives it both declared outputs (`out`, `doc`): every member is read, the closure has
+/// no read row, and C105 names neither closure-read code. C104 and C105 are
+/// then decided by the scan's other reasons alone, which are the values
+/// recorded before this feature.
+#[test]
+fn m1720_a_fully_read_closure_names_neither_gap() {
+    let store = populated_store();
+    // The library declares `out` and `doc`; both must be present to be read.
+    put(store.path(), LIB, "lib.txt", b"waybill-fixture-lib carries no build information");
+    put(store.path(), &format!("{LIB}-doc"), "lib.txt", b"waybill-fixture-lib documentation");
+    let run = scan(store.path(), &[]);
+    let cdx = run.cdx();
+    let contents = cdx_doc_prop(&cdx, C213).expect("C213");
+    assert_eq!(contents["absent"], 0, "CONTROL: every member read: {contents}");
+    assert_eq!(contents["partial"], 0, "{contents}");
+    assert_eq!(contents["failed"], 0, "{contents}");
+    assert!(cdx_doc_prop(&cdx, "waybill:nix-closure-read").is_none(), "CONTROL: no declaration gap");
+    let raw = |name: &str| -> Option<String> {
+        cdx["metadata"]["properties"].as_array()?.iter().find(|p| p["name"] == name)?["value"].as_str().map(str::to_string)
+    };
+    let reason = raw("waybill:graph-completeness-reason").unwrap_or_default();
+    assert!(!reason.contains("closure-declarations-unconsulted"), "{reason}");
+    assert!(!reason.contains("closure-contents-unread"), "{reason}");
+    assert_eq!(raw("waybill:graph-completeness").as_deref(), Some("partial"));
+    assert_eq!(reason, "transitive-edges-unresolvable: cargo, golang, hackage");
+}

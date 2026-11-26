@@ -358,3 +358,29 @@ pub fn unmask(doc: &mut Value) {
     }
     walk("", doc, spdx23);
 }
+
+/// The document's references to its OpenVEX sidecar: SPDX 2.3
+/// `externalDocumentRefs[]` entries naming one, SPDX 3 `SpdxDocument`
+/// `externalRef[]` entries of type `vulnerabilityExploitabilityAssessment`.
+pub fn openvex_refs(doc: &Value) -> Vec<String> {
+    match format_of(doc) {
+        "spdx23" => doc["externalDocumentRefs"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|r| r["spdxDocument"].as_str())
+            .filter(|d| d.ends_with(".openvex.json"))
+            .map(str::to_string)
+            .collect(),
+        _ => doc["@graph"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|e| e["type"] == "SpdxDocument")
+            .flat_map(|e| e["externalRef"].as_array().cloned().unwrap_or_default())
+            .filter(|r| r["externalRefType"] == "vulnerabilityExploitabilityAssessment")
+            .flat_map(|r| r["locator"].as_array().cloned().unwrap_or_default())
+            .filter_map(|l| l.as_str().map(str::to_string))
+            .collect(),
+    }
+}
