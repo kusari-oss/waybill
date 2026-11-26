@@ -74,9 +74,9 @@
 ## Phase 5: Measure and ship
 
 - [x] T009 After timings. Run `self_scan_guards::waybill_self_scan_guards`, i1454 and `us4` alone 3 times each, and record them as phase `after`. Compare with SC-001 (i1454 plus `us4` at 12 s or less, median) and SC-002 (one scan: the combined test against the sum of the four originals).
-- [ ] T010 Run the gate: `./scripts/gate.sh` with both `--expect` patterns from CLAUDE.md, around `prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass`, the summary line, and the test count. Expected: before − 4 + 1, with no other change; explain any other difference.
-- [ ] T011 Write `measurements/after.md`, commit, and open the PR (Refs #1719, #1716, #1725).
-- [ ] T012 CI: collect the `Tests` step and nextest summed time for Linux, from 2 PR runs against 2 recent `main` runs. Use `specs/1658-nextest-trial/measurements/ci_steps.py` and the per-test sum method from spec 1658. Add them to `after.md` and the PR. Enumerate every job's conclusion.
+- [x] T010 Run the gate: `./scripts/gate.sh` with both `--expect` patterns from CLAUDE.md, around `prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass`, the summary line, and the test count. Expected: before − 4 + 1, with no other change; explain any other difference.
+- [x] T011 Write `measurements/after.md`, commit, and open the PR (Refs #1719, #1716, #1725).
+- [x] T012 CI: collect the `Tests` step and nextest summed time for Linux, from 2 PR runs against 2 recent `main` runs. Use `specs/1658-nextest-trial/measurements/ci_steps.py` and the per-test sum method from spec 1658. Add them to `after.md` and the PR. Enumerate every job's conclusion.
 
 ## Dependencies
 
