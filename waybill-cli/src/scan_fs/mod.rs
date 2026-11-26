@@ -1629,7 +1629,17 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         relationships.extend(fetches.edges);
         // Spec 1653 US3 (FR-009): what a build's own units compiled against,
         // from the same owner. Deduplicated against the edges above.
-        relationships.extend(cmake_fetch_attach::attach_compile(&relationships, &cmake_compile_edges, &index, root));
+        let compiled = cmake_fetch_attach::attach_compile(&relationships, &cmake_compile_edges, &index, root);
+        relationships.extend(compiled.edges);
+        // C246 `compile-edges` is the edges compile evidence supports, known
+        // only once owners are resolved here (#1717 review): the reader's
+        // count was taken before self-edges and owner-less files were dropped.
+        if let Some(cov) = cmake_build_tree_coverage.as_mut() {
+            if let Ok(mut v) = serde_json::from_str::<serde_json::Value>(cov) {
+                v["compile-edges"] = serde_json::json!(compiled.supported);
+                *cov = v.to_string();
+            }
+        }
         // Spec 1543 (#1602): a vendored library linked by link directory
         // is a dependency of the project that links it, the same way. Its
         // scope is set here, before the rewrite below types the edge.

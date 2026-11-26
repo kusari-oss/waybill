@@ -35,6 +35,7 @@ pub(crate) fn units(json: &str) -> Result<Vec<Unit>, Malformed> {
         let dir = Path::new(dir);
         let args: Vec<String> = match (e["arguments"].as_array(), e["command"].as_str()) {
             (Some(a), _) => a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect(),
+            (None, Some(c)) if is_windows_dir(dir) => split_command_windows(c),
             (None, Some(c)) => split_command(c),
             (None, None) => continue,
         };
@@ -107,6 +108,63 @@ fn split_command(c: &str) -> Vec<String> {
                 in_word = true;
             }
             c if c.is_whitespace() && !single && !double => {
+                if in_word {
+                    out.push(std::mem::take(&mut cur));
+                    in_word = false;
+                }
+            }
+            c => {
+                cur.push(c);
+                in_word = true;
+            }
+        }
+    }
+    if in_word {
+        out.push(cur);
+    }
+    out
+}
+
+/// A `directory` that starts with a drive letter: the database was written
+/// on Windows, where CMake quotes `command` by Windows rules (#1717 review).
+fn is_windows_dir(dir: &Path) -> bool {
+    let b = dir.as_os_str().as_encoded_bytes();
+    b.len() >= 3 && b[0].is_ascii_alphabetic() && b[1] == b':' && (b[2] == b'\\' || b[2] == b'/')
+}
+
+/// A `command` split by Windows rules (`CommandLineToArgvW`): a backslash
+/// is literal unless a run of them precedes `"`, where `2n` backslashes give
+/// `n` and the quote toggles quoting, and `2n+1` give `n` and a literal `"`.
+/// POSIX rules removed every backslash of `C:\src\include` (#1717 review).
+fn split_command_windows(c: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut cur = String::new();
+    let (mut in_word, mut quoted) = (false, false);
+    let mut chars = c.chars().peekable();
+    while let Some(ch) = chars.next() {
+        match ch {
+            '\\' => {
+                let mut n = 1;
+                while chars.peek() == Some(&'\\') {
+                    chars.next();
+                    n += 1;
+                }
+                if chars.peek() == Some(&'"') {
+                    cur.extend(std::iter::repeat_n('\\', n / 2));
+                    if n % 2 == 1 {
+                        chars.next();
+                        cur.push('"');
+                    }
+                } else {
+                    cur.extend(std::iter::repeat_n('\\', n));
+                }
+                in_word = true;
+            }
+            '"' => {
+                quoted = !quoted;
+                in_word = true;
+            }
+            c if c.is_whitespace() && !quoted => {
                 if in_word {
                     out.push(std::mem::take(&mut cur));
                     in_word = false;
@@ -240,6 +298,35 @@ impl Resolver<'_> {
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
+    /// #1717 review, finding 1: the shape CMake's Ninja generator writes for
+    /// MSVC on Windows. POSIX splitting removed every backslash, so `cl` was
+    /// not recognised and `/I` was skipped.
+    #[test]
+    fn a_windows_command_keeps_its_backslashes() {
+        let args = split_command_windows(r#"C:\PROGRA~1\MICROS~1\cl.exe  /nologo /TP -IC:\src\include /I"C:\dep dir\include" /Fo x.obj /c C:\src\a.cpp"#);
+        assert_eq!(args[0], r"C:\PROGRA~1\MICROS~1\cl.exe");
+        assert_eq!(include_dirs(&args), [r"C:\src\include", r"C:\dep dir\include"]);
+    }
+
+    /// `CommandLineToArgvW`'s backslash-before-quote rules.
+    #[test]
+    fn windows_backslashes_before_a_quote() {
+        assert_eq!(split_command_windows(r#"a\\"b c"\" d"#), [r#"a\b c""#, "d"]);
+        assert_eq!(split_command_windows(r#"x\\\"y"#), [r#"x\"y"#]);
+        assert_eq!(split_command_windows(r"\\server\share\x"), [r"\\server\share\x"]);
+    }
+
+    #[test]
+    fn a_drive_letter_directory_selects_windows_rules() {
+        assert!(is_windows_dir(Path::new(r"C:\b")));
+        assert!(is_windows_dir(Path::new("d:/b")));
+        assert!(!is_windows_dir(Path::new("/home/b")));
+        assert!(!is_windows_dir(Path::new("C")));
+        let json = r#"[{"directory":"C:\\b","command":"C:\\PROGRA~1\\cl.exe /IC:\\dep\\include /c a.cpp","file":"a.cpp"}]"#;
+        let u = units(json).unwrap();
+        assert!(u[0].includes.iter().any(|i| i.to_string_lossy().contains(r"C:\dep\include")), "{:?}", u[0].includes);
+    }
+
     use super::*;
 
     /// The probe's `fetch` database (measurements/probe-results.md), at /b.

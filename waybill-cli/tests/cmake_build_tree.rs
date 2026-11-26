@@ -684,3 +684,21 @@ fn an_include_inside_a_submodule_is_an_edge_to_it() {
     assert_edge(&s, &probe, &sub);
     assert_eq!(coverage_bt(&s).unwrap()["compile-edges"], 3);
 }
+
+/// #1717 review, finding 2: a Find-module cache entry is not a package
+/// directory. `ZLIB_INCLUDE_DIR=<prefix>/include` shares `hdronly_DIR`'s
+/// prefix; counted as a package, it tied with `hdronly` in rule 3, which
+/// then resolved the include to nothing and dropped `compile-include`.
+#[test]
+fn a_find_module_include_dir_is_not_a_package_prefix() {
+    let f = materialise("system");
+    let cache = f.build.join("CMakeCache.txt");
+    let text = std::fs::read_to_string(&cache).unwrap();
+    let dir = text.lines().find_map(|l| l.strip_prefix("hdronly_DIR:PATH=")).expect("fixture drift: hdronly_DIR").to_string();
+    let prefix = dir.strip_suffix("/lib/cmake/hdronly").expect("fixture drift: hdronly_DIR layout");
+    std::fs::write(&cache, format!("{text}\n//Path to a file.\nZLIB_INCLUDE_DIR:PATH={prefix}/include\n")).unwrap();
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(basis(&settlement(&s, "hdronly")), ["cache-package-dir", "compile-include"]);
+    let cov = coverage_bt(&s).unwrap();
+    assert_eq!(cov["include-dirs-unresolved"], 0, "{cov}");
+}

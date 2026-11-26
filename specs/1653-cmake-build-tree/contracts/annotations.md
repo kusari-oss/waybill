@@ -48,7 +48,7 @@ CycloneDX, SPDX 2.3 and SPDX 3.
 | `declarations.*` | Settled CMake fetch declarations, by state, counted **before** the per-PURL merge |
 | `build-only` | Components emitted under FR-007 |
 | `configured-values-applied` | Conditions whose evaluation changed because of a configured value |
-| `compile-edges` | Edges added from `compile_commands.json` or a file-API reply |
+| `compile-edges` | Edges in the graph that `compile_commands.json` or a file-API reply supports: distinct (owner, component) pairs after the owner rule, excluding a component compiling itself. An edge a declaration already gives counts, but isn't added twice (#1717 review) |
 | `include-dirs-unresolved` | Distinct include directories that resolved to no component |
 | `file-api-replies` | Build directories with a readable reply |
 | `conflicts` | Declarations whose build directories gave different states |

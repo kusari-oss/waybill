@@ -555,7 +555,8 @@ fn compile_edges(
             v["basis"] = serde_json::json!(basis);
         }
     }
-    bt.compile_edges = edges.len();
+    // `compile-edges` is set once owners are resolved, in
+    // `scan_fs::cmake_fetch_attach::attach_compile` (#1717 review).
     bt.include_dirs_unresolved = unresolved.len();
     edges.into_iter().collect()
 }
