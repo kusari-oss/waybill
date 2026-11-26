@@ -759,6 +759,7 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1658-nextest-trial: tests run under cargo-nextest (constitution 4.1.0); `pre-pr.sh` 383 s → 143 s locally (median of 3). Doctests are a separate `cargo test --workspace --doc` step. **Zero new Cargo dependencies.**
 - 1657-test-time-first-slice: Added Rust stable 1.98.1 (pinned); no `+toolchain`. **Dependencies**: none new.
 - 1656-closure-read-completeness: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. **Zero new Cargo dependencies.**
 
