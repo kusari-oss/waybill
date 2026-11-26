@@ -11,11 +11,11 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `specs/1658-nextest-trial/measurements/` holding `runs.tsv` (header from data-model.md), `ci.tsv`, and `isolation.md` with a header. Record `cargo nextest --version` and the toolchain each runner's build reports, which must be 1.98.1 (R4), in `measurements/env.md`.
+- [x] T001 Create `specs/1658-nextest-trial/measurements/` holding `runs.tsv` (header from data-model.md), `ci.tsv`, and `isolation.md` with a header. Record `cargo nextest --version` and the toolchain each runner's build reports, which must be 1.98.1 (R4), in `measurements/env.md`.
 
 ## Phase 2: Foundational (blocks all stories)
 
-- [ ] T002 Write `specs/1658-nextest-trial/measurements/count.py` (stdlib, run with `python3 -I -B`). It reads one log and prints passed, failed and ignored totals per package, for either runner's output format, plus doctest totals from `cargo test --doc` logs. It also prints each binary's time: the `finished in` value for cargo-test logs, and the sum of per-test durations for nextest logs (used by T007). It's a positive control on a known log. The `nxprobe` crate from research.md has known counts of 2 passed, 1 skipped and 1 doctest, and the script must reproduce them.
+- [x] T002 Write `specs/1658-nextest-trial/measurements/count.py` (stdlib, run with `python3 -I -B`). It reads one log and prints passed, failed and ignored totals per package, for either runner's output format, plus doctest totals from `cargo test --doc` logs. It also prints each binary's time: the `finished in` value for cargo-test logs, and the sum of per-test durations for nextest logs (used by T007). It's a positive control on a known log. The `nxprobe` crate from research.md has known counts of 2 passed, 1 skipped and 1 doctest, and the script must reproduce them.
 
 ## Phase 3: User Story 1, measure before adopting (P1)
 
@@ -23,13 +23,13 @@
 
 **Independent test**: `runs.tsv` has 3 rows per runner. Counts match, or `isolation.md` explains each difference.
 
-- [ ] T003 [US1] Baseline: run `cargo test --workspace --no-fail-fast` 3 times on the branch tree, which matches `main` for code, after one warm build. Save each log to `measurements/cargo-test-<n>.log`, and record wall time, per-binary summed time and counts in `runs.tsv`. Run `cargo test --workspace --doc` once and record the doctest count.
-- [ ] T016a [US1] Before `pre-pr.sh` changes: copy it to `measurements/pre-pr.before.sh`, then time it 3 times through `gate.sh` with the old `--expect`. Record the times in `runs.tsv` (the SC-003 before half).
-- [ ] T004 [US1] Run `cargo nextest run --workspace --no-fail-fast --color never` 3 times on the same tree. Save the logs to `measurements/nextest-<n>.log` and the rows to `runs.tsv`. Summed time comes from nextest's per-test durations.
-- [ ] T005 [US1] Compare counts with `count.py` across T003 and T004 (FR-011). For every difference, and every test that failed under only one runner in any run, reproduce it with the quickstart commands. Then write an entry in `measurements/isolation.md`: test, runner, command, cause.
-- [ ] T006 [US1] Resolve each T005 entry. Fix the cause in the test file where possible. Otherwise add a named test group in `.config/nextest.toml`, with a comment pointing to the `isolation.md` entry. Re-run T004's command once and confirm the entry is resolved (SC-005).
-- [ ] T007 [P] [US1] Lazy-state check (FR-007). List the 16 test files that use `OnceLock`, `LazyLock` or `lazy_static` under `waybill-cli/tests` in `measurements/lazy-state.md`. Give each its binary's summed time under both runners, taken from the T003 and T004 logs, and flag any whose nextest sum exceeds the `cargo test` sum by more than the larger of the two runners' max−min spread.
-- [ ] T008 [US1] Adoption decision. In `measurements/decision.md`, compare median wall times (SC-001). If nextest is not faster, stop here and report. Otherwise continue.
+- [x] T003 [US1] Baseline: run `cargo test --workspace --no-fail-fast` 3 times on the branch tree, which matches `main` for code, after one warm build. Save each log to `measurements/cargo-test-<n>.log`, and record wall time, per-binary summed time and counts in `runs.tsv`. Run `cargo test --workspace --doc` once and record the doctest count.
+- [x] T016a [US1] Before `pre-pr.sh` changes: copy it to `measurements/pre-pr.before.sh`, then time it 3 times through `gate.sh` with the old `--expect`. Record the times in `runs.tsv` (the SC-003 before half).
+- [x] T004 [US1] Run `cargo nextest run --workspace --no-fail-fast --color never` 3 times on the same tree. Save the logs to `measurements/nextest-<n>.log` and the rows to `runs.tsv`. Summed time comes from nextest's per-test durations.
+- [x] T005 [US1] Compare counts with `count.py` across T003 and T004 (FR-011). For every difference, and every test that failed under only one runner in any run, reproduce it with the quickstart commands. Then write an entry in `measurements/isolation.md`: test, runner, command, cause.
+- [x] T006 [US1] Resolve each T005 entry. Fix the cause in the test file where possible. Otherwise add a named test group in `.config/nextest.toml`, with a comment pointing to the `isolation.md` entry. Re-run T004's command once and confirm the entry is resolved (SC-005).
+- [x] T007 [P] [US1] Lazy-state check (FR-007). List the 16 test files that use `OnceLock`, `LazyLock` or `lazy_static` under `waybill-cli/tests` in `measurements/lazy-state.md`. Give each its binary's summed time under both runners, taken from the T003 and T004 logs, and flag any whose nextest sum exceeds the `cargo test` sum by more than the larger of the two runners' max−min spread.
+- [x] T008 [US1] Adoption decision. In `measurements/decision.md`, compare median wall times (SC-001). If nextest is not faster, stop here and report. Otherwise continue.
 
 **Checkpoint**: US1 proves equal counts and a faster median, or the trial stops.
 
