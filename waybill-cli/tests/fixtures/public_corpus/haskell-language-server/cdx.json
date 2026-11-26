@@ -27443,7 +27443,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 2 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi; manifest-unread: 1 haskell manifest(s) found but not read"
+        "value": "orphaned-components-detected: 2 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -27456,10 +27456,6 @@
       {
         "name": "waybill:cabal-entries-skipped",
         "value": "0"
-      },
-      {
-        "name": "waybill:hpack-read-outcome",
-        "value": "{\"generated-cabal-suppressed\":[],\"manifests-partial\":[],\"manifests-read\":[],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/ac3746a76d11c911/1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80/repo/plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/package.yaml\"],\"manifests-unread\":[{\"detail\":\"no `name:` field; not an hpack package manifest\",\"file\":\"/home/runner/.cache/waybill/corpus/ac3746a76d11c911/1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80/repo/plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/package.yaml\",\"reason\":\"not-a-manifest\"}]}"
       }
     ],
     "supplier": {

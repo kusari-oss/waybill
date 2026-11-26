@@ -84,7 +84,7 @@
 
   Check for `GATE_RESULT=pass` and the summary line.
 - [ ] T013 Open the PR (Refs #1685). Enumerate every CI job's conclusion.
-- [ ] T014 Regenerate the corpus goldens through the `public-corpus.yml` dispatch on the PR branch. Read the diff, normalized and sorted, against T011's table: only `hpack-ogmios*` should change, by `json-via-show`. Commit the goldens.
+- [X] T014 Regenerate the corpus goldens through the `public-corpus.yml` dispatch on the PR branch. Read the diff, normalized and sorted, against T011's table: only `hpack-ogmios*` should change, by `json-via-show`. Commit the goldens.
 - [X] T015 Update `docs/` or the module comment at #1032's block to say that the rule covers `package.yaml` via the stand-in. Add a "Recent Changes" line to CLAUDE.md.
 
 ## Dependencies

@@ -40,3 +40,12 @@ Decision (maintainer): membership is the union of `cabal.project` and a `stack.y
 | hpack-ogmios, and its variant | 103 → 102 | `json-via-show@2.0.0` removed; C200 seen/read 8 → 7, includes-resolved 16 → 14 | the fix: `server/cabal.project` doesn't list `modules/json-via-show`, and there's no stack file |
 
 Unexplained differences: 0.
+
+## Corpus goldens (T014)
+
+Run 45848548209 regenerated the goldens on this branch (`public-corpus.yml`, `regen_goldens=true`, scanned commit `4fe0d064`). It reports 15 golden files changed. They are the five targets in the table above, each in CycloneDX, SPDX 2.3 and SPDX 3. No other target changed, and no golden file was added or removed.
+
+The sorted `purl` difference and the C200 counts in each changed CycloneDX golden match the table, with one more line:
+- **hs-temporal-sdk also loses the versionless `pkg:hackage/filepath`.** In the committed golden its only dependent is `tix-to-markdown@2025.10.1.0`.
+- **Locally it stayed.** `measure.sh` doesn't set `WAYBILL_NIXPKGS_CACHE` the way the harness does, so the local scans read a local nixpkgs cache. That cache resolved a transitive set (`conduit@1.3.6` and 12 others) that also depends on `filepath`.
+- **The comparison still holds.** `main` and the branch were measured in the same environment, so the comparison between them is valid, but the absolute counts above aren't the goldens' counts.
