@@ -12,11 +12,11 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `specs/1659-slow-test-inputs/measurements/` with a `runs.tsv` header (test, phase, run, seconds), and do a warm build with `cargo nextest run --workspace --no-run`.
+- [x] T001 Create `specs/1659-slow-test-inputs/measurements/` with a `runs.tsv` header (test, phase, run, seconds), and do a warm build with `cargo nextest run --workspace --no-run`.
 
 ## Phase 2: Foundational
 
-- [ ] T002 Baseline. Run each affected test alone 3 times with `cargo nextest run -p waybill --color never -E 'test(=NAME)'`, and record nextest's per-test seconds in `runs.tsv` as phase `before`. The tests:
+- [x] T002 Baseline. Run each affected test alone 3 times with `cargo nextest run -p waybill --color never -E 'test(=NAME)'`, and record nextest's per-test seconds in `runs.tsv` as phase `before`. The tests:
   - `sbom_edit_filter::i1454_an_edit_that_drops_components_drops_the_openvex_reference`
   - `closure_runtime_scope::us4_drop_scope_excluded_yields_valid_runtime_document`
   - `cpe_binary_id::mikebom_self_scan_emits_no_spurious_openssl_cpe`
@@ -30,16 +30,16 @@
 
 **Independent test**: `us4` passes. The R2 mutation makes it fail. i1454 passes with no `spdx3-validate` call.
 
-- [ ] T003 [US1] In `waybill-cli/tests/closure_runtime_scope.rs`, inside `us4_drop_scope_excluded_yields_valid_runtime_document`'s loop, add these for the `spdx23` and `spdx3` labels:
+- [x] T003 [US1] In `waybill-cli/tests/closure_runtime_scope.rs`, inside `us4_drop_scope_excluded_yields_valid_runtime_document`'s loop, add these for the `spdx23` and `spdx3` labels:
   - **Control:** before the edit, the input carries exactly one OpenVEX sidecar reference. Use a format-aware helper that reads `externalDocumentRefs[].spdxDocument` ending in `.openvex.json` (SPDX 2.3), or the `SpdxDocument`'s `externalRef[]` with `externalRefType == "vulnerabilityExploitabilityAssessment"` (SPDX 3). Move `openvex_refs` from `sbom_edit_filter.rs:502` into `waybill-cli/tests/sbom_edit_support/mod.rs` as `pub fn`, and use it from both files. Both already include that module; don't copy it.
   - **After the edit:** the output carries none, and `e.stderr` contains `OpenVEX sidecar reference removed`.
   - **Doc comment:** add one sentence, that the edit removes the SPDX document's *reference* to the sidecar (#1454), while the sidecar file itself is not edited.
-- [ ] T004 [US1] Mutation R2. In `waybill-cli/src/edit/spdx3.rs` `remove_openvex_references`, delete the `if refs.is_empty() { … obj.remove("externalRef") … }` block with an exact replacement, then run `us4` and record which check fails (schema or `spdx3-validate`) in `measurements/mutations.md`.
+- [x] T004 [US1] Mutation R2. In `waybill-cli/src/edit/spdx3.rs` `remove_openvex_references`, delete the `if refs.is_empty() { … obj.remove("externalRef") … }` block with an exact replacement, then run `us4` and record which check fails (schema or `spdx3-validate`) in `measurements/mutations.md`.
   - **If it passes**, the empty array is conformant. Try leaving a locator-less `ExternalRef` instead (retain the entry but strip its `locator`), and record that.
   - **Revert** with `cp`, check with `cmp`, and rebuild.
   - **Record which check fired.** If it was the JSON schema check, that shows the schema check catches it, not `spdx3-validate`. So also run a mutation that passes the JSON schema but should fail SHACL: for example, leave the OpenVEX `ExternalRef` in place but change its `externalRefType` to a value outside the SPDX 3 vocabulary. Confirm the schema check passes and `spdx3-validate` fails. If no such mutation can be found, record that the moat validator run guarded nothing the schema check didn't already catch.
   - **Also record** a test-side mutation: delete T003's "carries the reference" assertion, inject an input without the reference, and confirm the control fails.
-- [ ] T005 [US1] In `waybill-cli/tests/sbom_edit_filter.rs` i1454, remove the `if file == "spdx-3.json" { spdx3_validate_or_skip(&e.path); }` block. Leave a one-line comment pointing to `us4` as the conformance check for a reference-removing edit. If `spdx3_validate_or_skip`'s import becomes unused in this file, check it: lines 47 and 294 still use it, so it should stay used.
+- [x] T005 [US1] In `waybill-cli/tests/sbom_edit_filter.rs` i1454, remove the `if file == "spdx-3.json" { spdx3_validate_or_skip(&e.path); }` block. Leave a one-line comment pointing to `us4` as the conformance check for a reference-removing edit. If `spdx3_validate_or_skip`'s import becomes unused in this file, check it: lines 47 and 294 still use it, so it should stay used.
 
 **Checkpoint**: US1 is done when `us4` and i1454 pass and T004's mutation is recorded as failing.
 

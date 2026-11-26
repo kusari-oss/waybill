@@ -1,0 +1,19 @@
+test	phase	run	seconds
+sbom_edit_filter::i1454_an_edit_that_drops_components_drops_the_openvex_reference	before	1	33.785	PASS
+sbom_edit_filter::i1454_an_edit_that_drops_components_drops_the_openvex_reference	before	2	34.268	PASS
+sbom_edit_filter::i1454_an_edit_that_drops_components_drops_the_openvex_reference	before	3	33.394	PASS
+closure_runtime_scope::us4_drop_scope_excluded_yields_valid_runtime_document	before	1	1.838	PASS
+closure_runtime_scope::us4_drop_scope_excluded_yields_valid_runtime_document	before	2	1.807	PASS
+closure_runtime_scope::us4_drop_scope_excluded_yields_valid_runtime_document	before	3	1.778	PASS
+cpe_binary_id::mikebom_self_scan_emits_no_spurious_openssl_cpe	before	1	4.909	PASS
+cpe_binary_id::mikebom_self_scan_emits_no_spurious_openssl_cpe	before	2	4.822	PASS
+cpe_binary_id::mikebom_self_scan_emits_no_spurious_openssl_cpe	before	3	4.801	PASS
+binary_id_enrich::mikebom_itself_does_not_emit_spurious_version_strings	before	1	4.964	PASS
+binary_id_enrich::mikebom_itself_does_not_emit_spurious_version_strings	before	2	4.889	PASS
+binary_id_enrich::mikebom_itself_does_not_emit_spurious_version_strings	before	3	4.829	PASS
+binary_id_enrich::mikebom_itself_does_not_emit_spurious_symbol_fingerprints	before	1	4.828	PASS
+binary_id_enrich::mikebom_itself_does_not_emit_spurious_symbol_fingerprints	before	2	4.823	PASS
+binary_id_enrich::mikebom_itself_does_not_emit_spurious_symbol_fingerprints	before	3	4.829	PASS
+binary_build_provenance::mikebom_self_scan_emits_build_provenance_properties	before	1	4.822	PASS
+binary_build_provenance::mikebom_self_scan_emits_build_provenance_properties	before	2	4.853	PASS
+binary_build_provenance::mikebom_self_scan_emits_build_provenance_properties	before	3	4.794	PASS
