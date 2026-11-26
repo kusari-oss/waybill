@@ -16,10 +16,9 @@ fn fixture() -> PathBuf {
 
 fn scan_fixture(include_vendored: bool) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_waybill");
-    let out_path = tempfile::NamedTempFile::new()
-        .expect("tempfile")
-        .path()
-        .to_path_buf();
+    // Held until the output is read: a dropped temp file frees its name (#1727).
+    let out_path_dir = tempfile::tempdir().expect("tempdir");
+    let out_path = out_path_dir.path().join("out");
     let mut cmd = Command::new(bin);
     if include_vendored {
         cmd.env("WAYBILL_INCLUDE_VENDORED", "1");

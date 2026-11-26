@@ -10,7 +10,7 @@
 - `TempDir::new(` and `TempDir::new_in(`
 
 **Result.** 24 statements, all in `waybill-cli/tests`, none in production code:
-- **23 are the dropped shape** `NamedTempFile::new().expect|unwrap(…).path().to_path_buf()`, across 22 files. `scan_image.rs` has 2.
+- **23 are the dropped shape** `NamedTempFile::new().expect|unwrap(…).path().to_path_buf()`, across 21 files. `scan_image.rs` and `scan_npm.rs` have 2 each (first written as 22 files, a miscount).
 - **1 is a false hit:** `policy_layout.rs:255`, where `.path()` is the argument passed to `new_in(...)`. Its result is bound to `f` and held.
 
 **#1727's list came from a different method:** a grep for `NamedTempFile::new()` with 3 lines of context, then a match on `.path()` and `to_path_buf`. That caught files that bind the guard and *then* take its path on the next line, which is the held shape. `warm_go_cache.rs:51-52`, for example, is `let tmp = …new()…; let out_path = tmp.path().to_path_buf();`.

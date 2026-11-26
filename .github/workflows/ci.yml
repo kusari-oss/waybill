@@ -154,6 +154,11 @@ jobs:
         # Body lives in the script so scripts/pre-pr.sh runs the same check.
         run: bash scripts/check-walker-audit.sh
 
+      # Spec 1660 (#1727): reject a temp file or directory dropped in the
+      # statement that takes its path. Same script as scripts/pre-pr.sh.
+      - name: Held temp-path check
+        run: python3 -I -B scripts/check-held-temp-paths.py
+
       - name: "m214 rename-completeness grep gate (SC-001)"
         shell: bash
         run: |

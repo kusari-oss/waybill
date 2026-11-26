@@ -44,14 +44,14 @@
 
 **Independent test**: `--self-test` passes, and the check lists all 23 sites on the unfixed tree.
 
-- [ ] T005 [US3] Write `scripts/check-held-temp-paths.py` per `contracts/check.md`:
+- [x] T005 [US3] Write `scripts/check-held-temp-paths.py` per `contracts/check.md`:
   - **Scan:** every `*.rs` file in every workspace member (`waybill-cli/`, `waybill-common/`, `waybill-ebpf/`, `xtask/`), excluding `target/`.
   - **Constructors:** `NamedTempFile::new(`, `NamedTempFile::new_in(`, `Builder::new()` followed by `.tempfile(`/`.tempdir(`, `tempfile::tempdir(`, bare `tempdir(` and `TempDir::new(`/`TempDir::new_in(`.
   - **The statement:** from the constructor's start to the first `;` at bracket depth 0, skipping string literals.
   - **The chain:** parse the constructor's own parenthesised arguments, then look at what is chained onto it. The statement is flagged when that chain reaches `.path()` and the statement isn't of the form `let <ident> = <ctor>…;` with nothing after `.unwrap()`/`.expect(...)`/`?`.
   - **Allowed:** `.keep()`, `.persist(`, and a `// held-temp-path: <reason>` marker on the preceding line.
   - **`--self-test`:** built-in must-flag snippets (the tests' exact shape, a `TempDir::new().unwrap().path().join("x")` variant and a `Builder` variant) and must-pass snippets (bound and then used, `new_in(tmp.path())` bound, `.keep()`, the marker).
-- [ ] T006 [US3] Positive control. On the unfixed tree, run the check and save its output to `measurements/check-before.txt`. It must exit 1 and list exactly the 23 sites in research R1. Any difference is investigated and explained in `check-controls.md` before going on. Also record the `--self-test` output there.
+- [x] T006 [US3] Positive control. On the unfixed tree, run the check and save its output to `measurements/check-before.txt`. It must exit 1 and list exactly the 23 sites in research R1. Any difference is investigated and explained in `check-controls.md` before going on. Also record the `--self-test` output there.
 
 ## Phase 4: User Story 2, every output path stays reserved (P1)
 
@@ -59,8 +59,8 @@
 
 **Independent test**: the check exits 0, and the suite passes 3 times under nextest.
 
-- [ ] T007 [US2] Review all 23 sites, plus anything T006 found, by hand. Write `measurements/sites.md` with a table: file, line, helper, shape, verdict (`dropped` or `held`), reason, and the output-name extension, if the helper or scan cares about it (check whether `--format` or the file name decides the format).
-- [ ] T008 [US2] Fix every `dropped` site per research R4:
+- [x] T007 [US2] Review all 23 sites, plus anything T006 found, by hand. Write `measurements/sites.md` with a table: file, line, helper, shape, verdict (`dropped` or `held`), reason, and the output-name extension, if the helper or scan cares about it (check whether `--format` or the file name decides the format).
+- [x] T008 [US2] Fix every `dropped` site per research R4:
 
   ```rust
   let out_dir = tempfile::tempdir().expect("tempdir");
@@ -68,12 +68,12 @@
   ```
 
   `out_dir` must be bound and live until after the output is read. Keep the original extension where `sites.md` says it matters, and use `out.json` otherwise. Don't change any assertion. Edit each file with an exact replacement and check the diff per file.
-- [ ] T009 [US2] Run the check: it must exit 0. Then run `cargo clippy --workspace --all-targets -- -D warnings`, because unused imports such as `NamedTempFile` will need removing, and fix whatever it names.
-- [ ] T010 [US2] Run every touched binary once with `cargo nextest run -p waybill --test <bin>` for each file, and confirm the pass counts are unchanged from `main`. Get `main`'s counts from `cargo nextest list` before and after, by name.
+- [x] T009 [US2] Run the check: it must exit 0. Then run `cargo clippy --workspace --all-targets -- -D warnings`, because unused imports such as `NamedTempFile` will need removing, and fix whatever it names.
+- [x] T010 [US2] Run every touched binary once with `cargo nextest run -p waybill --test <bin>` for each file, and confirm the pass counts are unchanged from `main`. Get `main`'s counts from `cargo nextest list` before and after, by name.
 
 ## Phase 5: Wire the check in (US3, continued)
 
-- [ ] T011 [US3] Add `python3 -I -B scripts/check-held-temp-paths.py` to `scripts/pre-pr.sh`'s steps, after `check-walker-audit.sh`, and extend the comment above the steps that explains why the fast checks run first. Add a CI step beside the walker-audit step in `.github/workflows/ci.yml` (Linux lint job), named `Held temp-path check`, running the same command. Then run `--self-test` and the check from the repository root once more.
+- [x] T011 [US3] Add `python3 -I -B scripts/check-held-temp-paths.py` to `scripts/pre-pr.sh`'s steps, after `check-walker-audit.sh`, and extend the comment above the steps that explains why the fast checks run first. Add a CI step beside the walker-audit step in `.github/workflows/ci.yml` (Linux lint job), named `Held temp-path check`, running the same command. Then run `--self-test` and the check from the repository root once more.
 
 ## Phase 6: Verify and ship
 

@@ -43,15 +43,19 @@ fn output_path_hint() -> PathBuf {
 thread_local! {
     static LAST_OUT_PATH: std::cell::RefCell<Option<PathBuf>> =
         const { std::cell::RefCell::new(None) };
+    // The directory holding LAST_OUT_PATH, kept alive until the next scan
+    // replaces it, so the path stays reserved while it is read (#1727).
+    static LAST_OUT_DIR: std::cell::RefCell<Option<tempfile::TempDir>> =
+        const { std::cell::RefCell::new(None) };
 }
 
 fn scan_raw(fixture_sub: &str, exclude_dev_test: bool) -> std::process::Output {
     let bin = env!("CARGO_BIN_EXE_waybill");
-    let out_path = tempfile::NamedTempFile::new()
-        .expect("tempfile")
-        .path()
-        .to_path_buf();
+    // Held until the output is read: a dropped temp file frees its name (#1727).
+    let out_path_dir = tempfile::tempdir().expect("tempdir");
+    let out_path = out_path_dir.path().join("out");
     LAST_OUT_PATH.with(|c| *c.borrow_mut() = Some(out_path.clone()));
+    LAST_OUT_DIR.with(|c| *c.borrow_mut() = Some(out_path_dir));
     let mut cmd = Command::new(bin);
     cmd.arg("--offline");
     if exclude_dev_test {
@@ -386,10 +390,9 @@ fn cli_local_fixture(sub: &str) -> PathBuf {
 /// JSON.
 fn scan_path(path: &Path) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_waybill");
-    let out_path = tempfile::NamedTempFile::new()
-        .expect("tempfile")
-        .path()
-        .to_path_buf();
+    // Held until the output is read: a dropped temp file frees its name (#1727).
+    let out_path_dir = tempfile::tempdir().expect("tempdir");
+    let out_path = out_path_dir.path().join("out");
     let output = Command::new(bin)
         .arg("--offline")
         .arg("sbom")

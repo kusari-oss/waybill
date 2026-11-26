@@ -29,10 +29,9 @@ fn should_run() -> Option<PathBuf> {
 
 fn scan(path: &std::path::Path) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_waybill");
-    let out = tempfile::NamedTempFile::new()
-        .expect("tempfile")
-        .path()
-        .to_path_buf();
+    // Held until the output is read: a dropped temp file frees its name (#1727).
+    let out_dir = tempfile::tempdir().expect("tempdir");
+    let out = out_dir.path().join("out");
     let status = Command::new(bin)
         .arg("--offline")
         .arg("sbom")
