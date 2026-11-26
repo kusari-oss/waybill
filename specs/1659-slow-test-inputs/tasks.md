@@ -31,12 +31,13 @@
 **Independent test**: `us4` passes. The R2 mutation makes it fail. i1454 passes with no `spdx3-validate` call.
 
 - [ ] T003 [US1] In `waybill-cli/tests/closure_runtime_scope.rs`, inside `us4_drop_scope_excluded_yields_valid_runtime_document`'s loop, add these for the `spdx23` and `spdx3` labels:
-  - **Control:** before the edit, the input carries exactly one OpenVEX sidecar reference. Use a format-aware helper that reads `externalDocumentRefs[].spdxDocument` ending in `.openvex.json` (SPDX 2.3), or the `SpdxDocument`'s `externalRef[]` with `externalRefType == "vulnerabilityExploitabilityAssessment"` (SPDX 3). This is the same logic as `sbom_edit_filter.rs:502` `openvex_refs`, copied locally, because the two files don't share a module.
+  - **Control:** before the edit, the input carries exactly one OpenVEX sidecar reference. Use a format-aware helper that reads `externalDocumentRefs[].spdxDocument` ending in `.openvex.json` (SPDX 2.3), or the `SpdxDocument`'s `externalRef[]` with `externalRefType == "vulnerabilityExploitabilityAssessment"` (SPDX 3). Move `openvex_refs` from `sbom_edit_filter.rs:502` into `waybill-cli/tests/sbom_edit_support/mod.rs` as `pub fn`, and use it from both files. Both already include that module; don't copy it.
   - **After the edit:** the output carries none, and `e.stderr` contains `OpenVEX sidecar reference removed`.
   - **Doc comment:** add one sentence, that the edit removes the SPDX document's *reference* to the sidecar (#1454), while the sidecar file itself is not edited.
 - [ ] T004 [US1] Mutation R2. In `waybill-cli/src/edit/spdx3.rs` `remove_openvex_references`, delete the `if refs.is_empty() { … obj.remove("externalRef") … }` block with an exact replacement, then run `us4` and record which check fails (schema or `spdx3-validate`) in `measurements/mutations.md`.
   - **If it passes**, the empty array is conformant. Try leaving a locator-less `ExternalRef` instead (retain the entry but strip its `locator`), and record that.
   - **Revert** with `cp`, check with `cmp`, and rebuild.
+  - **Record which check fired.** If it was the JSON schema check, that shows the schema check catches it, not `spdx3-validate`. So also run a mutation that passes the JSON schema but should fail SHACL: for example, leave the OpenVEX `ExternalRef` in place but change its `externalRefType` to a value outside the SPDX 3 vocabulary. Confirm the schema check passes and `spdx3-validate` fails. If no such mutation can be found, record that the moat validator run guarded nothing the schema check didn't already catch.
   - **Also record** a test-side mutation: delete T003's "carries the reference" assertion, inject an input without the reference, and confirm the control fails.
 - [ ] T005 [US1] In `waybill-cli/tests/sbom_edit_filter.rs` i1454, remove the `if file == "spdx-3.json" { spdx3_validate_or_skip(&e.path); }` block. Leave a one-line comment pointing to `us4` as the conformance check for a reference-removing edit. If `spdx3_validate_or_skip`'s import becomes unused in this file, check it: lines 47 and 294 still use it, so it should stay used.
 
@@ -59,7 +60,7 @@
 - [ ] T007 [US2] Mutations R4, recorded in `measurements/mutations.md`. In the test, temporarily insert defects into the parsed SBOM before evaluation, and run once per mutation:
   - **One per guard:** a CPE `cpe:2.3:a:openssl:openssl:…` on any component; a component with PURL `pkg:generic/zlib@1.2.13`; a component with PURL `pkg:generic/openssl`; the format-specific provenance property removed from the file-level component. Each must fail and name its guard.
   - **Two together:** must give one failure naming both.
-  - **Product side:** in the CPE table source (`generate::cpe`), add an entry that matches a string present in the waybill binary, so the real scan emits `openssl:openssl`. The test must fail. Pick the string by grepping the debug binary.
+  - **Product side:** first read how a CPE reaches a component in a binary scan, and record the path in `mutations.md`. Then pick the mutation on that path that makes the real scan of waybill emit `openssl:openssl`: for example, loosening the `openssl` version-string anchor so it matches a string in the debug binary, found with `strings`. The test must fail. If no single change in waybill can produce it, record why, and rely on the injected-defect mutations for this guard.
   - **Revert** everything with `cp`, check with `cmp`, and rebuild.
 - [ ] T008 [US2] Delete the four original tests:
   - `cpe_binary_id.rs`: `mikebom_self_scan_emits_no_spurious_openssl_cpe`;

@@ -26,7 +26,7 @@
 
 **Candidate mutation:** in `edit/spdx3.rs::remove_openvex_references`, drop the `if refs.is_empty() { obj.remove("externalRef") }` block, so the edit leaves `"externalRef": []`.
 
-**Prediction, not yet observed:** `us4` fails, either at the JSON schema check or at `spdx3-validate`. Either way the check that now carries the guard catches it, and the task records which one fired. If neither fires, that removal is not a conformance defect, and the task must find one that is (for example, a locator-less `ExternalRef` left behind) before claiming FR-007.
+**Prediction, not yet observed:** `us4` fails, either at the JSON schema check or at `spdx3-validate`. If it's the schema check, a second mutation must show `spdx3-validate` failing while the schema check passes (tasks.md T004), because that is what the moat validator run would add over the schema check. Either way the check that now carries the guard catches it, and the task records which one fired. If neither fires, that removal is not a conformance defect, and the task must find one that is (for example, a locator-less `ExternalRef` left behind) before claiming FR-007.
 
 ## R3. #1716: one scan, four guards
 

@@ -74,7 +74,7 @@ The four self-scan guards run on one scan of the debug binary, not four.
 
 ### Edge Cases
 
-- **If no small document carrying an OpenVEX reference exists**, research must say so. The P1 input is then built for the test from the stub closure path that `us4` uses. It must not be a hand-edited copy of a golden.
+- **If no small document carrying an OpenVEX reference exists**, research must say so. (Settled by research R1: `us4`'s 40 KB SPDX 3 input carries one.) The P1 input is then built for the test from the stub closure path that `us4` uses. It must not be a hand-edited copy of a golden.
 - **Running the combined test on its own** (`-E 'test(=…)'`) gives the same result as running it in the suite.
 - **The four original test names disappear.** CI history and issue references to them are noted in the PR.
 - **The provenance guard branches on host format** (ELF, Mach-O, PE). The combined test keeps every branch.
