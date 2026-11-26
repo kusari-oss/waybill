@@ -2,9 +2,10 @@
 # Pre-PR verification gate. Runs the two checks that CI runs in
 # .github/workflows/ci.yml — clippy with --all-targets (so the
 # `clippy::unwrap_used` deny on the cli crate root applies inside
-# `#[cfg(test)]` modules too) and the workspace test suite.
+# `#[cfg(test)]` modules too), the workspace test suite under cargo-nextest,
+# and the doctests.
 #
-# Per CLAUDE.md: BOTH must pass locally before any PR. A passing
+# Per CLAUDE.md: ALL must pass locally before any PR. A passing
 # `cargo test -p waybill` alone is insufficient — clippy is not run,
 # and `--all-targets` enforces lints on tests.
 #
@@ -15,7 +16,7 @@
 #
 #   WAYBILL_PREPR_EBPF=1 ./scripts/pre-pr.sh
 #       Opt-in eBPF lane — matches the `lint-and-test-ebpf` CI job.
-#       Adds `--features ebpf-tracing` to both clippy and test.
+#       Adds `--features ebpf-tracing` to clippy and both test steps.
 #       Linux only (the optional aya/aya-log/libc deps are also
 #       target-gated). Requires `cargo run -p xtask -- ebpf` to have
 #       been run at least once if any test reaches into the kernel
@@ -49,8 +50,21 @@ steps=(
     "python3 scripts/check-homoglyphs.py"
     "bash scripts/check-walker-audit.sh"
     "cargo clippy --workspace --all-targets ${feature_args[*]:-} -- -D warnings"
-    "cargo test --workspace --no-fail-fast ${feature_args[*]:-}"
+    "cargo nextest run --workspace --no-fail-fast --color never ${feature_args[*]:-}"
+    "cargo test --workspace --doc ${feature_args[*]:-}"
 )
+
+# Tests run under cargo-nextest (spec 1658, constitution 4.1.0): it runs test
+# binaries in parallel, where `cargo test` ran them one at a time. Nextest does
+# not run doctests, hence the separate `--doc` step. `--color never` keeps the
+# `Summary` line free of escape codes, which CI forces on through
+# CARGO_TERM_COLOR=always and which the gate's --expect could not match.
+# There is deliberately no fallback to `cargo test`: a gate that silently runs
+# a different command is a check that did not run.
+if ! cargo nextest --version >/dev/null 2>&1; then
+    echo "pre-pr.sh: cargo-nextest is required: brew install cargo-nextest, or cargo install cargo-nextest --locked" >&2
+    exit 1
+fi
 
 for cmd in "${steps[@]}"; do
     printf '\n>>> %s\n' "$cmd"

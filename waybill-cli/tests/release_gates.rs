@@ -298,6 +298,197 @@ fn an_expected_signal_is_not_satisfied_by_the_gates_own_footer() {
 }
 
 // ---------------------------------------------------------------------------
+// The nextest positive signal (spec 1658, constitution 4.1.0)
+// ---------------------------------------------------------------------------
+
+/// The summary `--expect` from CLAUDE.md and `contracts/gate.md` C2. Kept
+/// byte-identical to the documented one by
+/// `the_documented_gate_invocation_uses_this_summary_pattern`.
+const NEXTEST_SUMMARY: &str =
+    r"^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed(, [0-9]+ skipped)?$";
+
+const PASSING_LIB: &str = "#[test] fn a() {}\n#[test] fn b() {}\n#[test] #[ignore] fn c() {}\n";
+
+/// A scratch crate holding `lib_rs`, outside the workspace, with its own
+/// target directory.
+fn scratch_crate(lib_rs: &str) -> tempfile::TempDir {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::create_dir(dir.path().join("src")).expect("mkdir src");
+    std::fs::write(
+        dir.path().join("Cargo.toml"),
+        "[package]\nname = \"gate-probe\"\nversion = \"0.0.0\"\nedition = \"2021\"\n\n[workspace]\n",
+    )
+    .expect("write Cargo.toml");
+    std::fs::write(dir.path().join("src/lib.rs"), lib_rs).expect("write lib.rs");
+    dir
+}
+
+/// Run `gate.sh --expect NEXTEST_SUMMARY` around nextest on a scratch crate.
+///
+/// The command ends in `; exit 0`, so its exit status says nothing: only the
+/// summary expectation can fail the gate. That is the case the expectation
+/// exists for (a caller or wrapper that loses the status), and it is what
+/// makes each test below able to fail when the expectation is removed.
+fn nextest_gate(lib_rs: &str, nextest_args: &str, env: &[(&str, &str)], expect: bool) -> Gate {
+    let krate = scratch_crate(lib_rs);
+    let logs = tempfile::tempdir().expect("tempdir");
+    let mut cmd = Command::new(repo_root().join("scripts/gate.sh"));
+    if expect {
+        cmd.args(["--expect", NEXTEST_SUMMARY]);
+    }
+    cmd.arg("nextest-probe")
+        .arg("--")
+        .arg("sh")
+        .arg("-c")
+        .arg(format!(
+            "cargo nextest run --no-fail-fast --color never {nextest_args}; exit 0"
+        ))
+        .current_dir(krate.path())
+        .env("GATE_LOG_DIR", logs.path())
+        .env("CARGO_TARGET_DIR", krate.path().join("target"));
+    // An outer nextest run exports its own settings; the inner run must not
+    // inherit them.
+    for (k, _) in std::env::vars() {
+        if k.starts_with("NEXTEST_") {
+            cmd.env_remove(k);
+        }
+    }
+    for (k, v) in env {
+        cmd.env(k, v);
+    }
+    let out = cmd
+        .output()
+        .expect("gate.sh is executable, and cargo-nextest is installed (CLAUDE.md, pre-PR)");
+    let log = std::fs::read_to_string(logs.path().join("nextest-probe.log")).unwrap_or_default();
+    Gate { out, log }
+}
+
+fn nextest_installed() {
+    let ok = Command::new("cargo")
+        .args(["nextest", "--version"])
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+    assert!(
+        ok,
+        "cargo-nextest is required for these gate tests and for pre-pr.sh: \
+         brew install cargo-nextest, or cargo install cargo-nextest --locked"
+    );
+}
+
+#[test]
+fn a_passing_nextest_run_passes_the_summary_gate() {
+    nextest_installed();
+    let g = nextest_gate(PASSING_LIB, "", &[], true);
+    assert!(g.log.contains("GATE_RESULT=pass"), "{}", g.log);
+    assert!(
+        g.log.contains("2 tests run: 2 passed, 1 skipped"),
+        "the summary the pattern matched: {}",
+        g.log
+    );
+}
+
+#[test]
+fn a_failing_test_fails_the_summary_gate_even_with_exit_zero() {
+    nextest_installed();
+    let lib = "#[test] fn a() {}\n#[test] fn b() { panic!(\"boom\") }\n";
+    let g = nextest_gate(lib, "", &[], true);
+    assert!(g.log.contains("GATE_EXIT=0"), "the status was hidden: {}", g.log);
+    assert!(g.log.contains("GATE_RESULT=fail"), "{}", g.log);
+    assert!(
+        g.log.contains("2 tests run: 1 passed, 1 failed"),
+        "no-fail-fast: both tests ran: {}",
+        g.log
+    );
+}
+
+#[test]
+fn a_build_that_does_not_compile_fails_the_summary_gate() {
+    nextest_installed();
+    let g = nextest_gate("#[test] fn a() { undefined_name }\n", "", &[], true);
+    assert!(g.log.contains("GATE_RESULT=fail"), "{}", g.log);
+    assert!(
+        !g.log.lines().any(|l| l.trim_start().starts_with("Summary [")),
+        "a build that never compiled prints no summary: {}",
+        g.log
+    );
+}
+
+#[test]
+fn a_run_of_zero_tests_fails_the_summary_gate() {
+    nextest_installed();
+    // `--no-tests=pass` makes nextest itself exit 0 on an empty run, so the
+    // `[1-9]` in the pattern is the only thing standing between "no tests ran"
+    // and a pass.
+    let g = nextest_gate(PASSING_LIB, "--no-tests=pass -E 'test(=no_such_test)'", &[], true);
+    assert!(g.log.contains("0 tests run"), "{}", g.log);
+    assert!(g.log.contains("GATE_RESULT=fail"), "{}", g.log);
+}
+
+#[test]
+fn forced_colour_does_not_break_the_summary_gate() {
+    nextest_installed();
+    // CI sets CARGO_TERM_COLOR=always (ci.yml). `--color never` must win, or
+    // escape codes inside the Summary line would fail every green run.
+    let g = nextest_gate(PASSING_LIB, "", &[("CARGO_TERM_COLOR", "always")], true);
+    assert!(g.log.contains("GATE_RESULT=pass"), "{}", g.log);
+}
+
+/// `pre-pr.sh` must refuse to run without nextest rather than fall back to
+/// `cargo test`. PATH holds only what the check needs, and CARGO_HOME points
+/// at an empty directory, because cargo also looks for subcommands in
+/// `$CARGO_HOME/bin`, where CI's install step puts nextest.
+#[test]
+fn pre_pr_refuses_to_run_without_nextest() {
+    let bin = tempfile::tempdir().expect("tempdir");
+    let cargo_home = tempfile::tempdir().expect("tempdir");
+    for tool in ["cargo", "rustc", "bash"] {
+        let found = Command::new("sh")
+            .arg("-c")
+            .arg(format!("command -v {tool}"))
+            .output()
+            .expect("sh");
+        let path = String::from_utf8_lossy(&found.stdout).trim().to_string();
+        assert!(!path.is_empty(), "{tool} must be on PATH to build this test's PATH");
+        std::os::unix::fs::symlink(&path, bin.path().join(tool)).expect("symlink");
+    }
+    let mut cmd = Command::new(repo_root().join("scripts/pre-pr.sh"));
+    cmd.current_dir(repo_root())
+        .env("PATH", bin.path())
+        .env("CARGO_HOME", cargo_home.path());
+    if let Ok(home) = std::env::var("RUSTUP_HOME") {
+        cmd.env("RUSTUP_HOME", home);
+    } else if let Ok(home) = std::env::var("HOME") {
+        cmd.env("RUSTUP_HOME", Path::new(&home).join(".rustup"));
+    }
+    let out = cmd.output().expect("pre-pr.sh is executable");
+    let err = stderr_of(&out);
+    assert!(!out.status.success(), "pre-pr.sh must fail without nextest: {err}");
+    assert!(
+        err.contains("cargo-nextest is required"),
+        "the failure must name the missing tool, not some other missing one: {err}"
+    );
+    // It must stop at the check. Without this, a check that printed the
+    // message and carried on would still fail later (no python3 on this
+    // PATH), and the two assertions above would pass.
+    assert!(
+        !stdout_of(&out).contains(">>> "),
+        "no pre-PR step may start once nextest is found missing: {}",
+        stdout_of(&out)
+    );
+}
+
+/// The pattern these tests exercise is the one CLAUDE.md tells people to run.
+#[test]
+fn the_documented_gate_invocation_uses_this_summary_pattern() {
+    let doc = std::fs::read_to_string(repo_root().join("CLAUDE.md")).expect("CLAUDE.md");
+    assert!(
+        doc.contains(&format!("--expect '{NEXTEST_SUMMARY}'")),
+        "CLAUDE.md's gate invocation must carry the tested summary pattern verbatim"
+    );
+}
+
+// ---------------------------------------------------------------------------
 // scripts/check-version-bump.py — the completeness pass
 // ---------------------------------------------------------------------------
 

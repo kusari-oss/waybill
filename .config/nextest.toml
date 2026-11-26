@@ -1,0 +1,15 @@
+# cargo-nextest configuration (spec 1658, constitution 4.1.0).
+#
+# No retries: a test that fails once is a finding, not noise to absorb
+# (feedback: don't dismiss test failures as flakes). No fail-fast: every
+# test runs, as `cargo test --no-fail-fast` did, so a red run lists all
+# failures. `pre-pr.sh` and CI also pass `--no-fail-fast` explicitly.
+#
+# Test groups (serialised tests) go here only for a test with a reproduced
+# failure under nextest, with a pointer to the finding in
+# specs/1658-nextest-trial/measurements/isolation.md. The spec-1658
+# comparison found none (3 full runs, 9,294 tests).
+
+[profile.default]
+retries = 0
+fail-fast = false

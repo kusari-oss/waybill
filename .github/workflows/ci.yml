@@ -371,8 +371,19 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      # Spec 1658 (#1718): tests run under cargo-nextest, which runs test
+      # binaries in parallel. A prebuilt, checksum-verified binary; the action
+      # is SHA-pinned and the tool version pinned.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@893d6ee8d714b6c7dfe2bcd94e5759e9a7958a7e # v2.90.10
+        with:
+          tool: cargo-nextest@0.9.152
+
       - name: Tests
-        run: cargo test --workspace --no-fail-fast
+        run: cargo nextest run --workspace --no-fail-fast --color never
+
+      - name: Doctests
+        run: cargo test --workspace --doc
 
       # Milestone 089 — production-deps vuln gate. Re-uses the trivy
       # 0.69.3 install above. Excludes test fixtures (intentionally
@@ -499,8 +510,19 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      # Spec 1658 (#1718): tests run under cargo-nextest, which runs test
+      # binaries in parallel. A prebuilt, checksum-verified binary; the action
+      # is SHA-pinned and the tool version pinned.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@893d6ee8d714b6c7dfe2bcd94e5759e9a7958a7e # v2.90.10
+        with:
+          tool: cargo-nextest@0.9.152
+
       - name: Tests
-        run: cargo test --workspace --no-fail-fast
+        run: cargo nextest run --workspace --no-fail-fast --color never
+
+      - name: Doctests
+        run: cargo test --workspace --doc
 
   # Milestone 100 — Windows-host build + test lane. Validates that the
   # user-space readers (cargo / npm / pip / gem / maven / golang) +
@@ -616,9 +638,21 @@ jobs:
       # Windows-portable rewrites. This step's per-test backlog
       # surfaces in CI logs without blocking the MVP. When #210
       # closes, drop the `continue-on-error` line.
+      # Spec 1658 (#1718): tests run under cargo-nextest, which runs test
+      # binaries in parallel. A prebuilt, checksum-verified binary; the action
+      # is SHA-pinned and the tool version pinned.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@893d6ee8d714b6c7dfe2bcd94e5759e9a7958a7e # v2.90.10
+        with:
+          tool: cargo-nextest@0.9.152
+
       - name: Tests (non-blocking, see issue #210)
         continue-on-error: true
-        run: cargo test --workspace --no-fail-fast
+        run: cargo nextest run --workspace --no-fail-fast --color never
+
+      - name: Doctests (non-blocking, see issue #210)
+        continue-on-error: true
+        run: cargo test --workspace --doc
 
   # Opt-in eBPF lane. Pays the nightly + bpf-linker + xtask ebpf cost
   # so the user-space eBPF integration (waybill-cli/src/trace/* +
@@ -726,6 +760,14 @@ jobs:
 
       - name: Clippy (--features ebpf-tracing)
         run: cargo clippy --workspace --all-targets --features ebpf-tracing -- -D warnings
+
+      # Spec 1658 (#1718): this lane keeps `cargo test` (out of scope),
+      # but release_gates.rs runs nextest on a scratch crate, so it needs it. A prebuilt, checksum-verified binary; the action
+      # is SHA-pinned and the tool version pinned.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@893d6ee8d714b6c7dfe2bcd94e5759e9a7958a7e # v2.90.10
+        with:
+          tool: cargo-nextest@0.9.152
 
       - name: Tests (--features ebpf-tracing)
         run: cargo test --workspace --no-fail-fast --features ebpf-tracing

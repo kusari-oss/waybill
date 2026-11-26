@@ -39,20 +39,20 @@
 
 **Independent test**: the `release_gates` tests pass, and each fails when its expectation is removed.
 
-- [ ] T009 [US2] Amend `.specify/memory/constitution.md` from 4.0.1 to 4.1.0, with a Sync Impact Report at the top as previous amendments have.
+- [x] T009 [US2] Amend `.specify/memory/constitution.md` from 4.0.1 to 4.1.0, with a Sync Impact Report at the top as previous amendments have.
   - **Pre-PR table:** step 2 becomes `cargo nextest run --workspace --no-fail-fast`, passing when the C2 summary line appears.
   - **New step 3:** `cargo test --workspace --doc`, passing when every `test result: ok.` line shows 0 failed.
   - **Also update** the Build & Test Commands table, and the `--no-fail-fast` rationale sentence.
-- [ ] T010 [US2] Update the "Pre-PR verification" section of `CLAUDE.md` to match T009. That covers the numbered list, the `gate.sh` invocation with both `--expect` arguments from C2, and the positive-signal paragraph, which should name the nextest summary line.
-- [ ] T011 [US2] Edit `scripts/pre-pr.sh` per contract C1:
+- [x] T010 [US2] Update the "Pre-PR verification" section of `CLAUDE.md` to match T009. That covers the numbered list, the `gate.sh` invocation with both `--expect` arguments from C2, and the positive-signal paragraph, which should name the nextest summary line.
+- [x] T011 [US2] Edit `scripts/pre-pr.sh` per contract C1:
   - **Missing-nextest check:** exits 1 with the install hint.
   - **Test step:** becomes `cargo nextest run --workspace --no-fail-fast --color never ${feature_args[*]:-}`.
   - **New doctest step:** `cargo test --workspace --doc ${feature_args[*]:-}`.
   - **Keep** `set -euo pipefail`, with no `+toolchain`.
-- [ ] T012 [US2] Create `.config/nextest.toml` (C5): default profile, `retries = 0`, `fail-fast = false`, plus any groups from T006.
-- [ ] T013 [US2] Add contract C3's six cases to `waybill-cli/tests/release_gates.rs`: pass, failing test, non-compiling, zero tests, colour forced, nextest absent. All go under the file's existing `#![cfg(unix)]`. The nextest-absent case sets `PATH` to a temporary directory containing only links to `cargo`, `rustc` and `bash`, and asserts that the message names cargo-nextest. Each builds a scratch crate in a `tempfile` directory, runs `scripts/gate.sh` with the C2 summary `--expect` around `cargo nextest run --no-fail-fast`, and asserts `GATE_RESULT`. Use the `#[cfg_attr(test, allow(clippy::unwrap_used))]` convention where needed. If nextest is missing, fail with a message naming it; don't skip.
-- [ ] T014 [US2] Teeth check. For each T013 case, remove that case's `--expect` (or the assertion it guards) and run the test, which must fail. Revert with `cp`, check with `cmp`, and record the results in `measurements/gate-mutations.md`.
-- [ ] T015 [US2] Edit `.github/workflows/ci.yml` (C4).
+- [x] T012 [US2] Create `.config/nextest.toml` (C5): default profile, `retries = 0`, `fail-fast = false`, plus any groups from T006.
+- [x] T013 [US2] Add contract C3's six cases to `waybill-cli/tests/release_gates.rs`: pass, failing test, non-compiling, zero tests, colour forced, nextest absent. All go under the file's existing `#![cfg(unix)]`. The nextest-absent case sets `PATH` to a temporary directory containing only links to `cargo`, `rustc` and `bash`, and asserts that the message names cargo-nextest. Each builds a scratch crate in a `tempfile` directory, runs `scripts/gate.sh` with the C2 summary `--expect` around `cargo nextest run --no-fail-fast`, and asserts `GATE_RESULT`. Use the `#[cfg_attr(test, allow(clippy::unwrap_used))]` convention where needed. If nextest is missing, fail with a message naming it; don't skip.
+- [x] T014 [US2] Teeth check. For each T013 case, remove that case's `--expect` (or the assertion it guards) and run the test, which must fail. Revert with `cp`, check with `cmp`, and record the results in `measurements/gate-mutations.md`.
+- [x] T015 [US2] Edit `.github/workflows/ci.yml` (C4).
   - **Linux, macOS and Windows:** add the install step `taiki-e/install-action@893d6ee8d714b6c7dfe2bcd94e5759e9a7958a7e # v2.90.10` with `tool: cargo-nextest@0.9.152`. Change `Tests` to the C1 nextest command, including `--color never`, and add a `Doctests` step. Windows keeps `continue-on-error: true` on both steps.
   - **The eBPF lane:** gets only the install step.
   - **Afterwards:** grep that the four `cargo test --workspace --no-fail-fast` call sites now read as intended, and that no `uses:` is pinned by tag.
