@@ -581,18 +581,28 @@ tests/
 
 ### Pre-PR verification (MANDATORY)
 
-Before opening any PR, BOTH of these MUST pass locally — not one, not
-a subset, BOTH:
+Before opening any PR, ALL THREE of these MUST pass locally — not one,
+not a subset, ALL THREE (constitution 4.1.0, spec 1658):
 
 1. `cargo clippy --workspace --all-targets` — zero errors
-2. `cargo test --workspace --no-fail-fast` — every suite `ok. N passed; 0 failed`
+2. `cargo nextest run --workspace --no-fail-fast --color never` — the
+   `Summary [ … ] N tests run: N passed[ (S slow)][, K skipped]` line, naming no failure
+3. `cargo test --workspace --doc` — every doctest suite `ok. N passed; 0 failed`
 
-`./scripts/pre-pr.sh` runs both in order and exits non-zero on the
+Nextest runs test binaries in parallel; `cargo test` ran them one at a
+time (measured 124 s against 352 s, median of 3, same machine). Nextest
+does not run doctests, hence step 3. `--color never` is load-bearing: CI
+sets `CARGO_TERM_COLOR=always`, which would put escape codes inside the
+summary line the gate matches. Install with `brew install cargo-nextest`
+or `cargo install cargo-nextest --locked`; `pre-pr.sh` refuses to run
+without it rather than falling back to `cargo test`.
+
+`./scripts/pre-pr.sh` runs them in order and exits non-zero on the
 first failure — preferred over invoking them by hand so the flag
 set stays aligned with CI.
 
 These are the exact commands CI runs (`.github/workflows/ci.yml`), on the
-exact compiler: neither invocation names a toolchain, so both resolve
+exact compiler: no invocation names a toolchain, so all resolve
 through `rust-toolchain.toml`. They carried `+stable` until #1189, which
 overrode the pin and silently ran the gate on whatever the stable channel
 was that day — 1.99.0 locally and in CI while the pin said 1.98.1. Do not
@@ -635,7 +645,10 @@ Both halves of the fix are one command, because the four-step version of
 it kept losing to the one-step broken form:
 
 ```sh
-./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh
+./scripts/gate.sh \
+  --expect '>>> all pre-PR checks passed\.' \
+  --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$' \
+  prepr -- ./scripts/pre-pr.sh
 ```
 
 `scripts/gate.sh` runs the command to a log, exits with the command's own
@@ -646,8 +659,9 @@ exits 0 without printing it **fails**. Mutation tests for both behaviours
 are in `waybill-cli/tests/release_gates.rs`.
 
 Assert on a **positive** signal, never on absence: the
-`>>> all pre-PR checks passed.` line, and the per-target
-`test result: ok. N passed; 0 failed` lines. The absence of the word
+`>>> all pre-PR checks passed.` line, nextest's `Summary` line (which the
+second `--expect` requires to name at least one passed test and no
+failure), and the doctest `test result: ok. N passed; 0 failed` lines. The absence of the word
 FAILED is not evidence — a build that never compiled also contains no
 failures, and its summary (`targets= passed= failed=`) reads like a
 formatting quirk rather than the alarm it is.
@@ -745,9 +759,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1658-nextest-trial: tests run under cargo-nextest (constitution 4.1.0); `pre-pr.sh` 383 s → 143 s locally (median of 3). Doctests are a separate `cargo test --workspace --doc` step. **Zero new Cargo dependencies.**
 - 1657-test-time-first-slice: Added Rust stable 1.98.1 (pinned); no `+toolchain`. **Dependencies**: none new.
 - 1656-closure-read-completeness: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only. **Zero new Cargo dependencies.**
-- 1655-reachable-boot-libraries: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde_json` (C247), `tracing`; milestone 966's `boot_table`, spec 1653's `boot_dependencies`, the closure's `ClosureCompilers`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

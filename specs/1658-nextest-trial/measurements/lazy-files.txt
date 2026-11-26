@@ -1,0 +1,12 @@
+waybill-cli/tests/common/cdx_schema.rs
+waybill-cli/tests/corpus_harness_195/layer2_golden.rs
+waybill-cli/tests/gemfile_main_module.rs
+waybill-cli/tests/mapping_doc_bidirectional.rs
+waybill-cli/tests/openvex_sidecar_path.rs
+waybill-cli/tests/openvex_sidecar.rs
+waybill-cli/tests/sbom_edit_support/mod.rs
+waybill-cli/tests/sbom_type_signaling.rs
+waybill-cli/tests/sbom_user_metadata.rs
+waybill-cli/tests/spdx_schema_validation.rs
+waybill-cli/tests/spdx3_schema_validation.rs
+waybill-cli/tests/split_manifest_schema.rs
