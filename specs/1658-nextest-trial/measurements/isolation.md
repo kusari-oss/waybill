@@ -15,4 +15,4 @@ Three full runs under each runner on the same tree (`runs.tsv`, logs `cargo-test
 
 > scan MUST complete within 10s of --gradle-timeout-secs 3 … took 15.1041355s
 
-15.1 s is the mock subprocess's full 15 s sleep, so in that run the `--gradle-timeout-secs` timeout did not end the subprocess. It passed in the other 5 runs (2 `cargo test`, 3 nextest). It's an intermittent defect in the old runner's run, out of scope here; filed as a side finding.
+15.1 s is the mock subprocess's full 15 s sleep, so in that run the `--gradle-timeout-secs` timeout did not end the subprocess. It passed in the other 5 runs (2 `cargo test`, 3 nextest). It's an intermittent defect in the old runner's run, out of scope here; filed as #1723.
