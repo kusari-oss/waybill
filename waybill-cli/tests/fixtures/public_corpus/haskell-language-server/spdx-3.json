@@ -21789,14 +21789,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-C6ESN7RDRITUVHR5",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/ac3746a76d11c911/1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80/repo/plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/package.yaml\\\"],\\\"manifests-unread\\\":[{\\\"detail\\\":\\\"no `name:` field; not an hpack package manifest\\\",\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/ac3746a76d11c911/1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80/repo/plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/package.yaml\\\",\\\"reason\\\":\\\"not-a-manifest\\\"}]}\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-C73GB4LEHUVZZUYF",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G47BS2WHMV3ADU56",
@@ -28974,7 +28966,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MVSJNKJPCFZTHVYE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 2 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi; manifest-unread: 1 haskell manifest(s) found but not read\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 2 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },

@@ -91,10 +91,6 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-via-show/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
@@ -107,7 +103,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -127,7 +123,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
         }
       ],
       "purl": "pkg:hackage/aeson",
@@ -439,10 +435,6 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-via-show/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
@@ -455,7 +447,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+          "value": "[\"server/modules/contra-tracers/package.yaml\",\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
@@ -483,7 +475,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+          "value": "[\"server\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
         }
       ],
       "purl": "pkg:hackage/base",
@@ -1911,10 +1903,6 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-via-show/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
@@ -1927,7 +1915,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+          "value": "[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1951,7 +1939,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+          "value": "[\"server\",\"server/modules/ouroboros-network-ogmios\"]"
         }
       ],
       "purl": "pkg:hackage/containers",
@@ -2828,10 +2816,6 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-via-show/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "server/package.yaml"
           }
         ]
@@ -2840,7 +2824,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2864,7 +2848,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\"]"
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\"]"
         }
       ],
       "purl": "pkg:hackage/hspec",
@@ -2905,10 +2889,6 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-via-show/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "server/modules/ouroboros-network-ogmios/package.yaml"
           },
           {
@@ -2921,7 +2901,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -2945,7 +2925,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
         }
       ],
       "purl": "pkg:hackage/hspec-discover",
@@ -3393,67 +3373,6 @@
       "purl": "pkg:hackage/json-rpc@1.0.0",
       "type": "library",
       "version": "1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/json-via-show@2.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-via-show/package.yaml"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "MPL-2.0"
-          }
-        }
-      ],
-      "name": "json-via-show",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"server/modules/json-via-show/package.yaml\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"server/modules/json-via-show\"]"
-        }
-      ],
-      "purl": "pkg:hackage/json-via-show@2.0.0",
-      "type": "library",
-      "version": "2.0.0"
     },
     {
       "bom-ref": "pkg:hackage/lens-aeson",
@@ -5075,10 +4994,6 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-via-show/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "server/package.yaml"
           }
         ]
@@ -5087,7 +5002,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
+          "value": "[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5111,7 +5026,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\"]"
+          "value": "[\"server\",\"server/modules/fast-bech32\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\"]"
         }
       ],
       "purl": "pkg:hackage/text",
@@ -5135,10 +5050,6 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "server/modules/json-via-show/package.yaml"
-          },
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "server/package.yaml"
           }
         ]
@@ -5147,7 +5058,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]"
+          "value": "[\"server/package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -5171,7 +5082,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"server\",\"server/modules/json-via-show\"]"
+          "value": "[\"server\"]"
         }
       ],
       "purl": "pkg:hackage/time",
@@ -7860,7 +7771,6 @@
         "pkg:hackage/git-th@1.1.0",
         "pkg:hackage/hspec-json-schema@1.0.0",
         "pkg:hackage/json-rpc@1.0.0",
-        "pkg:hackage/json-via-show@2.0.0",
         "pkg:hackage/ogmios@0",
         "pkg:hackage/ouroboros-network-ogmios@0.0.0"
       ],
@@ -8149,18 +8059,6 @@
         "pkg:hackage/text"
       ],
       "ref": "pkg:hackage/json-rpc@1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/aeson",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/hspec",
-        "pkg:hackage/hspec-discover",
-        "pkg:hackage/text",
-        "pkg:hackage/time"
-      ],
-      "ref": "pkg:hackage/json-via-show@2.0.0"
     },
     {
       "dependsOn": [],
@@ -8486,7 +8384,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":103,\"excluded_files\":10,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":5,\"with_candidates\":1031}"
+        "value": "{\"addressable_without_cpe\":102,\"excluded_files\":10,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":5,\"with_candidates\":1031}"
       },
       {
         "name": "waybill:git-submodule-coverage",
@@ -8526,7 +8424,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"clients/TypeScript\",\"clients/TypeScript/packages/client\",\"clients/TypeScript/packages/repl\",\"clients/TypeScript/packages/schema\",\"server\",\"server/dashboard\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/json-via-show\",\"server/modules/ouroboros-network-ogmios\"]"
+        "value": "[\".\",\"clients/TypeScript\",\"clients/TypeScript/packages/client\",\"clients/TypeScript/packages/repl\",\"clients/TypeScript/packages/schema\",\"server\",\"server/dashboard\",\"server/modules/contra-tracers\",\"server/modules/fast-bech32\",\"server/modules/git-th\",\"server/modules/hspec-json-schema\",\"server/modules/json-rpc\",\"server/modules/ouroboros-network-ogmios\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",
@@ -8538,7 +8436,7 @@
       },
       {
         "name": "waybill:hpack-read-outcome",
-        "value": "{\"generated-cabal-suppressed\":[],\"includes-resolved\":[{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\",\"include\":\".hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"}],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"],\"manifests-unread\":[]}"
+        "value": "{\"generated-cabal-suppressed\":[],\"includes-resolved\":[{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"include\":\"../../.hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\",\"include\":\".hpack.config.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"},{\"file\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\",\"include\":\".stylish-haskell.yaml\",\"manifest\":\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"}],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\",\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\"],\"manifests-unread\":[]}"
       }
     ],
     "supplier": {

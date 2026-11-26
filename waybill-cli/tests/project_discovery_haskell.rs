@@ -298,7 +298,9 @@ fn us2_strict_ignores_declarations() {
     let d = scan(&fixture("f4-cabal-project-json"), "strict");
     assert!(hackage(&same_purls_everywhere(&d)).is_empty());
     let rec = drop_record(&d).expect("strict records its drop");
-    assert_eq!(rec["main-modules"], serde_json::json!([A, B, E]));
+    // Spec 1662: `tools/e` is outside `packages: local-packages/*`, so it is
+    // not a project member and never reaches the scope filter.
+    assert_eq!(rec["main-modules"], serde_json::json!([A, B]));
 }
 
 /// A declaration at the root is the root project's: its root-level
@@ -428,11 +430,19 @@ fn us3_f2_drop_one() {
     assert_eq!(rec["main-modules"], serde_json::json!([DD]));
 }
 
+/// Spec 1662 (#1685): `tools/e/package.yaml` is outside the root
+/// `cabal.project`'s `packages: local-packages/*`. It used to reach root-only
+/// and be recorded as a scope drop. It is now not a project member at all, as
+/// a `.cabal` there already wasn't (#1032), so it's absent in every mode and
+/// root-only has nothing to record. `us3_f2_drop_one` still covers the record.
 #[test]
-fn us3_f3_unlisted_package_recorded() {
-    let d = scan(&fixture("f3-cabal-project"), "root-only");
-    let rec = drop_record(&d).expect("tools/e is dropped");
-    assert_eq!(rec["main-modules"], serde_json::json!([E]));
+fn us3_f3_unlisted_package_is_not_a_member() {
+    for mode in ["all", "root-only"] {
+        let d = scan(&fixture("f3-cabal-project"), mode);
+        let p = same_purls_everywhere(&d);
+        assert!(!p.iter().any(|x| x.contains(E)), "{mode}: tools/e emitted: {p:?}");
+        assert!(drop_record(&d).is_none(), "{mode}: nothing for root-only to drop");
+    }
 }
 
 /// Research R7: C200's paths and the components' evidence paths are joined to

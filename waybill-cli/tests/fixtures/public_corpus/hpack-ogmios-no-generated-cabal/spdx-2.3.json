@@ -17,7 +17,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":103,\\\"excluded_files\\\":10,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":5,\\\"with_candidates\\\":1031}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":102,\\\"excluded_files\\\":10,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":5,\\\"with_candidates\\\":1031}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -53,7 +53,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"clients/TypeScript\\\",\\\"clients/TypeScript/packages/client\\\",\\\"clients/TypeScript/packages/repl\\\",\\\"clients/TypeScript/packages/schema\\\",\\\"server\\\",\\\"server/dashboard\\\",\\\"server/modules/contra-tracers\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/git-th\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/json-via-show\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"clients/TypeScript\\\",\\\"clients/TypeScript/packages/client\\\",\\\"clients/TypeScript/packages/repl\\\",\\\"clients/TypeScript/packages/schema\\\",\\\"server\\\",\\\"server/dashboard\\\",\\\"server/modules/contra-tracers\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/git-th\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -71,7 +71,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[],\\\"includes-resolved\\\":[{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\",\\\"include\\\":\\\".hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"}],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-via-show/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"],\\\"manifests-unread\\\":[]}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[],\\\"includes-resolved\\\":[{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\",\\\"include\\\":\\\"../../.hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\",\\\"include\\\":\\\".hpack.config.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/.hpack.config.yaml\\\",\\\"include\\\":\\\".stylish-haskell.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"}],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/contra-tracers/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/fast-bech32/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/git-th/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/hspec-json-schema/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/json-rpc/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/modules/ouroboros-network-ogmios/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/486dfb97f96284d2/435189aea2d9a047dc395a6f1cdef737d52f1cbe/prepared-no-generated-cabal/server/package.yaml\\\"],\\\"manifests-unread\\\":[]}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -220,7 +220,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/contra-tracers/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/contra-tracers/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -232,7 +232,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/contra-tracers/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-via-show/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/ouroboros-network-ogmios/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/contra-tracers/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/ouroboros-network-ogmios/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -244,7 +244,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/contra-tracers\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/json-via-show\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/contra-tracers\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -622,7 +622,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/contra-tracers/package.yaml\",\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/contra-tracers/package.yaml\",\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -640,7 +640,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/contra-tracers/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/fast-bech32/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/git-th/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-via-show/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/ouroboros-network-ogmios/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/contra-tracers/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/fast-bech32/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/git-th/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/ouroboros-network-ogmios/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -658,7 +658,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/contra-tracers\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/git-th\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/json-via-show\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/contra-tracers\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/git-th\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2440,7 +2440,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2452,7 +2452,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/json-via-show/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/ouroboros-network-ogmios/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/ouroboros-network-ogmios/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2470,7 +2470,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/json-via-show\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -3538,7 +3538,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3550,7 +3550,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/fast-bech32/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/git-th/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-via-show/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/fast-bech32/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/git-th/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3562,7 +3562,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/git-th\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/json-via-show\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/git-th\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -3610,7 +3610,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/fast-bech32/package.yaml\",\"server/modules/git-th/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/ouroboros-network-ogmios/package.yaml\",\"server/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3622,7 +3622,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/fast-bech32/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/git-th/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-via-show/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/ouroboros-network-ogmios/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/fast-bech32/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/git-th/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/ouroboros-network-ogmios/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3634,7 +3634,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/git-th\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/json-via-show\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/git-th\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/ouroboros-network-ogmios\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -4178,72 +4178,6 @@
       "licenseDeclared": "MPL-2.0",
       "name": "json-rpc",
       "versionInfo": "1.0.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-LMATHDEZHPRBYS2R",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-main-module\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/json-via-show/package.yaml\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/json-via-show/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server/modules/json-via-show\\\"]\"}"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:hackage/json-via-show@2.0.0",
-          "referenceType": "purl"
-        }
-      ],
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "MPL-2.0",
-      "name": "json-via-show",
-      "versionInfo": "2.0.0"
     },
     {
       "SPDXID": "SPDXRef-Package-5RRMBUGRK25B335D",
@@ -6244,7 +6178,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/fast-bech32/package.yaml\",\"server/modules/hspec-json-schema/package.yaml\",\"server/modules/json-rpc/package.yaml\",\"server/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6256,7 +6190,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/fast-bech32/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-via-show/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/fast-bech32/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/hspec-json-schema/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/modules/json-rpc/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6274,7 +6208,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\",\\\"server/modules/json-via-show\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/fast-bech32\\\",\\\"server/modules/hspec-json-schema\\\",\\\"server/modules/json-rpc\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -6316,7 +6250,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/modules/json-via-show/package.yaml\",\"server/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"server/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6328,7 +6262,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/modules/json-via-show/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"server/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6346,7 +6280,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\",\\\"server/modules/json-via-show\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"server\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -7150,11 +7084,6 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-LMATHDEZHPRBYS2R",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-4X42HOTYXSDPMZ2R",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-2VVDEFK5XBWDU5CO"
@@ -7740,11 +7669,6 @@
       "spdxElementId": "SPDXRef-Package-I5KOLHHRQ6UND4ND"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-LMATHDEZHPRBYS2R",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-I5KOLHHRQ6UND4ND"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-2VVDEFK5XBWDU5CO",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-I6AO2GBMGCYDWZHM"
@@ -7855,31 +7779,6 @@
       "spdxElementId": "SPDXRef-Package-LJ5TGVKKYQVAMZM5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-LMATHDEZHPRBYS2R"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-RI6CJK3L3YV4XICN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-LMATHDEZHPRBYS2R"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-LMATHDEZHPRBYS2R"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-LMATHDEZHPRBYS2R"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-LMATHDEZHPRBYS2R"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-5W7KFI47NTQQJWDN",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-N2ATFF76NGWO6XMW"
@@ -7906,11 +7805,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-CLOTDLPBNEUJB5CC",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-UQU4IKJNYK632QSD"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-LMATHDEZHPRBYS2R",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-UQU4IKJNYK632QSD"
     },

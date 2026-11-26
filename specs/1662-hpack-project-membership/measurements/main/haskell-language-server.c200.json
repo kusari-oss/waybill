@@ -1,0 +1,3 @@
+[
+  "{\"generated-cabal-suppressed\":[],\"manifests-partial\":[],\"manifests-read\":[],\"manifests-seen\":[\"<work>/src/haskell-language-server/plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/package.yaml\"],\"manifests-unread\":[{\"detail\":\"no `name:` field; not an hpack package manifest\",\"file\":\"<work>/src/haskell-language-server/plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/package.yaml\",\"reason\":\"not-a-manifest\"}]}"
+]
