@@ -83,6 +83,7 @@
 // follows `nix/haskell_packages/`, where parsing, caching, the closure and
 // boot libraries each own a file under one module.
 mod hpack;
+mod nix_refs;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -830,7 +831,7 @@ pub(crate) fn finalize(
     rootfs: &Path,
     paths: HaskellDiscoveredPaths,
     _include_dev: bool,
-    _exclude_set: &ExclusionSet,
+    exclude_set: &ExclusionSet,
 ) -> (Vec<PackageDbEntry>, Option<HaskellParseSummary>) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
@@ -865,7 +866,7 @@ pub(crate) fn finalize(
     // Spec 1652 (FR-003): what a root declaration names, resolved against
     // every package this walk found — before #1032's filter below, which
     // only removes `.cabal` files a declaration does NOT list.
-    let root_declared_member_dirs = {
+    let mut root_declared_member_dirs = {
         let package_dirs: Vec<PathBuf> = cabal_paths
             .iter()
             .chain(package_yaml_paths.iter())
@@ -902,6 +903,13 @@ pub(crate) fn finalize(
     // declared. The other 69 are test fixtures and a CI helper, and emitting
     // them produced 33 coordinates that exist on no registry plus 4 that
     // collide with real package names while carrying a fixture's version.
+    // Spec 1664 (#1731) — package directories a `callCabal2nix` on a literal
+    // path names, mapped to the `.nix` files naming them. Built at most once,
+    // and only if some governing `cabal.project` would drop a manifest.
+    let mut nix_index: Option<BTreeMap<PathBuf, BTreeSet<PathBuf>>> = None;
+    // Manifest directories Nix admitted that neither `cabal.project` nor
+    // `stack.yaml` did (FR-004, R5); the emit tail annotates their components.
+    let mut nix_members: BTreeMap<PathBuf, BTreeSet<PathBuf>> = BTreeMap::new();
     {
         let before = cabal_paths.len();
         let mut dropped_total = 0usize;
@@ -935,7 +943,7 @@ pub(crate) fn finalize(
                 .collect();
             let candidates: Vec<PathBuf> =
                 cabal_paths.iter().chain(stand_ins.iter()).cloned().collect();
-            let declared = cabal_files_declared_by(project_dir, &entries, &candidates);
+            let mut declared = cabal_files_declared_by(project_dir, &entries, &candidates);
             if declared.is_empty() {
                 // Every entry failed to match. More likely a shape this parser
                 // does not understand than a project that declares nothing, so
@@ -945,6 +953,31 @@ pub(crate) fn finalize(
                     "haskell: cabal.project declared packages but none matched; leaving the tree alone"
                 );
                 continue;
+            }
+            // Spec 1664 — a candidate the rule would drop is kept when a Nix
+            // build reference names its directory.
+            let rejected: Vec<&PathBuf> = candidates
+                .iter()
+                .filter(|c| c.starts_with(project_dir) && !declared.contains(*c))
+                .collect();
+            let nix_files = || discover_nix_files(rootfs, exclude_set);
+            for (c, files) in nix_admit(rootfs, &nix_files, &mut nix_index, &rejected) {
+                if let Some(dir) = c.parent() {
+                    // R5: `--project-discovery=root-only` takes the same union
+                    // for the scan-root `cabal.project`.
+                    if project_dir == rootfs {
+                        if let Ok(rel) = dir.strip_prefix(rootfs) {
+                            let key = rel
+                                .components()
+                                .map(|c| c.as_os_str().to_string_lossy())
+                                .collect::<Vec<_>>()
+                                .join("/");
+                            root_declared_member_dirs.push(if key.is_empty() { ".".to_string() } else { key });
+                        }
+                    }
+                    nix_members.entry(dir.to_path_buf()).or_default().extend(files);
+                }
+                declared.insert(c);
             }
             let before_this = cabal_paths.len();
             cabal_paths.retain(|c| !c.starts_with(project_dir) || declared.contains(c));
@@ -956,16 +989,19 @@ pub(crate) fn finalize(
             });
             dropped_hpack += hpack_before - hpack_reads.len();
         }
-        if dropped_total > 0 || dropped_hpack > 0 {
+        if dropped_total > 0 || dropped_hpack > 0 || !nix_members.is_empty() {
             tracing::info!(
                 dropped = dropped_total,
                 dropped_package_yaml = dropped_hpack,
+                admitted_by_nix = nix_members.len(),
                 kept = cabal_paths.len(),
                 found = before,
                 "haskell: .cabal and package.yaml files not declared by a governing cabal.project were skipped (#1032, spec 1662)"
             );
         }
     }
+    root_declared_member_dirs.sort();
+    root_declared_member_dirs.dedup();
     // Downstream readers (the no-op check, `emit_hpack_warnings`) see only the
     // manifests that survived.
     let package_yaml_paths: Vec<PathBuf> = hpack_reads.iter().map(|(p, _, _)| p.clone()).collect();
@@ -1400,6 +1436,28 @@ pub(crate) fn finalize(
             skipped_entries,
         );
     }
+    // Spec 1664 (FR-004) — a main module Nix admitted names the `.nix` files
+    // that admitted it, and says so. Its declared dependencies share its
+    // manifest but were not admitted by anything: they carry neither.
+    for e in out.iter_mut() {
+        if e.source_type.as_deref() != Some("hackage-main-module") {
+            continue;
+        }
+        let Some(files) = Path::new(&e.source_path).parent().and_then(|d| nix_members.get(d)) else {
+            continue;
+        };
+        for f in files {
+            let f = f.to_string_lossy().into_owned();
+            if f != e.source_path && !e.extra_source_paths.contains(&f) {
+                e.extra_source_paths.push(f);
+            }
+        }
+        e.extra_source_paths.sort();
+        e.extra_annotations.insert(
+            "waybill:membership-source".to_string(),
+            serde_json::Value::String("nix-callcabal2nix".to_string()),
+        );
+    }
     (
         out,
         Some(HaskellParseSummary {
@@ -1525,6 +1583,14 @@ fn resolve_root_declared_members(
 // -----------------------------------------------------------------------
 
 fn discover_cabal_files(rootfs: &Path, exclude_set: &ExclusionSet) -> Vec<PathBuf> {
+    discover_by_extension(rootfs, exclude_set, "cabal")
+}
+
+fn discover_nix_files(rootfs: &Path, exclude_set: &ExclusionSet) -> Vec<PathBuf> {
+    discover_by_extension(rootfs, exclude_set, "nix")
+}
+
+fn discover_by_extension(rootfs: &Path, exclude_set: &ExclusionSet, ext: &str) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let cfg = crate::scan_fs::walk::WalkConfig {
         max_depth: MAX_HASKELL_WALK_DEPTH,
@@ -1541,7 +1607,7 @@ fn discover_cabal_files(rootfs: &Path, exclude_set: &ExclusionSet) -> Vec<PathBu
             && path
                 .extension()
                 .and_then(|s| s.to_str())
-                == Some("cabal")
+                == Some(ext)
         {
             out.push(path.to_path_buf());
         }
@@ -1991,6 +2057,48 @@ fn stanza_default_buildable(block: &str, flags: &HashMap<String, bool>) -> bool 
     buildable
 }
 
+
+/// Spec 1664 (#1731, research R5/R6) — the `rejected` candidates whose
+/// directory a `callCabal2nix` on a literal path names, each with the `.nix`
+/// files naming it.
+///
+/// `index` caches every such directory across projects. It is built on the
+/// first call that has something to admit, and never when nothing was
+/// rejected: `nix_files` walks the tree for `*.nix` only then, so a
+/// repository #1032 drops nothing from neither lists nor opens a `.nix` file.
+/// The shared walker does not collect them — that would register the Haskell
+/// reader as claiming `flake.nix` in the repo report (m924), which it does not.
+fn nix_admit(
+    rootfs: &Path,
+    nix_files: &dyn Fn() -> Vec<PathBuf>,
+    index: &mut Option<BTreeMap<PathBuf, BTreeSet<PathBuf>>>,
+    rejected: &[&PathBuf],
+) -> Vec<(PathBuf, BTreeSet<PathBuf>)> {
+    if rejected.is_empty() {
+        return Vec::new();
+    }
+    let index = index.get_or_insert_with(|| {
+        let mut idx: BTreeMap<PathBuf, BTreeSet<PathBuf>> = BTreeMap::new();
+        for nix in &nix_files() {
+            let Ok(text) = std::fs::read_to_string(nix) else {
+                continue;
+            };
+            for (literal, _line) in nix_refs::callcabal2nix_paths(&text) {
+                if let Some(dir) = nix_refs::resolve(nix, &literal, rootfs) {
+                    idx.entry(dir).or_default().insert(nix.clone());
+                }
+            }
+        }
+        idx
+    });
+    rejected
+        .iter()
+        .filter_map(|c| {
+            let files = index.get(c.parent()?)?;
+            Some(((*c).clone(), files.clone()))
+        })
+        .collect()
+}
 
 /// Issue #1032 — the `.cabal` files a `cabal.project` declares as part of the
 /// project.
@@ -4202,5 +4310,45 @@ mod root_declared_members_tests {
         let mut s = HaskellParseSummary::default();
         s.amend_scope_dropped(&[PathBuf::from("/r/a/package.yaml")]);
         assert!(s.hpack_read.is_none());
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod nix_admit_tests {
+    //! Spec 1664 (research R6): `.nix` files are opened only when #1032's rule
+    //! rejected something.
+    use super::*;
+
+    fn tree() -> (tempfile::TempDir, PathBuf, PathBuf) {
+        let t = tempfile::tempdir().unwrap();
+        let root = t.path().to_path_buf();
+        let nix = root.join("nix/p.nix");
+        std::fs::create_dir_all(nix.parent().unwrap()).unwrap();
+        std::fs::write(&nix, "x: x.callCabal2nix \"p\" ../tools/p { }\n").unwrap();
+        (t, root, nix)
+    }
+
+    #[test]
+    fn nothing_rejected_reads_no_nix_file() {
+        let (_t, root, nix) = tree();
+        let listed = std::cell::Cell::new(false);
+        let files = || {
+            listed.set(true);
+            vec![nix.clone()]
+        };
+        let mut index = None;
+        assert!(nix_admit(&root, &files, &mut index, &[]).is_empty());
+        assert!(!listed.get() && index.is_none(), "the tree was searched for .nix files with nothing to admit");
+    }
+
+    #[test]
+    fn a_rejected_manifest_the_nix_file_builds_is_admitted() {
+        let (_t, root, nix) = tree();
+        let cand = root.join("tools/p/p.cabal");
+        let mut index = None;
+        let files = || vec![nix.clone()];
+        let got = nix_admit(&root, &files, &mut index, &[&cand]);
+        assert_eq!(got, vec![(cand, BTreeSet::from([nix]))]);
     }
 }
