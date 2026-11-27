@@ -52,7 +52,7 @@
 - [X] T011 [P] Add a one-sentence note to the C18 row in `docs/reference/sbom-format-mapping.md` saying that Haskell lock and freeze pins list their files (spec 1665). Add a CLAUDE.md "Recent Changes" line by hand.
 - [X] T012 File the side finding from research R4 as an issue: an unreachable `hackage-freeze` pin has no orphan reason. Use the attribution footer.
 - [X] T013 Run the gate (`./scripts/gate.sh … prepr -- ./scripts/pre-pr.sh`), and check `GATE_RESULT=pass` and the Summary line.
-- [ ] T014 Commit and open the PR ("Refs #1736"). Dispatch `public-corpus.yml` with `regen_goldens=true`. Commit only the hs-opentelemetry and lootbox golden changes that R6 explains, check that no invariant declaration moved, and check for the #1738 agent.
+- [X] T014 Commit and open the PR ("Refs #1736"). Dispatch `public-corpus.yml` with `regen_goldens=true`. Commit only the hs-opentelemetry and lootbox golden changes that R6 explains, check that no invariant declaration moved, and check for the #1738 agent.
 
 ## Dependencies
 

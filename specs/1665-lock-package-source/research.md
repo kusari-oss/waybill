@@ -55,3 +55,15 @@ This is `measure.sh` with a release build of the branch, written to `measurement
 - **Per component.** Comparing purl, source type, reachability and orphan reason across all 15 scanned targets, no line differs. The only column that changed is source files: all 22 lock components now read `["stack.yaml.lock"]`. hs-opentelemetry's pins are in its root lock; its `instrumentation/yesod` lock pins none.
 - **Whole document.** Across the 15 targets, the set of component PURLs and the multiset of orphan reasons are identical between `main` and the branch, so no component appeared, disappeared or merged differently.
 - **Prediction (R4) confirmed:** no orphan reason moved.
+
+## R7 — Goldens (T014)
+
+From `public-corpus.yml` run 46055226828, with `regen_goldens=true`, on `1665-lock-package-source`. The run passed. Of 88 regenerated files, 13 differ.
+
+- **12 are the hs-opentelemetry and lootbox goldens**, including their `-no-generated-cabal` variants, in all three formats. Each of the 22 lock components gains three values, and nothing else changes. Every changed line in the 12 files was tallied: each value appears 44 times (22 components × 2 targets per pair), plus the SPDX annotation framing that carries it.
+  - `waybill:source-files`: `[""]` → `["stack.yaml.lock"]`;
+  - `evidence.occurrences`: a new entry `{location: stack.yaml.lock, sha256}`, carried in CycloneDX as `evidence.occurrences` and in SPDX as an annotation;
+  - `waybill:workspace-member`: a new `["."]`, from the lock file's directory (milestone 176).
+- **The last two were not predicted by R1–R6.** The probe measured source files, reachability and orphan reason, not the values derived from a source path. They are the existing, general emission for any component that has a source file. Lock-derived components of other ecosystems carry them already; Haskell's had none only because their path was empty. Neither affects reachability or orphan reasons: R6 measured both as identical.
+- **The 13th is `hpack-hs-temporal-sdk/spdx-3.json`.** Its only difference is the unreferenced `Organization "Microsoft"` element from #1738. It is not committed, which keeps the golden as it was, as in #1737 and #1740.
+- **No `invariant-declarations.toml` row moved.**
