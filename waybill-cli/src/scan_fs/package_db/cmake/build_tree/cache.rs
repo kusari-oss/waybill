@@ -20,7 +20,7 @@ pub(crate) enum CacheKind {
 }
 
 impl CacheKind {
-    fn parse(s: &str) -> Self {
+    pub(crate) fn parse(s: &str) -> Self {
         match s {
             "BOOL" => Self::Bool,
             "STRING" => Self::String,
@@ -89,6 +89,41 @@ impl CacheView {
             return Err(CacheError::NoEntries);
         }
         Ok(Self { entries, help })
+    }
+
+    /// A view from (name, kind, value, help) entries, as a file-API
+    /// `cache-v2` reply lists them (spec 1653 US4). `help` is the entry's
+    /// `HELPSTRING` property: the text `CMakeCache.txt` writes as the `//`
+    /// comment, which [`Self::help`] needs to tell a package directory apart.
+    pub(crate) fn from_entries(entries: impl IntoIterator<Item = (String, CacheKind, String, Option<String>)>) -> Result<Self, CacheError> {
+        let (mut map, mut help) = (HashMap::new(), HashMap::new());
+        for (name, kind, value, h) in entries.into_iter().filter(|e| !e.0.is_empty()) {
+            if let Some(h) = h.filter(|h| !h.is_empty()) {
+                help.insert(name.clone(), h);
+            }
+            map.insert(name, CacheEntry { kind, value });
+        }
+        if map.is_empty() {
+            return Err(CacheError::NoEntries);
+        }
+        Ok(Self { entries: map, help })
+    }
+
+    /// Names both caches hold with different values, sorted. #1735 review:
+    /// a file-API reply is stale exactly when its cache disagrees with
+    /// `CMakeCache.txt`. Measured with CMake 4.4.5 on a probe build: after a
+    /// successful configure and generate, 0 of 82 shared entries differ;
+    /// after a configure whose generate failed, exactly the changed entry
+    /// does, because the reply is from the previous run.
+    pub(crate) fn disagreements_with(&self, other: &CacheView) -> Vec<String> {
+        let mut out: Vec<String> = self
+            .entries
+            .iter()
+            .filter(|(k, e)| other.entries.get(*k).is_some_and(|o| o.value != e.value))
+            .map(|(k, _)| k.clone())
+            .collect();
+        out.sort();
+        out
     }
 
     pub(crate) fn get(&self, name: &str) -> Option<&CacheEntry> {

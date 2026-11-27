@@ -697,8 +697,192 @@ fn a_find_module_include_dir_is_not_a_package_prefix() {
     let dir = text.lines().find_map(|l| l.strip_prefix("hdronly_DIR:PATH=")).expect("fixture drift: hdronly_DIR").to_string();
     let prefix = dir.strip_suffix("/lib/cmake/hdronly").expect("fixture drift: hdronly_DIR layout");
     std::fs::write(&cache, format!("{text}\n//Path to a file.\nZLIB_INCLUDE_DIR:PATH={prefix}/include\n")).unwrap();
+    // The fixture has a file-API reply, which is preferred (US4): the same
+    // entry goes into its cache, with the `HELPSTRING` a Find module writes.
+    let reply = reply_file(&f, "cache-v2-");
+    let mut v: Value = serde_json::from_str(&std::fs::read_to_string(&reply).unwrap()).unwrap();
+    v["entries"].as_array_mut().expect("fixture drift: cache-v2 entries").push(serde_json::json!({
+        "name": "ZLIB_INCLUDE_DIR", "type": "PATH", "value": format!("{prefix}/include"),
+        "properties": [{ "name": "HELPSTRING", "value": "Path to a file." }],
+    }));
+    std::fs::write(&reply, serde_json::to_string(&v).unwrap()).unwrap();
+    for source in ["the reply", "CMakeCache.txt"] {
+        let s = checked(&f, &[&f.build]);
+        assert_eq!(coverage_bt(&s).unwrap()["file-api-replies"], u64::from(source == "the reply"), "{source}");
+        assert_eq!(basis(&settlement(&s, "hdronly")), ["cache-package-dir", "compile-include"], "{source}");
+        let cov = coverage_bt(&s).unwrap();
+        assert_eq!(cov["include-dirs-unresolved"], 0, "{source}: {cov}");
+        std::fs::remove_dir_all(f.build.join(".cmake")).ok();
+    }
+}
+
+// ---------------------------------------------------------------------
+// US4: the file API (FR-010)
+// ---------------------------------------------------------------------
+
+fn reply_dir(f: &Fixture) -> PathBuf {
+    f.build.join(".cmake/api/v1/reply")
+}
+
+fn reply_file(f: &Fixture, prefix: &str) -> PathBuf {
+    std::fs::read_dir(reply_dir(f))
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .find(|p| p.file_name().unwrap().to_string_lossy().starts_with(prefix))
+        .unwrap_or_else(|| panic!("fixture drift: no {prefix}* reply"))
+}
+
+/// Every C245 value by component name, and the compile edges: what the
+/// reply and the files must agree on.
+fn outcome(s: &Scan) -> (Vec<(String, Value)>, Value) {
+    let mut settled: Vec<(String, Value)> = cdx_components(&s.cdx)
+        .into_iter()
+        .filter_map(|c| Some((c["name"].as_str()?.to_string(), serde_json::from_str(prop(c, C245)?).ok()?)))
+        .collect();
+    settled.sort_by(|a, b| a.0.cmp(&b.0));
+    (settled, coverage_bt(s).unwrap()["compile-edges"].clone())
+}
+
+/// FX/system has a reply: it is read, and it gives the settlement and the
+/// edges the cache and the compilation database give.
+#[test]
+fn a_file_api_reply_is_read_and_agrees_with_the_files() {
+    let f = materialise("system");
+    let with = checked(&f, &[&f.build]);
+    let cov = coverage_bt(&with).unwrap();
+    assert_eq!(cov["file-api-replies"], 1, "{cov}");
+    assert_eq!(cov["unreadable-files"], 0, "{cov}");
+    assert_edge(&with, &purl_of_named(&with, "probe"), &purl_of_named(&with, "hdronly"));
+    std::fs::remove_dir_all(f.build.join(".cmake")).unwrap();
+    let without = checked(&f, &[&f.build]);
+    assert_eq!(coverage_bt(&without).unwrap()["file-api-replies"], 0);
+    assert_eq!(outcome(&with), outcome(&without));
+    assert_eq!(cdx_edges(&with.cdx), cdx_edges(&without.cdx));
+}
+
+/// Sets `name`'s value in the reply's `cache-v2` through its JSON, not its
+/// byte layout (#1735 review).
+fn set_reply_cache(f: &Fixture, name: &str, value: &str) {
+    let path = reply_file(f, "cache-v2-");
+    let mut v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    let e = v["entries"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|e| e["name"] == name)
+        .unwrap_or_else(|| panic!("fixture drift: {name} in the reply"));
+    e["value"] = serde_json::json!(value);
+    std::fs::write(&path, serde_json::to_string_pretty(&v).unwrap()).unwrap();
+}
+
+fn with_backend_search(f: &Fixture) {
+    let lists = f.src.join("CMakeLists.txt");
+    let text = std::fs::read_to_string(&lists).unwrap() + "if(BACKEND STREQUAL \"B\")\n  find_package(WaybillFixtureSearched)\nendif()\n";
+    std::fs::write(&lists, text).unwrap();
+}
+
+/// What `CMakeCache.txt` lacks, the reply supplies. A package search under
+/// `if(BACKEND STREQUAL "B")`, with `BACKEND` only in the reply.
+#[test]
+fn the_reply_cache_is_preferred_over_cmakecache() {
+    let f = materialise("system");
+    with_backend_search(&f);
     let s = checked(&f, &[&f.build]);
-    assert_eq!(basis(&settlement(&s, "hdronly")), ["cache-package-dir", "compile-include"]);
+    assert_eq!(scope(named(&s, "waybillfixturesearched")), "required", "both say B");
+    let cache = f.build.join("CMakeCache.txt");
+    let text = std::fs::read_to_string(&cache).unwrap();
+    assert!(text.contains("BACKEND:STRING=B"), "fixture drift: BACKEND in CMakeCache.txt");
+    std::fs::write(&cache, text.replace("BACKEND:STRING=B\n", "")).unwrap();
+    set_reply_cache(&f, "BACKEND", "A");
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(scope(named(&s, "waybillfixturesearched")), "excluded", "only the reply has BACKEND, and it says A");
+    assert_eq!(coverage_bt(&s).unwrap()["file-api-replies"], 1);
+}
+
+/// #1735 review: a reply that disagrees with `CMakeCache.txt` is from an
+/// earlier run (measured, CMake 4.4.5: a configure whose generate failed
+/// leaves the old reply, while 0 of 82 shared entries differ after a
+/// successful run). It is set aside and counted, and the files decide.
+#[test]
+fn a_reply_that_disagrees_with_cmakecache_is_stale() {
+    let f = materialise("system");
+    with_backend_search(&f);
+    set_reply_cache(&f, "BACKEND", "A");
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(scope(named(&s, "waybillfixturesearched")), "required", "CMakeCache.txt says B");
     let cov = coverage_bt(&s).unwrap();
-    assert_eq!(cov["include-dirs-unresolved"], 0, "{cov}");
+    assert_eq!(cov["file-api-stale-replies"], 1, "{cov}");
+    assert_eq!(cov["file-api-replies"], 0, "{cov}");
+}
+
+/// A malformed reply is counted, and the files are used instead.
+#[test]
+fn a_malformed_reply_falls_back_to_the_files() {
+    let f = materialise("system");
+    let good = outcome(&checked(&f, &[&f.build]));
+    std::fs::write(reply_file(&f, "codemodel-v2-"), "{\"configurations\": [").unwrap();
+    let s = checked(&f, &[&f.build]);
+    let cov = coverage_bt(&s).unwrap();
+    assert_eq!(cov["file-api-replies"], 0, "{cov}");
+    assert_eq!(cov["unreadable-files"], 1, "{cov}");
+    assert_eq!(outcome(&s), good);
+}
+
+/// The reply's codemodel replaces the compilation database: without the
+/// database, the reply alone gives the same compile edges.
+#[test]
+fn the_reply_codemodel_gives_compile_edges_without_a_database() {
+    let f = materialise("system");
+    let good = outcome(&checked(&f, &[&f.build]));
+    std::fs::remove_file(f.build.join("compile_commands.json")).unwrap();
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(coverage_bt(&s).unwrap()["compile-edges"], 2);
+    assert_eq!(outcome(&s), good);
+}
+
+/// #1735 review: an include passed as a flag (`add_compile_options(-I…)`,
+/// `CMAKE_<LANG>_FLAGS`) is in a compile group's `compileCommandFragments`,
+/// not its `includes[]` (measured, CMake 4.4.5). Moving every include of the
+/// app target into fragments must give the same edges as before.
+#[test]
+fn includes_passed_as_flags_in_the_reply_are_read() {
+    let f = materialise("system");
+    let good = outcome(&checked(&f, &[&f.build]));
+    std::fs::remove_file(f.build.join("compile_commands.json")).unwrap();
+    let path = reply_file(&f, "target-app-");
+    let mut v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    let mut moved = 0;
+    for g in v["compileGroups"].as_array_mut().unwrap() {
+        let incs: Vec<String> =
+            g["includes"].as_array().into_iter().flatten().filter_map(|i| i["path"].as_str().map(str::to_string)).collect();
+        moved += incs.len();
+        let frags = g["compileCommandFragments"].as_array().cloned().unwrap_or_default();
+        let mut frags: Vec<serde_json::Value> = frags;
+        frags.extend(incs.iter().map(|i| serde_json::json!({"fragment": format!("-isystem {i}")})));
+        g["compileCommandFragments"] = serde_json::Value::Array(frags);
+        g["includes"] = serde_json::json!([]);
+    }
+    assert!(moved > 0, "fixture drift: the app target has no includes");
+    std::fs::write(&path, serde_json::to_string_pretty(&v).unwrap()).unwrap();
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(coverage_bt(&s).unwrap()["compile-edges"], 2);
+    assert_eq!(outcome(&s), good);
+}
+
+/// #1735 review: a malformed reply is counted even when `CMakeCache.txt`
+/// cannot be read either.
+#[test]
+fn a_malformed_reply_beside_an_unreadable_cache_is_counted_twice() {
+    let f = materialise("system");
+    std::fs::write(reply_file(&f, "codemodel-v2-"), "{\"configurations\": [").unwrap();
+    std::fs::write(f.build.join("CMakeCache.txt"), "").unwrap();
+    let s = scan_bt(&f, &[&f.build]);
+    assert_eq!(coverage_bt(&s).unwrap()["unreadable-files"], 2);
+}
+
+#[test]
+fn without_a_reply_none_is_counted() {
+    let f = materialise("fetch");
+    let s = checked(&f, &[&f.build]);
+    assert_eq!(coverage_bt(&s).unwrap()["file-api-replies"], 0);
 }

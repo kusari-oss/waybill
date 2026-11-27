@@ -59,12 +59,28 @@ fn include_dirs(args: &[String]) -> Vec<String> {
         let stem = Path::new(&c.replace('\\', "/")).file_stem().and_then(|s| s.to_str()).unwrap_or("").to_ascii_lowercase();
         stem == "cl" || stem == "clang-cl"
     });
+    include_flags(args.iter().skip(1), msvc)
+}
+
+/// #1735 review: the include directories in command-line fragments with no
+/// compiler in front of them, as a file-API reply's
+/// `compileCommandFragments` are. Flags-passed includes
+/// (`add_compile_options(-I…)`, `CMAKE_<LANG>_FLAGS`, a toolchain's
+/// `-isystem`) appear there and NOT in `compileGroups[].includes[]`
+/// (measured, CMake 4.4.5). Split by Windows rules, accepting `/I`, when the
+/// reply's source directory is a Windows path.
+pub(crate) fn fragment_include_dirs<'a>(fragments: impl Iterator<Item = &'a str>, windows: bool) -> Vec<String> {
+    let args: Vec<String> = fragments.flat_map(|f| if windows { split_command_windows(f) } else { split_command(f) }).collect();
+    include_flags(args.iter(), windows)
+}
+
+fn include_flags<'a>(args: impl Iterator<Item = &'a String>, msvc: bool) -> Vec<String> {
     let mut flags: Vec<&str> = vec!["-isystem", "-iquote", "-idirafter", "-I"];
     if msvc {
         flags.push("/I");
     }
     let mut out = Vec::new();
-    let mut it = args.iter().skip(1);
+    let mut it = args;
     while let Some(a) = it.next() {
         for f in &flags {
             if let Some(rest) = a.strip_prefix(f) {
@@ -127,7 +143,7 @@ fn split_command(c: &str) -> Vec<String> {
 
 /// A `directory` that starts with a drive letter: the database was written
 /// on Windows, where CMake quotes `command` by Windows rules (#1717 review).
-fn is_windows_dir(dir: &Path) -> bool {
+pub(crate) fn is_windows_dir(dir: &Path) -> bool {
     let b = dir.as_os_str().as_encoded_bytes();
     b.len() >= 3 && b[0].is_ascii_alphabetic() && b[1] == b':' && (b[2] == b'\\' || b[2] == b'/')
 }
@@ -182,7 +198,7 @@ fn split_command_windows(c: &str) -> Vec<String> {
     out
 }
 
-fn absolute(dir: &Path, p: &str) -> PathBuf {
+pub(crate) fn absolute(dir: &Path, p: &str) -> PathBuf {
     let p = Path::new(p);
     normalise(&if p.is_absolute() { p.to_path_buf() } else { dir.join(p) })
 }

@@ -12,6 +12,7 @@
 pub(crate) mod cache;
 pub(crate) mod compile_db;
 pub(crate) mod discover;
+pub(crate) mod file_api;
 pub(crate) mod redact;
 pub(crate) mod settle;
 
@@ -63,6 +64,9 @@ pub(crate) struct BuildTreeCoverage {
     pub(crate) compile_edges: usize,
     pub(crate) include_dirs_unresolved: usize,
     pub(crate) file_api_replies: usize,
+    /// #1735 review: replies set aside because their cache disagreed with
+    /// `CMakeCache.txt`, which a failed generate leaves behind.
+    pub(crate) file_api_stale_replies: usize,
     pub(crate) conflicts: usize,
     pub(crate) signal_disagreements: usize,
     pub(crate) source_mismatch: usize,
@@ -87,6 +91,7 @@ impl BuildTreeCoverage {
                 "taken": decl("taken"),
             },
             "file-api-replies": self.file_api_replies,
+            "file-api-stale-replies": self.file_api_stale_replies,
             "include-dirs-unresolved": self.include_dirs_unresolved,
             "signal-disagreements": self.signal_disagreements,
             "source-mismatch": self.source_mismatch,
@@ -135,10 +140,41 @@ impl BuildEvidence {
             let found = discover::discover(tree);
             for c in &found.caches {
                 let Some(root) = c.parent() else { continue };
-                let cache = match std::fs::read_to_string(c).map_err(|_| ()).and_then(|t| CacheView::parse(&t).map_err(|_| ())) {
+                // US4 (FR-010): a file-API reply is preferred over the
+                // cache and the compilation database it describes; each
+                // file is the fallback for what the reply lacks.
+                let (mut reply, reply_malformed) = match file_api::load(root) {
+                    file_api::Loaded::Read(r) => (Some(r), false),
+                    file_api::Loaded::Absent => (None, false),
+                    file_api::Loaded::Malformed => (None, true),
+                };
+                let file_cache: Result<CacheView, ()> =
+                    std::fs::read_to_string(c).map_err(|_| ()).and_then(|t| CacheView::parse(&t).map_err(|_| ()));
+                // #1735 review: a reply whose cache disagrees with
+                // `CMakeCache.txt` is from an earlier run (a configure whose
+                // generate failed). Set it aside, whole, for the files.
+                if let (Some(rc), Ok(fc)) = (reply.as_ref().and_then(|r| r.cache.as_ref()), file_cache.as_ref()) {
+                    let differ = rc.disagreements_with(fc);
+                    if !differ.is_empty() {
+                        tracing::warn!(
+                            build_dir = %root.display(),
+                            entries = ?differ,
+                            "cmake build tree: the file-API reply disagrees with CMakeCache.txt and is stale; using the files"
+                        );
+                        coverage.file_api_stale_replies += 1;
+                        reply = None;
+                    }
+                }
+                let from_reply = reply.as_mut().and_then(|r| r.cache.take());
+                let cache = match from_reply.ok_or(()).or(file_cache) {
                     Ok(v) => v,
                     Err(()) => {
                         coverage.unreadable_files += 1;
+                        // #1735 review: a malformed reply is counted even
+                        // when the cache it would replace is unreadable too.
+                        if reply_malformed {
+                            coverage.unreadable_files += 1;
+                        }
                         continue;
                     }
                 };
@@ -149,7 +185,13 @@ impl BuildEvidence {
                 if home.as_deref().is_some_and(|h| !h.starts_with(&canonical_root)) {
                     coverage.source_mismatch += 1;
                 }
-                let units = match read_units(&root.join("compile_commands.json")) {
+                if reply_malformed {
+                    coverage.unreadable_files += 1;
+                }
+                if reply.is_some() {
+                    coverage.file_api_replies += 1;
+                }
+                let units = match reply.and_then(|r| r.units).map(Ok).unwrap_or_else(|| read_units(&root.join("compile_commands.json"))) {
                     Ok(u) => u,
                     Err(()) => {
                         coverage.unreadable_files += 1;
@@ -215,6 +257,8 @@ impl BuildEvidence {
             build_dirs = ev.coverage.build_dirs,
             source_mismatch = ev.coverage.source_mismatch,
             unreadable_files = ev.coverage.unreadable_files,
+            file_api_replies = ev.coverage.file_api_replies,
+            file_api_stale_replies = ev.coverage.file_api_stale_replies,
             "cmake build tree: read (spec 1653)"
         );
         ev

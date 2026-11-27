@@ -1159,6 +1159,20 @@ waybill sbom scan --path . --cmake-build-tree build --output project.cdx.json
   `compile-include` in its C245 `basis`. This is the only trace a header-only
   library leaves. It never changes scope. Other include directories are
   counted in C246 `include-dirs-unresolved` and not emitted.
+- **The CMake file API, when present.** If the build has a file-API reply
+  (`<build>/.cmake/api/v1/reply/`), its `cache-v2` and `codemodel-v2`
+  objects are used instead of `CMakeCache.txt` and `compile_commands.json`
+  for that build directory; the files are the fallback. CMake writes a reply
+  only if a query existed before configure, and waybill never writes one.
+  To get one, create the query files before configuring:
+
+  ```bash
+  mkdir -p build/.cmake/api/v1/query
+  touch build/.cmake/api/v1/query/codemodel-v2 build/.cmake/api/v1/query/cache-v2
+  cmake -S . -B build
+  ```
+
+  C246 `file-api-replies` counts the build directories whose reply was used.
 - **Configure is enough for FetchContent**, which populates during configure.
   ExternalProject downloads happen at build time.
 - **Read-only.** Nothing is written into the build tree, and no host path from

@@ -37,7 +37,7 @@ CycloneDX, SPDX 2.3 and SPDX 3.
 ```json
 {"build-dirs":3,"build-only":0,"build-trees":1,"compile-edges":2,"conflicts":0,
  "configured-values-applied":2,"declarations":{"incomplete":0,"no-evidence":1,"not-taken":1,"taken":4},
- "file-api-replies":1,"include-dirs-unresolved":0,"signal-disagreements":0,
+ "file-api-replies":1,"file-api-stale-replies":0,"include-dirs-unresolved":0,"signal-disagreements":0,
  "source-mismatch":0,"unreadable-files":0}
 ```
 
@@ -51,6 +51,7 @@ CycloneDX, SPDX 2.3 and SPDX 3.
 | `compile-edges` | Edges in the graph that `compile_commands.json` or a file-API reply supports: distinct (owner, component) pairs after the owner rule, excluding a component compiling itself. An edge a declaration already gives counts, but isn't added twice (#1717 review) |
 | `include-dirs-unresolved` | Distinct include directories that resolved to no component |
 | `file-api-replies` | Build directories with a readable reply |
+| `file-api-stale-replies` | Replies set aside because their cache disagrees with `CMakeCache.txt` (a configure whose generate failed); the files are used (#1735 review) |
 | `conflicts` | Declarations whose build directories gave different states |
 | `signal-disagreements` | FetchContent cases where the R1 signals disagreed |
 | `source-mismatch` | Build directories whose `CMAKE_HOME_DIRECTORY` is not inside the scan root |
