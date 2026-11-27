@@ -924,13 +924,19 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "stack.yaml.lock"
+          }
         ]
       },
       "name": "co-log",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"\"]"
+          "value": "[\"stack.yaml.lock\"]"
         },
         {
           "name": "waybill:source-type",
@@ -943,6 +949,10 @@
         {
           "name": "waybill:evidence-kind",
           "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/co-log@0.6.1.2",
@@ -6011,13 +6021,19 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "stack.yaml.lock"
+          }
         ]
       },
       "name": "proto-lens-runtime",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"\"]"
+          "value": "[\"stack.yaml.lock\"]"
         },
         {
           "name": "waybill:source-type",
@@ -6030,6 +6046,10 @@
         {
           "name": "waybill:evidence-kind",
           "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/proto-lens-runtime@0.7.0.7",
@@ -6050,13 +6070,19 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "stack.yaml.lock"
+          }
         ]
       },
       "name": "proto-lens",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"\"]"
+          "value": "[\"stack.yaml.lock\"]"
         },
         {
           "name": "waybill:source-type",
@@ -6069,6 +6095,10 @@
         {
           "name": "waybill:evidence-kind",
           "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/proto-lens@0.7.1.6",
@@ -6907,13 +6937,19 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "stack.yaml.lock"
+          }
         ]
       },
       "name": "thread-utils-context",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"\"]"
+          "value": "[\"stack.yaml.lock\"]"
         },
         {
           "name": "waybill:source-type",
@@ -6926,6 +6962,10 @@
         {
           "name": "waybill:evidence-kind",
           "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/thread-utils-context@0.4.1.0",
@@ -6946,13 +6986,19 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "stack.yaml.lock"
+          }
         ]
       },
       "name": "thread-utils-finalizers",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"\"]"
+          "value": "[\"stack.yaml.lock\"]"
         },
         {
           "name": "waybill:source-type",
@@ -6969,6 +7015,10 @@
         {
           "name": "waybill:orphan-reason",
           "value": "edgeless-lock-pin"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/thread-utils-finalizers@0.1.1.0",
@@ -7298,13 +7348,19 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "stack.yaml.lock"
+          }
         ]
       },
       "name": "unix-compat",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"\"]"
+          "value": "[\"stack.yaml.lock\"]"
         },
         {
           "name": "waybill:source-type",
@@ -7317,6 +7373,10 @@
         {
           "name": "waybill:evidence-kind",
           "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/unix-compat@0.7.1",
