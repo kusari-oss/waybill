@@ -310,6 +310,8 @@ enum CabalFreezeEntry {
     ExactPin {
         name: String, // lowercased
         version: String,
+        /// Spec 1665 (#1736): the `cabal.project.freeze` that pinned it.
+        source: PathBuf,
     },
     RangeConstraint {
         name: String,
@@ -322,6 +324,8 @@ enum CabalFreezeEntry {
 struct StackLockEntry {
     name: String,
     version: String,
+    /// Spec 1665 (#1736): the `stack.yaml.lock` that pinned it.
+    source: PathBuf,
 }
 
 #[derive(Debug, Clone)]
@@ -1304,17 +1308,28 @@ pub(crate) fn finalize(
         .collect();
 
     // Phase F — emit lockfile-derived components.
-    for entry in &freeze_entries {
-        let component = build_freeze_component(entry);
+    //
+    // Spec 1665 (#1736): a PURL several freeze or lock files pin is one
+    // component listing every one of them, across both kinds — not the first
+    // with the rest dropped. Different versions are different PURLs, so a
+    // file is never attributed to a version it did not pin.
+    let mut pin_at: HashMap<String, usize> = HashMap::new();
+    let lock_components = freeze_entries
+        .iter()
+        .map(build_freeze_component)
+        .chain(stack_lock_entries.iter().map(build_stack_lock_component));
+    for component in lock_components {
         let purl_key = component.purl.as_str().to_string();
-        if seen_purls.insert(purl_key) {
-            out.push(component);
-        }
-    }
-    for entry in &stack_lock_entries {
-        let component = build_stack_lock_component(entry);
-        let purl_key = component.purl.as_str().to_string();
-        if seen_purls.insert(purl_key) {
+        if let Some(&i) = pin_at.get(&purl_key) {
+            let c: &mut PackageDbEntry = &mut out[i];
+            let src = component.source_path;
+            // Unsorted here: emission sorts every component's source files
+            // (spec 1542), which the fixture's `e/` freeze file tests.
+            if !src.is_empty() && src != c.source_path && !c.extra_source_paths.contains(&src) {
+                c.extra_source_paths.push(src);
+            }
+        } else if seen_purls.insert(purl_key.clone()) {
+            pin_at.insert(purl_key, out.len());
             out.push(component);
         }
     }
@@ -1730,7 +1745,7 @@ fn parse_cabal_freeze(path: &Path) -> anyhow::Result<Vec<CabalFreezeEntry>> {
             let name = caps.get(1).map(|m| m.as_str().to_string());
             let version = caps.get(2).map(|m| m.as_str().to_string());
             if let (Some(name), Some(version)) = (name, version) {
-                out.push(CabalFreezeEntry::ExactPin { name, version });
+                out.push(CabalFreezeEntry::ExactPin { name, version, source: path.to_path_buf() });
                 continue;
             }
         }
@@ -1803,7 +1818,7 @@ fn parse_stack_lock(
             tracing::warn!(coord = %hackage_coord, "haskell: failed to parse hackage coord");
             continue;
         };
-        entries.push(StackLockEntry { name, version });
+        entries.push(StackLockEntry { name, version, source: path.to_path_buf() });
     }
     Ok((entries, snapshots))
 }
@@ -2479,7 +2494,7 @@ fn collect_design_tier_deps(manifest: &CabalManifest) -> Vec<(DeclaredDep, Lifec
 
 fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
     match entry {
-        CabalFreezeEntry::ExactPin { name, version } => {
+        CabalFreezeEntry::ExactPin { name, version, source } => {
             let purl_str = format!("pkg:hackage/{name}@{version}");
             let purl = Purl::new(&purl_str)
                 .unwrap_or_else(|_| fallback_purl());
@@ -2492,7 +2507,7 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
                 name: name.clone(),
                 version: version.clone(),
                 arch: None,
-                source_path: String::new(),
+                source_path: source.to_string_lossy().into_owned(),
                 depends: Vec::new(),
                 maintainer: None,
                 licenses: Vec::new(),
@@ -2597,7 +2612,7 @@ fn build_stack_lock_component(entry: &StackLockEntry) -> PackageDbEntry {
         name: entry.name.clone(),
         version: entry.version.clone(),
         arch: None,
-        source_path: String::new(),
+        source_path: entry.source.to_string_lossy().into_owned(),
         depends: Vec::new(),
         maintainer: None,
         licenses: Vec::new(),
@@ -3156,9 +3171,11 @@ mod tests {
         let entries = parse_cabal_freeze(&p).unwrap();
         assert_eq!(entries.len(), 3);
         match &entries[0] {
-            CabalFreezeEntry::ExactPin { name, version } => {
+            CabalFreezeEntry::ExactPin { name, version, source } => {
                 assert_eq!(name, "aeson");
                 assert_eq!(version, "2.2.0.0");
+                // Spec 1665 (#1736): the pin names the file that pinned it.
+                assert_eq!(source, &p);
             }
             _ => panic!("expected ExactPin"),
         }
@@ -3232,6 +3249,8 @@ packages:
         assert_eq!(entries[0].version, "2.2.0.0");
         assert_eq!(entries[1].name, "lens");
         assert_eq!(entries[1].version, "5.2.3");
+        // Spec 1665 (#1736): every pin names the lock that pinned it.
+        assert!(entries.iter().all(|e| e.source == p), "{entries:?}");
     }
 
     #[test]
@@ -3424,6 +3443,7 @@ version: 0.1.0
         let entry = CabalFreezeEntry::ExactPin {
             name: "aeson".to_string(),
             version: "2.2.0.0".to_string(),
+            source: PathBuf::from("cabal.project.freeze"),
         };
         let c = build_freeze_component(&entry);
         assert_eq!(c.purl.as_str(), "pkg:hackage/aeson@2.2.0.0");
@@ -3434,6 +3454,7 @@ version: 0.1.0
         let entry = CabalFreezeEntry::ExactPin {
             name: "base".to_string(),
             version: "4.18.0.0".to_string(),
+            source: PathBuf::from("cabal.project.freeze"),
         };
         let c = build_freeze_component(&entry);
         assert_eq!(
@@ -3447,6 +3468,7 @@ version: 0.1.0
         let entry = CabalFreezeEntry::ExactPin {
             name: "aeson".to_string(),
             version: "2.2.0.0".to_string(),
+            source: PathBuf::from("cabal.project.freeze"),
         };
         let c = build_freeze_component(&entry);
         assert!(!c.extra_annotations.contains_key("waybill:ghc-stdlib"));

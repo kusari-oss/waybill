@@ -1,0 +1,6 @@
+pkg:hackage/co-log@0.6.1.2	hackage-stack-lock	["stack.yaml.lock"]	reachable	-
+pkg:hackage/proto-lens-runtime@0.7.0.7	hackage-stack-lock	["stack.yaml.lock"]	reachable	-
+pkg:hackage/proto-lens@0.7.1.6	hackage-stack-lock	["stack.yaml.lock"]	reachable	-
+pkg:hackage/thread-utils-context@0.4.1.0	hackage-stack-lock	["stack.yaml.lock"]	reachable	-
+pkg:hackage/thread-utils-finalizers@0.1.1.0	hackage-stack-lock	["stack.yaml.lock"]	unreachable	edgeless-lock-pin
+pkg:hackage/unix-compat@0.7.1	hackage-stack-lock	["stack.yaml.lock"]	reachable	-
