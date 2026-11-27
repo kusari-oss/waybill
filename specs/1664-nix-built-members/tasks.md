@@ -79,7 +79,7 @@ Format: `- [ ] Txxx [P?] [Story?] description (path)`.
 
 - [X] T016 Add a CLAUDE.md "Recent Changes" line for 1664, by hand (the context script deletes lines).
 - [X] T017 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$' prepr -- ./scripts/pre-pr.sh`, and check `GATE_RESULT=pass` and the Summary line.
-- [ ] T018 Open the PR ("Refs #1731" until the goldens land). Dispatch `public-corpus.yml` with `regen_goldens=true`, and commit only the goldens T014 explains (expected: `hpack-hs-temporal-sdk` gains `tix-to-markdown`, `hpc` and C248). Confirm no `invariant-declarations.toml` row moves unless R7 explains it.
+- [X] T018 Open the PR ("Refs #1731" until the goldens land). Dispatch `public-corpus.yml` with `regen_goldens=true`, and commit only the goldens T014 explains (expected: `hpack-hs-temporal-sdk` gains `tix-to-markdown`, `hpc` and C248). Confirm no `invariant-declarations.toml` row moves unless R7 explains it.
 
 ## Dependencies
 

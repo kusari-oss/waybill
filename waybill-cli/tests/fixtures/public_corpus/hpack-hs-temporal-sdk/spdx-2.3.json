@@ -23,13 +23,13 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":70,\\\"excluded_files\\\":6,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":12,\\\"with_candidates\\\":354}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":73,\\\"excluded_files\\\":6,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":12,\\\"with_candidates\\\":354}\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":0,\\\"resolved\\\":0,\\\"revision\\\":null,\\\"unresolved\\\":{\\\"offline\\\":64}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":0,\\\"resolved\\\":0,\\\"revision\\\":null,\\\"unresolved\\\":{\\\"offline\\\":66}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -59,7 +59,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"codec-encryption\\\",\\\"codec-server\\\",\\\"core\\\",\\\"core/rust\\\",\\\"optimal-codec\\\",\\\"protos\\\",\\\"sdk\\\"]\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"codec-encryption\\\",\\\"codec-server\\\",\\\"core\\\",\\\"core/rust\\\",\\\"nix/overlays/haskell\\\",\\\"nix/packages\\\",\\\"optimal-codec\\\",\\\"protos\\\",\\\"sdk\\\",\\\"tools/tix-to-markdown\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -77,7 +77,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/temporal-codec-encryption.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/temporal-sdk-codec-server.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/temporal-sdk-core.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/temporal-sdk-optimal-codec.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/temporal-api-protos.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/temporal-sdk.cabal\\\"],\\\"includes-resolved\\\":[{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\\\"}],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\\\"],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\\\"],\\\"manifests-unread\\\":[]}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/temporal-codec-encryption.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/temporal-sdk-codec-server.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/temporal-sdk-core.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/temporal-sdk-optimal-codec.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/temporal-api-protos.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/temporal-sdk.cabal\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/tix-to-markdown.cabal\\\"],\\\"includes-resolved\\\":[{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\\\",\\\"include\\\":\\\"../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\\\"},{\\\"file\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\\\",\\\"include\\\":\\\"../../hpack-defaults.yaml\\\",\\\"manifest\\\":\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\\\"}],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\\\"],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-encryption/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/codec-server/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/core/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/optimal-codec/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/protos/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/sdk/package.yaml\\\",\\\"/home/runner/.cache/waybill/corpus/91d6c236aefb8307/d24313e37a009cc4121012e509e16a3e749811d3/repo/tools/tix-to-markdown/package.yaml\\\"],\\\"manifests-unread\\\":[]}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -448,7 +448,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"protos/package.yaml\",\"sdk/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"protos/package.yaml\",\"sdk/package.yaml\",\"tools/tix-to-markdown/package.yaml\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -466,7 +466,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"codec-encryption/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"codec-server/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"core/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"optimal-codec/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"protos/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"sdk/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"codec-encryption/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"codec-server/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"core/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"optimal-codec/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"protos/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"sdk/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"tools/tix-to-markdown/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -490,7 +490,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"codec-encryption\\\",\\\"codec-server\\\",\\\"core\\\",\\\"optimal-codec\\\",\\\"protos\\\",\\\"sdk\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"codec-encryption\\\",\\\"codec-server\\\",\\\"core\\\",\\\"optimal-codec\\\",\\\"protos\\\",\\\"sdk\\\",\\\"tools/tix-to-markdown\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -754,7 +754,13 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"sdk/package.yaml\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"codec-encryption/package.yaml\",\"codec-server/package.yaml\",\"core/package.yaml\",\"optimal-codec/package.yaml\",\"sdk/package.yaml\",\"tools/tix-to-markdown/package.yaml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\">= 0.6\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -766,7 +772,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"codec-encryption/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"codec-server/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"core/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"optimal-codec/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"sdk/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"codec-encryption/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"codec-server/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"core/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"optimal-codec/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"sdk/package.yaml\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"tools/tix-to-markdown/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -790,7 +796,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"codec-encryption\\\",\\\"codec-server\\\",\\\"core\\\",\\\"optimal-codec\\\",\\\"sdk\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"codec-encryption\\\",\\\"codec-server\\\",\\\"core\\\",\\\"optimal-codec\\\",\\\"sdk\\\",\\\"tools/tix-to-markdown\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1180,6 +1186,90 @@
       "versionInfo": "NOASSERTION"
     },
     {
+      "SPDXID": "SPDXRef-Package-6QLBIN4OMQGCVQVJ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"tools/tix-to-markdown/package.yaml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\">= 1.4\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"tools/tix-to-markdown/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:ghc-stdlib\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:haskell-version-unresolved-reason\",\"value\":\"offline\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"tools/tix-to-markdown\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/filepath",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "filepath",
+      "versionInfo": "NOASSERTION"
+    },
+    {
       "SPDXID": "SPDXRef-Package-EZEG4BXRC7JCXVOV",
       "annotations": [
         {
@@ -1549,6 +1639,84 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "hedgehog",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5FLYUJUSJZPT2WEW",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"tools/tix-to-markdown/package.yaml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\">= 0.6\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"tools/tix-to-markdown/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:haskell-version-unresolved-reason\",\"value\":\"offline\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"tools/tix-to-markdown\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/hpc",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "hpc",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -4408,6 +4576,78 @@
       "versionInfo": "NOASSERTION"
     },
     {
+      "SPDXID": "SPDXRef-Package-TP7XFARHWUNYTMMU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-main-module\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:evidence-kind\",\"value\":\"hpack-manifest\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"nix/overlays/haskell/hs-temporal-sdk.nix\",\"nix/packages/tix-to-markdown.nix\",\"tools/tix-to-markdown/package.yaml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"nix/overlays/haskell/hs-temporal-sdk.nix\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"nix/packages/tix-to-markdown.nix\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"tools/tix-to-markdown/package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:membership-source\",\"value\":\"nix-callcabal2nix\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"nix/overlays/haskell\\\",\\\"nix/packages\\\",\\\"tools/tix-to-markdown\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/tix-to-markdown@2025.10.1.0",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
+      "name": "tix-to-markdown",
+      "versionInfo": "2025.10.1.0"
+    },
+    {
       "SPDXID": "SPDXRef-Package-SKZ7EN7ALZJSMRAA",
       "annotations": [
         {
@@ -5311,6 +5551,11 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-TP7XFARHWUNYTMMU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-YGW6ZIEN42EQNFC4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
@@ -5679,6 +5924,26 @@
       "relatedSpdxElement": "SPDXRef-Package-ZALDXEAOW6OF5YPO",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-T35F24VSYM65SVVE"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5FLYUJUSJZPT2WEW",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TP7XFARHWUNYTMMU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-6QLBIN4OMQGCVQVJ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TP7XFARHWUNYTMMU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TP7XFARHWUNYTMMU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TP7XFARHWUNYTMMU"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-T35F24VSYM65SVVE",

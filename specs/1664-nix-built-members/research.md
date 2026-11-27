@@ -111,3 +111,9 @@ This is the same probe run with a release build of the branch: `measurements/rej
   
   The root reaches `tix-to-markdown`, and `tix-to-markdown` depends on `base`, `containers`, `filepath` and `hpc`. `filepath` and `hpc` are new because `tix-to-markdown` is their only dependent. #1731 named `hpc`; `filepath` has the same cause.
 - The other 14 literal `callCabal2nix` sites from R1 changed nothing, as predicted: each names a directory that is already a member.
+
+**Goldens** (T018). They come from `public-corpus.yml` run 46036180952 with `regen_goldens=true` on `1664-nix-built-members`. Of 88 regenerated files, the 3 `hpack-hs-temporal-sdk` goldens differ and the other 85 are byte-identical.
+- In CycloneDX, the component PURLs gain exactly `pkg:hackage/filepath`, `pkg:hackage/hpc` and `pkg:hackage/tix-to-markdown@2025.10.1.0`, and C248 appears once.
+- C200 now reads 7 of 7 `package.yaml`, including `tix-to-markdown`'s `!include` of `../../hpack-defaults.yaml`.
+- The SPDX 3 output again carried the unreferenced `Organization "Microsoft"` element from #1738. It was removed from the committed golden, as in #1737, with no other byte changed. The file round-trips through `json.dumps(indent=2)`.
+- No `invariant-declarations.toml` row moved, and the run passed.
