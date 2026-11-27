@@ -1,0 +1,3 @@
+## tools/tix-to-markdown
+./nix/overlays/haskell/hs-temporal-sdk.nix:44:  tix-to-markdown = hfinal.callCabal2nix "tix-to-markdown" ../../../tools/tix-to-markdown { };
+./nix/packages/tix-to-markdown.nix:1:{ haskellPackages }: haskellPackages.callCabal2nix "tix-to-markdown" ../../tools/tix-to-markdown { }

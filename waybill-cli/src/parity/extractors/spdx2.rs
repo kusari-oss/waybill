@@ -774,6 +774,8 @@ spdx23_anno!(c245_spdx23, "waybill:cmake-build-settlement", component);
 spdx23_anno!(c246_spdx23, "waybill:cmake-build-tree-coverage", document);
 // Spec 1653: C247 — where a boot library's dependency edges came from.
 spdx23_anno!(c247_spdx23, "waybill:boot-library-dependencies", component);
+// Spec 1664: C248 — a Haskell package Nix admitted as a project member.
+spdx23_anno!(c248_spdx23, "waybill:membership-source", component);
 spdx23_anno!(c42_spdx23, "waybill:lifecycle-scope", component);
 spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
 spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);

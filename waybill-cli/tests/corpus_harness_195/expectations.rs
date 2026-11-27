@@ -2596,8 +2596,9 @@ pub(crate) fn recall_proxy(cdx: &serde_json::Value, truth: &serde_json::Value) -
 /// `package.yaml` that neither the governing `cabal.project` nor a
 /// `stack.yaml` beside it declares is dropped before C200 is recorded. That
 /// is why ogmios is 7 of the 8 on disk (`modules/json-via-show` is not in
-/// `server/cabal.project`) and hs-temporal-sdk is 6 of 7
-/// (`tools/tix-to-markdown` is outside `packages: */*.cabal`).
+/// `server/cabal.project`). Spec 1664 adds a third source, a `callCabal2nix`
+/// on a literal path: hs-temporal-sdk's `tools/tix-to-markdown` is outside
+/// `packages: */*.cabal` but built by two Nix files, so it is 7 of 7.
 pub(crate) struct HpackExpect {
     /// `manifests-seen` in C200 (`waybill:hpack-read-outcome`).
     seen: usize,
@@ -2716,7 +2717,7 @@ pub fn hpack_lootbox_no_generated_cabal_expectations(sboms: &EmittedSboms) -> Re
 }
 
 pub fn hpack_hs_temporal_sdk_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    hpack_expectations(sboms, HpackExpect { seen: 6, generated_cabal_present: true })
+    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: true })
 }
 
 pub fn hpack_ogmios_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {

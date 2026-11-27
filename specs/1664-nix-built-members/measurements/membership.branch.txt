@@ -1,0 +1,12 @@
+haskell-aeson	0
+haskell-language-server	0
+haskell-security-advisories	0
+hpack-hs-opentelemetry	0
+hpack-hs-temporal-sdk	1
+hpack-lootbox	0
+hpack-ogmios	0
+nix-closure-moat	0
+nix-closure-openai	0
+nix-closure-shellcheck	0
+nix-closure-slack-web	0
+nix-closure-slacklinker	0
