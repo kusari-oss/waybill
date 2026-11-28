@@ -71,12 +71,12 @@
 
   Each must fail at least one test. Record the results in `measurements/mutations.md`.
 - [X] T013 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$' prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass` and the Summary line.
-- [ ] T014 Open the PR, then dispatch `gh workflow run public-corpus.yml -f branch=1667-haskell-path-shapes -f regen_goldens=true` and download `corpus-goldens-regen`.
+- [X] T014 Open the PR, then dispatch `gh workflow run public-corpus.yml -f branch=1667-haskell-path-shapes -f regen_goldens=true` and download `corpus-goldens-regen`.
   - Run `measure.sh` as `branch`.
   - Diff it against `main`, using a normalized, sorted diff. Explain every line in `measurements/branch.md`. The expected result: only the C200 line changes, in the 27 files, and 0 files contain `/home/runner`.
   - Re-run the T002 fixture with the branch build into `measurements/split-branch/`, and explain every `source_dir` and grouping difference from `split-main/` in `branch.md` (FR-001).
   - Commit only the goldens that are explained, and exclude the #1738 stray element if it recurs.
-- [ ] T015 Add the `CLAUDE.md` Recent Changes line by hand, and tick every task only after checking its claim.
+- [X] T015 Add the `CLAUDE.md` Recent Changes line by hand, and tick every task only after checking its claim.
 
 ## Dependencies
 

@@ -106477,7 +106477,7 @@
       },
       {
         "name": "waybill:hpack-read-outcome",
-        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/53983fe1021353b3/d06905558ba68b49b17f36c875e97f7234a9c19b/repo/moat.cabal\"],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/53983fe1021353b3/d06905558ba68b49b17f36c875e97f7234a9c19b/repo/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/53983fe1021353b3/d06905558ba68b49b17f36c875e97f7234a9c19b/repo/package.yaml\"],\"manifests-unread\":[]}"
+        "value": "{\"generated-cabal-suppressed\":[\"moat.cabal\"],\"manifests-partial\":[],\"manifests-read\":[\"package.yaml\"],\"manifests-seen\":[\"package.yaml\"],\"manifests-unread\":[]}"
       },
       {
         "name": "waybill:nixpkgs-security",
