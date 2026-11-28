@@ -871,14 +871,15 @@ pub(crate) fn finalize(
     // Spec 1652 (FR-003): what a root declaration names, resolved against
     // every package this walk found — before #1032's filter below, which
     // only removes `.cabal` files a declaration does NOT list.
-    let mut root_declared_member_dirs = {
-        let package_dirs: Vec<PathBuf> = cabal_paths
-            .iter()
-            .chain(package_yaml_paths.iter())
-            .filter_map(|p| p.parent().map(Path::to_path_buf))
-            .collect();
-        resolve_root_declared_members(rootfs, &cabal_project_paths, &stack_yaml_paths, &package_dirs)
-    };
+    // Spec 1668: also the candidates a freeze file's `cabal.project` names
+    // (Phase B), so computed before #1032's filter, as membership is.
+    let package_dirs: Vec<PathBuf> = cabal_paths
+        .iter()
+        .chain(package_yaml_paths.iter())
+        .filter_map(|p| p.parent().map(Path::to_path_buf))
+        .collect();
+    let mut root_declared_member_dirs =
+        resolve_root_declared_members(rootfs, &cabal_project_paths, &stack_yaml_paths, &package_dirs);
 
     // Spec 1662 — every `package.yaml` is read once, here, before #1032's
     // filter: the filter needs each manifest's `name:` (its stand-in, below),
@@ -1067,17 +1068,25 @@ pub(crate) fn finalize(
                 // dependency below, so "a lockfile exists here" is not enough
                 // information to decide anything.
                 if let Some(dir) = path.parent() {
-                    let canon = std::fs::canonicalize(dir)
-                        .unwrap_or_else(|_| dir.to_path_buf());
-                    let slot = pins_by_dir.entry(canon).or_default();
-                    for e in &entries {
-                        // Only an EXACT pin suppresses the manifest's own
-                        // declaration. A `RangeConstraint` carries the same
-                        // class of information `build-depends` already does —
-                        // an acceptable set, not a chosen member — so it is
-                        // not grounds for silencing the declaration.
-                        if let CabalFreezeEntry::ExactPin { name, .. } = e {
-                            slot.insert(name.to_lowercase());
+                    // Spec 1668 (#1744): a freeze file governs every package
+                    // its sibling `cabal.project` lists, as a Stack lock does
+                    // its `stack.yaml`'s (spec 1663). Measured: `packages:
+                    // app` left `app/`'s dependency versionless and the pin
+                    // an unreachable `edgeless-lock-pin`.
+                    let members = std::fs::read_to_string(dir.join("cabal.project"))
+                        .map(|text| cabal_project_members(dir, &text, &package_dirs))
+                        .unwrap_or_default();
+                    for g in lock_governed_dirs(dir, members) {
+                        let slot = pins_by_dir.entry(g).or_default();
+                        for e in &entries {
+                            // Only an EXACT pin suppresses the manifest's own
+                            // declaration. A `RangeConstraint` carries the same
+                            // class of information `build-depends` already does —
+                            // an acceptable set, not a chosen member — so it is
+                            // not grounds for silencing the declaration.
+                            if let CabalFreezeEntry::ExactPin { name, .. } = e {
+                                slot.insert(name.to_lowercase());
+                            }
                         }
                     }
                     successful_freeze_dirs.insert(dir.to_path_buf());
@@ -1110,18 +1119,21 @@ pub(crate) fn finalize(
                     // emitted a versionless `co-log` that the edges reached
                     // AND an unreachable, unexplained `co-log@0.6.1.2` (22
                     // I7 failures across hs-opentelemetry and lootbox).
-                    let mut governed: Vec<PathBuf> = vec![dir.to_path_buf()];
                     let stack_yaml = dir.join("stack.yaml");
-                    if stack_yaml.is_file() {
-                        for entry in stack_yaml_packages(&stack_yaml).unwrap_or_default() {
-                            let e = entry.trim().trim_end_matches('/');
-                            let e = e.strip_prefix("./").unwrap_or(e);
-                            governed.push(if e.is_empty() || e == "." { dir.to_path_buf() } else { dir.join(e) });
-                        }
-                    }
-                    for g in governed {
-                        let canon = std::fs::canonicalize(&g).unwrap_or(g);
-                        let slot = pins_by_dir.entry(canon).or_default();
+                    let members: Vec<PathBuf> = if stack_yaml.is_file() {
+                        stack_yaml_packages(&stack_yaml)
+                            .unwrap_or_default()
+                            .iter()
+                            .map(|entry| match normalise_member_entry(entry).as_str() {
+                                "." => dir.to_path_buf(),
+                                e => dir.join(e),
+                            })
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
+                    for g in lock_governed_dirs(dir, members) {
+                        let slot = pins_by_dir.entry(g).or_default();
                         for e in &entries {
                             // Stack lockfile entries are always exact versions.
                             slot.insert(e.name.to_lowercase());
@@ -1521,8 +1533,6 @@ fn resolve_root_declared_members(
     stack_yaml_paths: &[PathBuf],
     package_dirs: &[PathBuf],
 ) -> Vec<String> {
-    use globset::GlobBuilder;
-
     let dir_key = |d: &Path| -> Option<String> {
         let rel = d.strip_prefix(rootfs).ok()?;
         let s = rel
@@ -1535,11 +1545,7 @@ fn resolve_root_declared_members(
     let candidates: BTreeSet<String> = package_dirs.iter().filter_map(|d| dir_key(d)).collect();
     let at_root = |p: &PathBuf| p.parent() == Some(rootfs);
     // `./foo/` -> `foo`; `.` / `./` / `` -> `.`.
-    let normalise = |e: &str| -> String {
-        let e = e.trim().trim_end_matches('/');
-        let e = e.strip_prefix("./").unwrap_or(e);
-        if e.is_empty() || e == "." { ".".to_string() } else { e.to_string() }
-    };
+    let normalise = normalise_member_entry;
 
     let mut out: BTreeSet<String> = BTreeSet::new();
 
@@ -1547,39 +1553,7 @@ fn resolve_root_declared_members(
         let Ok(text) = std::fs::read_to_string(project) else {
             continue;
         };
-        let Some(entries) = parse_cabal_project_packages(&text) else {
-            continue;
-        };
-        for token in entries.iter().flat_map(|e| e.split(',')) {
-            if token.trim().is_empty() {
-                continue;
-            }
-            let entry = normalise(token);
-            // A `.cabal` entry names the package in its directory.
-            let dir_pattern = if entry.ends_with(".cabal") {
-                match entry.rsplit_once('/') {
-                    Some((dir, _)) => normalise(dir),
-                    None => ".".to_string(),
-                }
-            } else {
-                entry
-            };
-            if dir_pattern == "." {
-                if candidates.contains(".") {
-                    out.insert(".".to_string());
-                }
-                continue;
-            }
-            match GlobBuilder::new(&dir_pattern).literal_separator(true).build() {
-                Ok(g) => {
-                    let m = g.compile_matcher();
-                    out.extend(candidates.iter().filter(|c| m.is_match(c.as_str())).cloned());
-                }
-                Err(_) => {
-                    tracing::debug!(entry = %token, "haskell: unparseable cabal.project packages entry; ignored");
-                }
-            }
-        }
+        out.extend(cabal_project_member_dirs(&text, &candidates));
     }
 
     for stack in stack_yaml_paths.iter().filter(|p| at_root(p)) {
@@ -1595,6 +1569,94 @@ fn resolve_root_declared_members(
     }
 
     out.into_iter().collect()
+}
+
+/// `./foo/` -> `foo`; `.` / `./` / `` -> `.`.
+fn normalise_member_entry(e: &str) -> String {
+    let e = e.trim().trim_end_matches('/');
+    let e = e.strip_prefix("./").unwrap_or(e);
+    if e.is_empty() || e == "." { ".".to_string() } else { e.to_string() }
+}
+
+/// The `candidates` a `cabal.project`'s `packages:` and `optional-packages:`
+/// name. Candidates are package directories as `/`-joined keys relative to
+/// the project's directory (`.` for the directory itself). An entry is a
+/// directory, a directory glob, or a `.cabal` path or glob naming its
+/// directory; globs use `literal_separator(true)` (#1032). Spec 1668: the one
+/// reader of `packages:`, shared by root membership and freeze governance.
+fn cabal_project_member_dirs(text: &str, candidates: &BTreeSet<String>) -> BTreeSet<String> {
+    use globset::GlobBuilder;
+
+    let mut out = BTreeSet::new();
+    let Some(entries) = parse_cabal_project_packages(text) else {
+        return out;
+    };
+    for token in entries.iter().flat_map(|e| e.split(',')) {
+        if token.trim().is_empty() {
+            continue;
+        }
+        let entry = normalise_member_entry(token);
+        let dir_pattern = if entry.ends_with(".cabal") {
+            match entry.rsplit_once('/') {
+                Some((dir, _)) => normalise_member_entry(dir),
+                None => ".".to_string(),
+            }
+        } else {
+            entry
+        };
+        if dir_pattern == "." {
+            if candidates.contains(".") {
+                out.insert(".".to_string());
+            }
+            continue;
+        }
+        match GlobBuilder::new(&dir_pattern).literal_separator(true).build() {
+            Ok(g) => {
+                let m = g.compile_matcher();
+                out.extend(candidates.iter().filter(|c| m.is_match(c.as_str())).cloned());
+            }
+            Err(_) => {
+                tracing::debug!(entry = %token, "haskell: unparseable cabal.project packages entry; ignored");
+            }
+        }
+    }
+    out
+}
+
+/// Spec 1668 (FR-003): the directories a lock file governs — its own, plus
+/// the package directories its project file lists — canonical and unique.
+/// Freeze files and Stack locks differ only in where `members` come from
+/// (`cabal.project` and `stack.yaml`); having two copies of this step is how
+/// #1744 arose.
+fn lock_governed_dirs(lock_dir: &Path, members: impl IntoIterator<Item = PathBuf>) -> Vec<PathBuf> {
+    let canon = |p: PathBuf| std::fs::canonicalize(&p).unwrap_or(p);
+    let mut out: Vec<PathBuf> = Vec::new();
+    for d in std::iter::once(lock_dir.to_path_buf()).chain(members).map(canon) {
+        if !out.contains(&d) {
+            out.push(d);
+        }
+    }
+    out
+}
+
+/// Spec 1668: the package directories a `cabal.project` in `project_dir`
+/// lists, among `package_dirs`. A directory outside `project_dir` has no
+/// relative key and so is never a member.
+fn cabal_project_members(project_dir: &Path, text: &str, package_dirs: &[PathBuf]) -> Vec<PathBuf> {
+    let key = |d: &Path| -> Option<String> {
+        let rel = d.strip_prefix(project_dir).ok()?;
+        let s = rel
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy())
+            .collect::<Vec<_>>()
+            .join("/");
+        Some(if s.is_empty() { ".".to_string() } else { s })
+    };
+    let candidates: BTreeSet<String> = package_dirs.iter().filter_map(|d| key(d)).collect();
+    cabal_project_member_dirs(text, &candidates)
+        .into_iter()
+        .map(|k| if k == "." { project_dir.to_path_buf() } else { project_dir.join(k) })
+        .collect()
 }
 
 // -----------------------------------------------------------------------
@@ -4392,5 +4454,54 @@ mod nix_admit_tests {
         let files = || vec![nix.clone()];
         let got = nix_admit(&root, &files, &mut index, &[&cand]);
         assert_eq!(got, vec![(cand, BTreeSet::from([nix]))]);
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1668_governed_dirs_tests {
+    use super::*;
+
+    #[test]
+    fn no_members_governs_only_the_lock_dir() {
+        let t = tempfile::tempdir().unwrap();
+        let c = std::fs::canonicalize(t.path()).unwrap();
+        assert_eq!(lock_governed_dirs(t.path(), Vec::new()), vec![c]);
+    }
+
+    #[test]
+    fn members_are_canonical_and_unique() {
+        let t = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(t.path().join("app")).unwrap();
+        let c = std::fs::canonicalize(t.path()).unwrap();
+        let got = lock_governed_dirs(
+            t.path(),
+            vec![t.path().join("app"), t.path().join("app/../app"), t.path().to_path_buf()],
+        );
+        assert_eq!(got, vec![c.clone(), c.join("app")]);
+    }
+
+    fn dirs(root: &Path, rel: &[&str]) -> Vec<PathBuf> {
+        rel.iter().map(|r| if r.is_empty() { root.to_path_buf() } else { root.join(r) }).collect()
+    }
+
+    #[test]
+    fn cabal_project_members_reads_every_packages_form() {
+        let root = Path::new("/p");
+        let pkgs = dirs(root, &["", "app", "libs/x", "libs/y", "other"]);
+        let m = |text: &str| cabal_project_members(root, text, &pkgs);
+        assert_eq!(m("packages: app\n"), vec![root.join("app")]);
+        assert_eq!(m("packages: ./app/\n"), vec![root.join("app")]);
+        assert_eq!(m("packages: app/a.cabal\n"), vec![root.join("app")]);
+        assert_eq!(m("packages: libs/*\n"), vec![root.join("libs/x"), root.join("libs/y")]);
+        assert_eq!(m("packages: .\n"), vec![root.to_path_buf()]);
+        assert_eq!(m("packages: ../outside\n"), Vec::<PathBuf>::new());
+    }
+
+    #[test]
+    fn cabal_project_members_ignores_directories_outside_the_project() {
+        let pkgs = vec![PathBuf::from("/p/app"), PathBuf::from("/q/app")];
+        assert_eq!(cabal_project_members(Path::new("/p"), "packages: */app\n", &pkgs), Vec::<PathBuf>::new());
+        assert_eq!(cabal_project_members(Path::new("/p"), "packages: app\n", &pkgs), vec![PathBuf::from("/p/app")]);
     }
 }
