@@ -96,23 +96,15 @@ impl std::fmt::Display for ProjectDiscoveryMode {
 /// Spec 1652 (research R1): the main module's directory, relative to the
 /// scan root.
 ///
-/// Milestone 215's `split::source_dir_for` strips the manifest's file name
-/// only when `is_manifest_basename` knows it. That list has no `package.yaml`
-/// and no `*.cabal`, so a root Haskell package's `source_dir` is the file
-/// `package.yaml` — never the scan root — and every Haskell repository fell
-/// back to a full scan under `root-only` and `strict` (8 of 8 corpus targets).
-///
-/// The directory is decided here, from the filesystem, rather than by adding
-/// names to that list: the list also drives `--split`'s file names and
-/// `--split=directory` grouping, which spec 1652 holds fixed (FR-007, #1691),
-/// and a file test covers every ecosystem's manifest name, not only the ones
-/// someone remembered.
+/// Spec 1652 added a file test here because `split::source_dir_for` stripped
+/// the file name only for names `is_manifest_basename` lists, which has no
+/// `package.yaml` or `*.cabal`, so every Haskell repository fell back to a
+/// full scan under `root-only` and `strict` (8 of 8 corpus targets). Spec 1667
+/// (#1691) moved the rule into [`crate::generate::split::subproject_dir`],
+/// which `source_dir_for` now uses too, so `source_dir` is already a directory.
+/// This stays a wrapper so a `SubprojectRoot` built elsewhere still resolves.
 pub(crate) fn root_dir(root: &SubprojectRoot, scan_root: &Path) -> PathBuf {
-    if scan_root.join(&root.source_dir).is_file() {
-        root.source_dir.parent().map(Path::to_path_buf).unwrap_or_default()
-    } else {
-        root.source_dir.clone()
-    }
+    crate::generate::split::subproject_dir(&root.source_dir, scan_root)
 }
 
 /// A main-module is "root-level" iff its directory ([`root_dir`]) is either

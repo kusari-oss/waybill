@@ -107,7 +107,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[\\\"/home/runner/.cache/waybill/corpus/17f637feb7c01827/72af26a71622bcf1eb4b84d017677be711c6fc7b/repo/package.yaml\\\"],\\\"manifests-seen\\\":[\\\"/home/runner/.cache/waybill/corpus/17f637feb7c01827/72af26a71622bcf1eb4b84d017677be711c6fc7b/repo/package.yaml\\\"],\\\"manifests-unread\\\":[]}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:hpack-read-outcome\",\"value\":\"{\\\"generated-cabal-suppressed\\\":[],\\\"manifests-partial\\\":[],\\\"manifests-read\\\":[\\\"package.yaml\\\"],\\\"manifests-seen\\\":[\\\"package.yaml\\\"],\\\"manifests-unread\\\":[]}\"}"
     },
     {
       "annotationDate": "<masked>",

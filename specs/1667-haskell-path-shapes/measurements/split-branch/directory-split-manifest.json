@@ -1,0 +1,60 @@
+{
+  "$schema": "https://waybill.dev/schema/split-manifest/v1.json",
+  "waybill_version": "0.18.0",
+  "scan_root": "/var/folders/dz/l36x69hs28l50_whrqsz2dvh0000gn/T/tmp.EiCbhwAvWe/waybill-fixture-tree",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "total_unique_components": 6,
+  "shared_dep_count": 1,
+  "entries": [
+    {
+      "subproject_id": "waybill-fixture-a.hackage",
+      "root_purl": "pkg:hackage/waybill-fixture-a@0.1.0",
+      "source_dir": "local-packages/a",
+      "component_count": 2,
+      "shared_deps_count": 1,
+      "files": {
+        "cyclonedx-json": "waybill-fixture-a.hackage.cdx.json"
+      }
+    },
+    {
+      "subproject_id": "waybill-fixture-c.hackage",
+      "root_purl": "pkg:hackage/waybill-fixture-c@0.1.0",
+      "source_dir": "local-packages/c",
+      "component_count": 2,
+      "shared_deps_count": 1,
+      "files": {
+        "cyclonedx-json": "waybill-fixture-c.hackage.cdx.json"
+      }
+    },
+    {
+      "subproject_id": "local-packages-d.multi",
+      "root_purl": "pkg:generic/local-packages-d@0.0.0-unknown",
+      "source_dir": "local-packages/d",
+      "component_count": 3,
+      "shared_deps_count": 1,
+      "files": {
+        "cyclonedx-json": "local-packages-d.multi.cdx.json"
+      },
+      "members": [
+        {
+          "purl": "pkg:hackage/waybill-fixture-d2@0.1.0",
+          "source_dir": "local-packages/d"
+        },
+        {
+          "purl": "pkg:hackage/waybill-fixture-d@0.1.0",
+          "source_dir": "local-packages/d"
+        }
+      ]
+    },
+    {
+      "subproject_id": "waybill-fixture-root.hackage",
+      "root_purl": "pkg:hackage/waybill-fixture-root@0.1.0",
+      "source_dir": "",
+      "component_count": 2,
+      "shared_deps_count": 1,
+      "files": {
+        "cyclonedx-json": "waybill-fixture-root.hackage.cdx.json"
+      }
+    }
+  ]
+}

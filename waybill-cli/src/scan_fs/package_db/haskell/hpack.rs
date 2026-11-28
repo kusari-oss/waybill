@@ -195,8 +195,16 @@ impl HpackReadOutcome {
 
     /// The document-scope value (FR-018). Keys sort through `serde_json::Map`,
     /// which is a `BTreeMap` here, so a golden can pin the string.
-    pub(crate) fn to_document_value(&self) -> serde_json::Value {
-        let path = |p: &PathBuf| p.display().to_string();
+    ///
+    /// Spec 1667 (#1463): every path is relative to the scan root, so the
+    /// document names no host directory. `roots` are the root's spellings
+    /// (canonical first, then as given): a path is relative to the first it
+    /// lies under, and climbs from the first only when it lies under none.
+    pub(crate) fn to_document_value(&self, roots: &[&Path]) -> serde_json::Value {
+        let path = |p: &PathBuf| {
+            let root = roots.iter().find(|r| p.starts_with(r)).or(roots.first()).copied();
+            root.map_or_else(|| root_relative(Path::new(""), p), |r| root_relative(r, p))
+        };
         let mut v = serde_json::json!({
             "manifests-seen": self.seen.iter().map(path).collect::<Vec<_>>(),
             "manifests-read": self.read.iter().map(path).collect::<Vec<_>>(),
@@ -250,6 +258,20 @@ impl HpackReadOutcome {
         }
         v
     }
+}
+
+/// Spec 1667 (research R3): `p` relative to `root`, `/`-separated on every
+/// host. A path outside `root` climbs with `..`; no scan produces one today,
+/// because an include outside the root is refused rather than read.
+///
+/// Built from components, not `display()`: on Windows a canonical path is
+/// `\\?\`-prefixed and `\`-separated.
+pub(crate) fn root_relative(root: &Path, p: &Path) -> String {
+    let (r, q): (Vec<_>, Vec<_>) = (root.components().collect(), p.components().collect());
+    let common = r.iter().zip(&q).take_while(|(a, b)| a == b).count();
+    let up = std::iter::repeat_n("..".to_string(), r.len() - common);
+    let down = q[common..].iter().map(|c| c.as_os_str().to_string_lossy().into_owned());
+    up.chain(down).collect::<Vec<_>>().join("/")
 }
 
 // ───────────────────────────────────────────────────────────────────────
@@ -796,5 +818,96 @@ mod include_tests {
             "the error must NOT be about !include -- that is the whole point: \
              it is indistinguishable from a malformed manifest. Got: {msg}"
         );
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1667_path_tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn root() -> PathBuf {
+        std::env::temp_dir().join("waybill-fixture-root")
+    }
+
+    #[test]
+    fn a_nested_manifest_is_relative() {
+        assert_eq!(root_relative(&root(), &root().join("server/package.yaml")), "server/package.yaml");
+    }
+
+    #[test]
+    fn the_root_manifest_is_its_file_name() {
+        assert_eq!(root_relative(&root(), &root().join("package.yaml")), "package.yaml");
+    }
+
+    #[test]
+    fn three_components_join_with_a_slash_on_every_host() {
+        assert_eq!(root_relative(&root(), &root().join("a").join("b").join("c.yaml")), "a/b/c.yaml");
+    }
+
+    #[test]
+    fn a_path_under_the_second_spelling_is_relative_to_it() {
+        let o = HpackReadOutcome { seen: vec![root().join("a/package.yaml")], ..Default::default() };
+        let v = o.to_document_value(&[Path::new("/elsewhere"), &root()]);
+        assert_eq!(v["manifests-seen"], serde_json::json!(["a/package.yaml"]));
+    }
+
+    #[test]
+    fn a_path_above_the_root_climbs() {
+        let above = root().parent().unwrap().join("shared").join("x.yaml");
+        assert_eq!(root_relative(&root(), &above), "../shared/x.yaml");
+    }
+
+    fn outcome() -> HpackReadOutcome {
+        let r = root();
+        let inc = |file: &str, outcome| IncludeResolution {
+            manifest: r.join("a/package.yaml"),
+            file: r.join(file),
+            include: "x.yaml".to_string(),
+            outcome,
+        };
+        HpackReadOutcome {
+            seen: vec![r.join("a/package.yaml")],
+            read: vec![r.join("a/package.yaml")],
+            unreadable: vec![(r.join("b/package.yaml"), UnreadableReason::Unreadable("e".into()))],
+            partial: vec![(r.join("a/package.yaml"), UnmodelledConstruct::Include)],
+            suppressed_cabal: vec![r.join("a/a.cabal")],
+            includes: vec![
+                inc("a/package.yaml", IncludeOutcome::Resolved),
+                inc("a/lib.yaml", IncludeOutcome::Unresolved(prep::UnresolvedReason::OutsideRoot)),
+            ],
+        }
+    }
+
+    /// Every path-bearing key of contracts/annotations.md, and nothing else moves.
+    #[test]
+    fn every_key_is_relative_and_the_keys_are_unchanged() {
+        let v = outcome().to_document_value(&[&root()]);
+        let keys: Vec<&str> = v.as_object().unwrap().keys().map(String::as_str).collect();
+        assert_eq!(
+            keys,
+            [
+                "generated-cabal-suppressed",
+                "includes-resolved",
+                "includes-unresolved",
+                "manifests-partial",
+                "manifests-read",
+                "manifests-seen",
+                "manifests-unread",
+            ]
+        );
+        assert_eq!(v["manifests-seen"], serde_json::json!(["a/package.yaml"]));
+        assert_eq!(v["manifests-read"], serde_json::json!(["a/package.yaml"]));
+        assert_eq!(v["generated-cabal-suppressed"], serde_json::json!(["a/a.cabal"]));
+        assert_eq!(v["manifests-unread"][0]["file"], "b/package.yaml");
+        assert_eq!(v["manifests-partial"][0]["file"], "a/package.yaml");
+        assert_eq!(v["includes-resolved"][0]["manifest"], "a/package.yaml");
+        assert_eq!(v["includes-resolved"][0]["file"], "a/package.yaml");
+        assert_eq!(v["includes-unresolved"][0]["manifest"], "a/package.yaml");
+        assert_eq!(v["includes-unresolved"][0]["file"], "a/lib.yaml");
+        assert_eq!(v["includes-unresolved"][0]["reason"], "outside-root");
+        let text = v.to_string();
+        assert!(!text.contains(&root().display().to_string()), "{text}");
     }
 }
