@@ -4099,10 +4099,6 @@
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"ghcide\"]"
         }
@@ -4465,10 +4461,6 @@
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -4753,10 +4745,6 @@
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"hls-graph\"]"
         }
@@ -4822,10 +4810,6 @@
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"hls-plugin-api\"]"
         }
@@ -4889,10 +4873,6 @@
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
-        },
-        {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
         },
         {
           "name": "waybill:workspace-member",
@@ -27423,7 +27403,7 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":11,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":91,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24,\"nixpkgs-version-violates-requirement\":6}}"
+        "value": "{\"disagreements\":6,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":91,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24,\"nixpkgs-version-violates-requirement\":6}}"
       },
       {
         "name": "waybill:scope-exemptions",

@@ -1,0 +1,8 @@
+# C172
+purl	version	source-type	emitted	nixpkgs	note60	C221
+# unreachable
+purl	orphan-reason
+pkg:github/nix-systems/default@da67096a3b9bf56a91d16901293e51ba5b49a27e	unreferenced-lock-node
+pkg:github/nixos/nixpkgs@567a49d1913ce81ac6e9582e3553dd90a955875f	unreferenced-lock-node
+pkg:github/numtide/flake-utils@11707dc2f618dd54ca8739b309ec4fc024de578b	unreferenced-lock-node
+# C174 disagreements	0

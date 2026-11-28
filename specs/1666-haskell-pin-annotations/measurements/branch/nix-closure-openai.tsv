@@ -1,0 +1,17 @@
+# C172
+purl	version	source-type	emitted	nixpkgs	note60	C221
+# unreachable
+purl	orphan-reason
+pkg:generic/UserSettings.hs-kd286i956647m7j4rgcfqgsskr618z27	closure-member-not-an-edge-endpoint
+pkg:generic/cacert-blocklist.txt-fpisxajipvqgavfx7ypgw8vcgwv0czy1	closure-member-not-an-edge-endpoint
+pkg:generic/cacert-extra-certificates-bundle.crt-j84wp8js5l4wlzcdvxfyv351q7pikqhm	closure-member-not-an-edge-endpoint
+pkg:generic/ensure-newer-sources-hook.sh-lpqnvwsgddvx6c1d5wf5v2nphh3ynq1q	closure-member-not-an-edge-endpoint
+pkg:generic/ghc@9.6.6	reachable-only-through-unemitted-package
+pkg:generic/haskell-generic-builder-test-wrapper.sh-c7340lpp5vzlch968wq499805xg7v4nr	closure-member-not-an-edge-endpoint
+pkg:generic/locales-setup-hook.sh-ndhsw0saj2aq9kgnl4iv3mxz12k0wci4	closure-member-not-an-edge-endpoint
+pkg:generic/locales-setup-hook.sh-rkqgls6gsdqsx1gz7ksplv1x661z22pi	closure-member-not-an-edge-endpoint
+pkg:generic/pytest-hook-mhnmqpclj5ib4k245834fmx62xgghxwr	closure-member-not-an-edge-endpoint
+pkg:generic/python-setup-hook.sh-a2l0yvia98q599wy4jhpbnr4n2fclv3s	closure-member-not-an-edge-endpoint
+pkg:generic/python-setup-hook.sh-dcmy36l480lpk6m5jwl92qgpkxnfpwg9	closure-member-not-an-edge-endpoint
+pkg:generic/python-setup-hook.sh-i6sbrplyg099jkzpnxnz38y95aay3ip0	closure-member-not-an-edge-endpoint
+# C174 disagreements	0

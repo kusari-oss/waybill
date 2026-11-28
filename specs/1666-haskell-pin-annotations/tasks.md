@@ -82,7 +82,7 @@ C172 needs a nixpkgs package set, so its tests are unit tests over a hand-built 
 
   Each must fail at least one test. Record the results in `measurements/mutations.md`.
 - [X] T013 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$' prepr -- ./scripts/pre-pr.sh`. Check `GATE_RESULT=pass` and the Summary line.
-- [ ] T014 Open the PR, then dispatch `gh workflow run public-corpus.yml -f branch=1666-haskell-pin-annotations -f regen_goldens=true` and download `corpus-goldens-regen`.
+- [X] T014 Open the PR, then dispatch `gh workflow run public-corpus.yml -f branch=1666-haskell-pin-annotations -f regen_goldens=true` and download `corpus-goldens-regen`.
   - Run `measure.sh` on it as `branch`.
   - Diff it against `main`, using a normalized, sorted diff, and explain every line in `measurements/branch.md`. The expected result:
     - 10 main-module C172 removed;
