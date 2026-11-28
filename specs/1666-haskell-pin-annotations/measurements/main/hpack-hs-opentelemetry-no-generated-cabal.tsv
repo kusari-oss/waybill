@@ -1,0 +1,6 @@
+# C172
+purl	version	source-type	emitted	nixpkgs	note60	C221
+# unreachable
+purl	orphan-reason
+pkg:hackage/thread-utils-finalizers@0.1.1.0	edgeless-lock-pin
+# C174 disagreements	0

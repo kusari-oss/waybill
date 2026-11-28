@@ -1,0 +1,19 @@
+# C172
+purl	version	source-type	emitted	nixpkgs	note60	C221
+pkg:hackage/slack-web@2.4.0.0	2.4.0.0	hackage-main-module	2.4.0.0	2.2.0.0	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/hspec-discover@2.11.14	2.11.14	hackage-cabal-design	None	2.11.14	the pinned revision's version does not satisfy the project's	yes
+# unreachable
+purl	orphan-reason
+pkg:generic/UserSettings.hs-a321hy6hydni4nmk500xl21djkm8smq1	closure-member-not-an-edge-endpoint
+pkg:generic/cacert-blocklist.txt-fpnk7b46qjdpg2vq6ld3gd0jyjch36w8	closure-member-not-an-edge-endpoint
+pkg:generic/cacert-extra-certificates-bundle.crt-h1gqh545cyc6l7m3ysxv6d2pw4zgklxf	closure-member-not-an-edge-endpoint
+pkg:generic/ensure-newer-sources-hook.sh-ya9xyhgb4vvrzyyrnnd2qdaim6jfva1a	closure-member-not-an-edge-endpoint
+pkg:generic/ghc@9.10.3	reachable-only-through-unemitted-package
+pkg:generic/haskell-generic-builder-test-wrapper.sh-4v6g0ygv3scydb4d5fyny36dval40404	closure-member-not-an-edge-endpoint
+pkg:generic/locales-setup-hook.sh-lq736f5ywznm34lvakqbq6w95bys02rs	closure-member-not-an-edge-endpoint
+pkg:generic/locales-setup-hook.sh-wjbbss4a6s44qj5swjjsa4vb6agyc0km	closure-member-not-an-edge-endpoint
+pkg:generic/pytest-hook-9p6qjn0p8dbhfz7phnfvkbcq4y7bxxgc	closure-member-not-an-edge-endpoint
+pkg:generic/python-setup-hook.sh-14il5kspq2d9lv9vwl9i1xwi1w5f0w7h	closure-member-not-an-edge-endpoint
+pkg:generic/python-setup-hook.sh-20qs9nqva2yzyihgj2gv3s1xvzml7zfj	closure-member-not-an-edge-endpoint
+pkg:generic/python-setup-hook.sh-3cb80yzfbd9fbw8id62l0b1ylraj0p68	closure-member-not-an-edge-endpoint
+# C174 disagreements	2

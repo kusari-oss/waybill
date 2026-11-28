@@ -1,0 +1,12 @@
+# C172
+purl	version	source-type	emitted	nixpkgs	note60	C221
+pkg:hackage/cvss@0.3.0.0	0.3.0.0	hackage-main-module	0.3.0.0	0.2.0.1	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/hsec-core@0.5.0.0	0.5.0.0	hackage-main-module	0.5.0.0	0.3.0.0	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/hsec-tools@0.5.0.0	0.5.0.0	hackage-main-module	0.5.0.0	0.3.0.1	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/osv@0.2.0.1	0.2.0.1	hackage-main-module	0.2.0.1	0.2.0.0	the emitted version came from a project-local lockfile or fr	no
+# unreachable
+purl	orphan-reason
+pkg:github/nix-systems/default@da67096a3b9bf56a91d16901293e51ba5b49a27e	unreferenced-lock-node
+pkg:github/nixos/nixpkgs@567a49d1913ce81ac6e9582e3553dd90a955875f	unreferenced-lock-node
+pkg:github/numtide/flake-utils@11707dc2f618dd54ca8739b309ec4fc024de578b	unreferenced-lock-node
+# C174 disagreements	4

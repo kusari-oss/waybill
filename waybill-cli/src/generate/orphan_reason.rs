@@ -645,10 +645,15 @@ pub fn classify_orphans(
                     // its lock file. A URL-pinned snapshot fell through to no
                     // reason at all (I7, #1678).
                     OrphanReasonCode::BuildToolchain
-                } else if c.source_type.as_deref() == Some("hackage-stack-lock") {
+                } else if matches!(
+                    c.source_type.as_deref(),
+                    Some("hackage-stack-lock" | "hackage-freeze")
+                ) {
                     // Spec 1663 — a `stack.yaml.lock` package entry no
                     // declared package reaches. The lock records no edges, so
                     // nothing here can say what needs it (`EdgelessLockPin`).
+                    // Spec 1666 (#1741): a `cabal.project.freeze` pin is the
+                    // same fact, so it gets the same reason.
                     OrphanReasonCode::EdgelessLockPin
                 } else if c.sbom_tier.as_deref() == Some("design")
                     && c.evidence.source_file_paths
@@ -1270,7 +1275,7 @@ mod tests {
         pin.source_type = Some("hackage-stack-lock".to_string());
         pin.sbom_tier = Some("source".to_string());
         let mut other = mk("pkg:hackage/waybill-fixture-other@1.0.0");
-        other.source_type = Some("hackage-freeze".to_string());
+        other.source_type = Some("hackage-cabal-design".to_string());
         other.sbom_tier = Some("source".to_string());
         let mut comps = vec![pin, other];
 
@@ -1278,6 +1283,22 @@ mod tests {
 
         assert_eq!(reason_of(&comps[0]), Some("edgeless-lock-pin"));
         assert_ne!(reason_of(&comps[1]), Some("edgeless-lock-pin"));
+        assert_eq!(counts.edgeless_lock_pin, 1);
+    }
+
+    /// Spec 1666 (#1741): an unreachable `cabal.project.freeze` pin is an
+    /// edgeless lock pin, as its Stack counterpart is.
+    #[test]
+    fn spec1666_an_unreached_freeze_pin_is_edgeless() {
+        let mut pin = mk("pkg:hackage/waybill-fixture-frozen@4.0.0");
+        pin.source_type = Some("hackage-freeze".to_string());
+        pin.sbom_tier = Some("source".to_string());
+        pin.evidence.source_file_paths = vec!["cabal.project.freeze".to_string()];
+        let mut comps = vec![pin];
+
+        let counts = classify_orphans(&mut comps, &HashSet::new());
+
+        assert_eq!(reason_of(&comps[0]), Some("edgeless-lock-pin"));
         assert_eq!(counts.edgeless_lock_pin, 1);
     }
 

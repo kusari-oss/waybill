@@ -837,6 +837,34 @@ fn is_main_module(c: &ResolvedComponent) -> bool {
         .is_some_and(|t| t.ends_with("main-module"))
 }
 
+/// Spec 1666 (#1682): C172's note names what produced the emitted version,
+/// read from the component's own source type and source files.
+fn disagreement_note(c: &ResolvedComponent) -> String {
+    let kind = match c.source_type.as_deref() {
+        Some("hackage-stack-lock") => "the Stack lock file",
+        Some("hackage-freeze") => "the freeze file",
+        Some(other) => other,
+        None => "an unrecorded source",
+    };
+    let mut files: Vec<&str> = c
+        .evidence
+        .source_file_paths
+        .iter()
+        .map(String::as_str)
+        .filter(|f| !f.is_empty())
+        .collect();
+    files.sort_unstable();
+    files.dedup();
+    if files.is_empty() {
+        format!("the emitted version came from {kind} and takes precedence")
+    } else {
+        format!(
+            "the emitted version came from {kind} {} and takes precedence",
+            files.join(", ")
+        )
+    }
+}
+
 fn is_haskell(c: &ResolvedComponent) -> bool {
     c.purl.as_str().starts_with("pkg:hackage/")
 }
@@ -1075,21 +1103,25 @@ pub(crate) fn enrich(
     // resolved. Without this the local value simply shadows nixpkgs and a
     // consumer never learns the two sources differ — which is exactly the
     // question someone comparing a Nix build to a cabal build is asking.
+    //
+    // Spec 1666 (#1682): a main module is skipped. Its version is the working
+    // tree's and nixpkgs carries the project's last release, so the two are
+    // not sources disagreeing about one build.
     for c in components.iter_mut().filter(|c| is_haskell(c) && !c.version.is_empty()) {
-        if boot_libraries::is_boot_library(&c.name, &boot) {
+        if boot_libraries::is_boot_library(&c.name, &boot) || is_main_module(c) {
             continue;
         }
         if let Some(entry) = packages.get(&c.name) {
             if entry.version != c.version {
                 summary.disagreements += 1;
+                let note = disagreement_note(c);
                 c.extra_annotations.insert(
                     ANN_VERSION_DISAGREEMENT.to_string(),
                     serde_json::json!({
                         "emitted": c.version,
                         "nixpkgs": entry.version,
                         "revision": pinned.revision,
-                        "note": "the emitted version came from a project-local \
-                                 lockfile or freeze file and takes precedence",
+                        "note": note,
                     }),
                 );
             }
@@ -2548,6 +2580,69 @@ mod enrich_tests {
         std::env::remove_var(cache::CACHE_ENV);
     }
 
+    fn pinned_by(source_type: &str, files: &[&str]) -> ResolvedComponent {
+        let mut c = comp("waybill-fixture-liba");
+        c.version = "0.0.1".to_string();
+        c.source_type = Some(source_type.to_string());
+        c.evidence.source_file_paths = files.iter().map(|f| f.to_string()).collect();
+        c
+    }
+
+    fn note_for(c: ResolvedComponent) -> (EnrichmentSummary, Option<serde_json::Value>) {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![c, comp("waybill-fixture-absent")];
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+        std::env::remove_var(cache::CACHE_ENV);
+        (s, comps[0].extra_annotations.get(ANN_VERSION_DISAGREEMENT).cloned())
+    }
+
+    /// Spec 1666 US1: a Stack-lock pin's note names the Stack lock file.
+    #[test]
+    fn s1666_stack_lock_note_names_the_lock() {
+        let (s, rec) = note_for(pinned_by("hackage-stack-lock", &["stack.yaml.lock"]));
+        assert_eq!(s.disagreements, 1);
+        let note = rec.unwrap()["note"].as_str().unwrap().to_string();
+        assert_eq!(
+            note,
+            "the emitted version came from the Stack lock file stack.yaml.lock and takes precedence"
+        );
+    }
+
+    /// Spec 1666 US1: a freeze pin's note names the freeze file.
+    #[test]
+    fn s1666_freeze_note_names_the_freeze_file() {
+        let (_, rec) = note_for(pinned_by("hackage-freeze", &["cabal.project.freeze"]));
+        let note = rec.unwrap()["note"].as_str().unwrap().to_string();
+        assert_eq!(
+            note,
+            "the emitted version came from the freeze file cabal.project.freeze and takes precedence"
+        );
+    }
+
+    /// Spec 1666: a pin from two lock files (spec 1665) names both, sorted.
+    #[test]
+    fn s1666_two_lock_files_are_named_sorted() {
+        let (_, rec) =
+            note_for(pinned_by("hackage-stack-lock", &["sub/stack.yaml.lock", "stack.yaml.lock"]));
+        let note = rec.unwrap()["note"].as_str().unwrap().to_string();
+        assert!(
+            note.contains("stack.yaml.lock, sub/stack.yaml.lock"),
+            "both files, sorted: {note}"
+        );
+    }
+
+    /// Spec 1666 US2: a main module ahead of its nixpkgs release is no
+    /// disagreement.
+    #[test]
+    fn s1666_main_module_carries_no_disagreement() {
+        let (s, rec) = note_for(pinned_by("hackage-main-module", &["waybill-fixture-liba.cabal"]));
+        assert_eq!(s.disagreements, 0);
+        assert!(rec.is_none());
+    }
+
     /// Agreement is not a disagreement: no annotation when the two match.
     #[test]
     fn m926_agreement_records_nothing() {
@@ -2583,6 +2678,45 @@ mod enrich_tests {
         assert_eq!(s.disagreements, 0);
         assert!(!comps[0].extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT));
         std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// Spec 1666 (R5): after the twin merge removes a C172, C174's count
+    /// equals the C172 annotations left in the document.
+    #[test]
+    fn s1666_c174_counts_the_c172_left_after_the_merge() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![ranged("waybill-fixture-liba", ">= 1.3")];
+        let mut s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+        std::env::remove_var(cache::CACHE_ENV);
+        assert_eq!(s.disagreements, 1, "the #1457 form is counted");
+
+        comps[0].sbom_tier = Some("design".to_string());
+        let mut built = comp("waybill-fixture-liba");
+        built.version = "1.2.3".to_string();
+        built.purl =
+            waybill_common::types::purl::Purl::new("pkg:hackage/waybill-fixture-liba@1.2.3").unwrap();
+        built.sbom_tier = Some("build".to_string());
+        built.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_ROLE.to_string(),
+            serde_json::json!("artifact-input"),
+        );
+        comps.push(built);
+        let raw = crate::scan_fs::package_db::nix::closure::derivation::RawClosure::parse(
+            r#"{"derivations":{}}"#,
+        )
+        .unwrap();
+        let twins = super::twin_merge::merge(&mut comps, &mut Vec::new(), &raw);
+        twins.adjust_disagreements(&mut s.disagreements);
+
+        let left = comps
+            .iter()
+            .filter(|c| c.extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT))
+            .count();
+        assert_eq!((twins.merged, left), (1, 0));
+        assert_eq!(s.disagreements, left);
     }
 
     fn ranged(name: &str, range: &str) -> ResolvedComponent {
