@@ -19734,7 +19734,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6JEI2ACHURF3SSAP",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":11,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":91,\\\"revision\\\":\\\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\\\",\\\"unresolved\\\":{\\\"absent-from-package-set\\\":1,\\\"compiler-supplied\\\":24,\\\"nixpkgs-version-violates-requirement\\\":6}}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":6,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":91,\\\"revision\\\":\\\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\\\",\\\"unresolved\\\":{\\\"absent-from-package-set\\\":1,\\\"compiler-supplied\\\":24,\\\"nixpkgs-version-violates-requirement\\\":6}}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -20816,14 +20816,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AMCAVQ4DJ5QLRM74",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GDWBSEPBX4STDJXD",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AMFSTE5U2VVV5CVS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-B5FSSMD3U2AKTZ3U",
       "type": "Annotation"
     },
     {
@@ -27045,14 +27037,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JQEQPIDMERBDAWRE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SOHD2FQY63IYSZHQ",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JRBUXUWOFBJ2TDVG",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-resolved-via\",\"value\":{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OIXGRZTSKXW3NUG4",
@@ -31165,14 +31149,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Q4MGH4SKERKBYDQ3",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DRO4K43YKHDV346C",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Q4OFEGKH7OXOSZSO",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:haskell-version-unresolved-reason\",\"value\":\"absent-from-package-set\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RC27FFMYD6GEPBBK",
@@ -31765,14 +31741,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-R6X7E2KZOZP4UM6Y",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JMVPSHHJ4OUVMCAC",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-R77BOI6YVYY5SEJW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-component-origin\",\"value\":\"declared\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CIFOROFTNCQYBGOA",
@@ -31952,14 +31920,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RG355COZZXFUBLEX",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H34TFJ36TAQE2KTH",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RGAX3QET4KTTJ6JE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OWQFBW4LHSY5E3BC",
       "type": "Annotation"
     },
     {

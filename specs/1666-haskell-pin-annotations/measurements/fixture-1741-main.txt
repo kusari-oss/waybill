@@ -1,0 +1,2 @@
+main build 46506106; fixture: cabal.project (packages: app), app/waybill-fixture-app.cabal (base only), cabal.project.freeze (waybill-fixture-frozen ==4.0.0); scan --offline, empty HOME
+pkg:hackage/waybill-fixture-frozen@4.0.0	hackage-freeze	<none>

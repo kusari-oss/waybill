@@ -53,7 +53,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":2,\\\"optional-reconciliation\\\":{\\\"declined\\\":2,\\\"reviewed\\\":2,\\\"withdrawn\\\":[]},\\\"resolved\\\":34,\\\"revision\\\":\\\"5ae3b07d8d6527c42f17c876e404993199144b6a\\\",\\\"unresolved\\\":{\\\"nixpkgs-version-violates-requirement\\\":1}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":0,\\\"optional-reconciliation\\\":{\\\"declined\\\":2,\\\"reviewed\\\":2,\\\"withdrawn\\\":[]},\\\"resolved\\\":34,\\\"revision\\\":\\\"5ae3b07d8d6527c42f17c876e404993199144b6a\\\",\\\"unresolved\\\":{\\\"nixpkgs-version-violates-requirement\\\":1}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -4062,12 +4062,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-component-origin\",\"value\":\"declared\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.4.0.0\",\"nixpkgs\":\"2.2.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"5ae3b07d8d6527c42f17c876e404993199144b6a\"}}"
         },
         {
           "annotationDate": "<masked>",
@@ -41486,12 +41480,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-component-origin\",\"value\":\"declared\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":null,\"nixpkgs\":\"2.11.14\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\">=2.6.0 && <2.11\"],\"revision\":\"5ae3b07d8d6527c42f17c876e404993199144b6a\"}}"
         },
         {
           "annotationDate": "<masked>",

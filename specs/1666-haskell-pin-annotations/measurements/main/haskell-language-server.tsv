@@ -1,0 +1,18 @@
+# C172
+purl	version	source-type	emitted	nixpkgs	note60	C221
+pkg:hackage/cabal-gild	None	hackage-cabal-design	None	1.6.0.4	the pinned revision's version does not satisfy the project's	no
+pkg:hackage/ghcide@2.15.0.0	2.15.0.0	hackage-main-module	2.15.0.0	2.13.0.0	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/haskell-language-server@2.15.0.0	2.15.0.0	hackage-main-module	2.15.0.0	2.13.0.0	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/hie-bios	None	hackage-cabal-design	None	0.17.0	the pinned revision's version does not satisfy the project's	no
+pkg:hackage/hiedb	None	hackage-cabal-design	None	0.7.0.0	the pinned revision's version does not satisfy the project's	no
+pkg:hackage/hls-graph@2.15.0.0	2.15.0.0	hackage-main-module	2.15.0.0	2.13.0.0	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/hls-plugin-api@2.15.0.0	2.15.0.0	hackage-main-module	2.15.0.0	2.13.0.0	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/hls-test-utils@2.15.0.0	2.15.0.0	hackage-main-module	2.15.0.0	2.13.0.0	the emitted version came from a project-local lockfile or fr	no
+pkg:hackage/lsp	None	hackage-cabal-design	None	2.7.0.1	the pinned revision's version does not satisfy the project's	no
+pkg:hackage/lsp-test	None	hackage-cabal-design	None	0.17.1.1	the pinned revision's version does not satisfy the project's	no
+pkg:hackage/lsp-types	None	hackage-cabal-design	None	2.3.0.1	the pinned revision's version does not satisfy the project's	no
+# unreachable
+purl	orphan-reason
+pkg:generic/ghc-9.6.5@unspecified	build-toolchain
+pkg:generic/stackage-lts-23.28@unspecified	build-toolchain
+# C174 disagreements	11

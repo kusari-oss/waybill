@@ -72,6 +72,17 @@ pub(crate) struct TwinMergeSummary {
     /// Of those, the ones whose build every declared range rejects (C221).
     pub(crate) out_of_range: usize,
     pub(crate) declined: BTreeMap<&'static str, usize>,
+    /// Spec 1666 (R4): C172 annotations removed because the closure built
+    /// nixpkgs' own version. The caller subtracts them from C174.
+    pub(crate) c172_removed: usize,
+}
+
+impl TwinMergeSummary {
+    /// Spec 1666 (R5): C174's `disagreements` counts the C172 annotations
+    /// that remain after the merge.
+    pub(crate) fn adjust_disagreements(&self, disagreements: &mut usize) {
+        *disagreements = disagreements.saturating_sub(self.c172_removed);
+    }
 }
 
 /// A versionless design-tier Hackage component: the twin's manifest half.
@@ -113,8 +124,42 @@ fn select(candidates: &[usize], components: &[ResolvedComponent], ranges: &[Stri
     }
 }
 
-/// Fold `design` into `survivor` (research R6).
-fn fold(survivor: &mut ResolvedComponent, design: &ResolvedComponent) {
+/// Spec 1666 (R4): the twin's C172 was written while the dependency had no
+/// version. Once the survivor has one, a stale `"emitted": null` either
+/// stops being a disagreement or becomes one with the closure. Returns
+/// whether C172 was removed.
+fn recompute_disagreement(survivor: &mut ResolvedComponent) -> bool {
+    let Some(serde_json::Value::Object(rec)) =
+        survivor.extra_annotations.get(super::ANN_VERSION_DISAGREEMENT)
+    else {
+        return false;
+    };
+    if !rec.get("emitted").is_some_and(serde_json::Value::is_null) || survivor.version.is_empty() {
+        return false;
+    }
+    if rec.get("nixpkgs").and_then(serde_json::Value::as_str) == Some(survivor.version.as_str()) {
+        survivor.extra_annotations.remove(super::ANN_VERSION_DISAGREEMENT);
+        return true;
+    }
+    let mut rec = rec.clone();
+    rec.remove("requirement-ranges");
+    rec.insert("emitted".to_string(), serde_json::Value::from(survivor.version.clone()));
+    rec.insert(
+        "note".to_string(),
+        serde_json::Value::from(
+            "the closure built this version; the pinned revision's version does not \
+             satisfy the project's declared requirement and a flake overlay pinned another",
+        ),
+    );
+    survivor
+        .extra_annotations
+        .insert(super::ANN_VERSION_DISAGREEMENT.to_string(), serde_json::Value::Object(rec));
+    false
+}
+
+/// Fold `design` into `survivor` (research R6). Returns whether C172 was
+/// removed (spec 1666).
+fn fold(survivor: &mut ResolvedComponent, design: &ResolvedComponent) -> bool {
     for r in &design.requirement_ranges {
         if !survivor.requirement_ranges.contains(r) {
             survivor.requirement_ranges.push(r.clone());
@@ -152,6 +197,7 @@ fn fold(survivor: &mut ResolvedComponent, design: &ResolvedComponent) {
             serde_json::Value::String(serde_json::Value::Object(m).to_string()),
         );
     }
+    recompute_disagreement(survivor)
 }
 
 /// Merge every design-tier twin into its build-tier member, and move the
@@ -205,7 +251,9 @@ pub(crate) fn merge(
             }
         };
         let design = components[d].clone();
-        fold(&mut components[survivor], &design);
+        if fold(&mut components[survivor], &design) {
+            summary.c172_removed += 1;
+        }
         if components[survivor].extra_annotations.contains_key(ANN_REQUIREMENT_UNSATISFIED) {
             summary.out_of_range += 1;
         }
@@ -253,7 +301,13 @@ mod tests {
             .insert("waybill:unresolved-reason".to_string(), serde_json::json!("declared"));
         c.extra_annotations.insert(
             "waybill:nixpkgs-version-disagreement".to_string(),
-            serde_json::json!("{\"nixpkgs\":\"1.0.0.0\"}"),
+            serde_json::json!({
+                "emitted": null,
+                "nixpkgs": "1.0.0.0",
+                "requirement-ranges": ranges,
+                "revision": "waybill-fixture-rev",
+                "note": "the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another",
+            }),
         );
         c
     }
@@ -386,7 +440,8 @@ mod tests {
         assert_eq!(c.evidence.source_file_paths, vec!["waybill-fixture-proj.cabal"]);
         assert!(!c.extra_annotations.contains_key(super::super::ANN_UNRESOLVED_REASON));
         assert!(!c.extra_annotations.contains_key("waybill:unresolved-reason"));
-        assert!(c.extra_annotations.contains_key("waybill:nixpkgs-version-disagreement"), "C172 stays true");
+        let c172 = &c.extra_annotations["waybill:nixpkgs-version-disagreement"];
+        assert_eq!(c172["emitted"], "2.1", "C172 is rewritten to the built version");
         assert!(c.extra_annotations.contains_key(ANN_CLOSURE_ROLE));
     }
 
@@ -405,6 +460,31 @@ mod tests {
         assert_eq!(rels.len(), 1, "{rels:?}");
         assert_eq!((rels[0].from.as_str(), rels[0].to.as_str()), (root, build_purl));
         assert!(!cs.iter().any(|c| c.purl.as_str() == design_purl), "the design twin is gone");
+    }
+
+    // --- Spec 1666 US3: C172 after the merge ------------------------------
+
+    #[test]
+    fn s1666_c172_is_removed_when_the_closure_built_nixpkgs_version() {
+        let mut cs = vec![design("waybill-fixture-h", &[">=0.5 && <0.9"]), build("waybill-fixture-h", "1.0.0.0", "hackage")];
+        let s = merge(&mut cs, &mut Vec::new(), &closure(&[]));
+        let c = named(&cs, "waybill-fixture-h")[0];
+        assert_eq!(s.c172_removed, 1);
+        assert!(!c.extra_annotations.contains_key(super::super::ANN_VERSION_DISAGREEMENT));
+        assert!(c221(c).is_some(), "C221 still records the range violation");
+    }
+
+    #[test]
+    fn s1666_c172_is_rewritten_when_the_closure_built_another_version() {
+        let mut cs = vec![design("waybill-fixture-s", &[">= 2.0"]), build("waybill-fixture-s", "2.1", "hackage")];
+        let s = merge(&mut cs, &mut Vec::new(), &closure(&[]));
+        let c = named(&cs, "waybill-fixture-s")[0];
+        assert_eq!(s.c172_removed, 0);
+        let rec = &c.extra_annotations[super::super::ANN_VERSION_DISAGREEMENT];
+        assert_eq!(rec["emitted"], "2.1");
+        assert_eq!(rec["nixpkgs"], "1.0.0.0");
+        assert!(rec.get("requirement-ranges").is_none());
+        assert!(rec["note"].as_str().unwrap().contains("closure"), "{rec}");
     }
 
     // --- T023: C221 ---------------------------------------------------------

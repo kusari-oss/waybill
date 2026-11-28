@@ -29,7 +29,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":11,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":91,\\\"revision\\\":\\\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\\\",\\\"unresolved\\\":{\\\"absent-from-package-set\\\":1,\\\"compiler-supplied\\\":24,\\\"nixpkgs-version-violates-requirement\\\":6}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":6,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":91,\\\"revision\\\":\\\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\\\",\\\"unresolved\\\":{\\\"absent-from-package-set\\\":1,\\\"compiler-supplied\\\":24,\\\"nixpkgs-version-violates-requirement\\\":6}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -4702,12 +4702,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"ghcide\\\"]\"}"
         }
       ],
@@ -5110,12 +5104,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -5452,12 +5440,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"hls-graph\\\"]\"}"
         }
       ],
@@ -5530,12 +5512,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"hls-plugin-api\\\"]\"}"
         }
       ],
@@ -5603,12 +5579,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-component-origin\",\"value\":\"declared\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.15.0.0\",\"nixpkgs\":\"2.13.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}}"
         },
         {
           "annotationDate": "<masked>",

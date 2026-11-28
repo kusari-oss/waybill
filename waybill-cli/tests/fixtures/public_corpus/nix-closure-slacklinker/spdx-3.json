@@ -204596,7 +204596,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GL3RVY57ZJ2JVDNM",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":null,\"nixpkgs\":\"2.2.0.0\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\">= 2.3.0.0\"],\"revision\":\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\"}}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"2.3.0.0\",\"nixpkgs\":\"2.2.0.0\",\"note\":\"the closure built this version; the pinned revision's version does not satisfy the project's declared requirement and a flake overlay pinned another\",\"revision\":\"5b2c2d84341b2afb5647081c1386a80d7a8d8605\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WUUJM2PTAHFUVNV2",
       "type": "Annotation"
     },

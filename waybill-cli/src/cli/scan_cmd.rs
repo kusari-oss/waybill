@@ -4840,7 +4840,7 @@ pub async fn execute(
         }
         _ => None,
     };
-    let nixpkgs_haskell_summary = {
+    let mut nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
         let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);
         nhp::enrich(
@@ -5175,8 +5175,13 @@ pub async fn execute(
                 merged = twins.merged,
                 out_of_range = twins.out_of_range,
                 declined = ?twins.declined,
+                c172_removed = twins.c172_removed,
                 "nix-closure: design/build twins merged"
             );
+            // Spec 1666 (R5): C174 counts the C172 annotations that remain.
+            if let Some(s) = nixpkgs_haskell_summary.as_mut() {
+                twins.adjust_disagreements(&mut s.disagreements);
+            }
 
             // Milestone 1366 (#1365) — an ecosystem identity for the
             // closure's PyPI components.

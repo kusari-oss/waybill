@@ -1,0 +1,15 @@
+# C172
+purl	version	source-type	emitted	nixpkgs	note60	C221
+# unreachable
+purl	orphan-reason
+pkg:hackage/bytebuild@0.3.12.0	edgeless-lock-pin
+pkg:hackage/byteslice@0.2.9.0	edgeless-lock-pin
+pkg:hackage/bytesmith@0.3.9.1	edgeless-lock-pin
+pkg:hackage/cborg@0.2.8.0	edgeless-lock-pin
+pkg:hackage/chronos@1.1.5	edgeless-lock-pin
+pkg:hackage/contiguous@0.6.3.0	edgeless-lock-pin
+pkg:hackage/primitive@0.7.4.0	edgeless-lock-pin
+pkg:hackage/run-st@0.1.1.0	edgeless-lock-pin
+pkg:hackage/teardown@0.5.0.1	edgeless-lock-pin
+pkg:hackage/typerep-map@0.5.0.0	edgeless-lock-pin
+pkg:hackage/zigzag@0.0.1.0	edgeless-lock-pin

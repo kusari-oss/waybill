@@ -11412,14 +11412,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2CQSDBR63HCYEV7N",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"0.3.0.0\",\"nixpkgs\":\"0.2.0.1\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"567a49d1913ce81ac6e9582e3553dd90a955875f\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LBJAD7VOSCG5XFK4",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2DNRFCWKWECCUPNC",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-resolved-via\",\"value\":{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"567a49d1913ce81ac6e9582e3553dd90a955875f\",\"source\":\"nixpkgs\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QKSFVL3YJ3N7QRKL",
@@ -13045,7 +13037,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6JEI2ACHURF3SSAP",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":4,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":39,\\\"revision\\\":\\\"567a49d1913ce81ac6e9582e3553dd90a955875f\\\",\\\"unresolved\\\":{\\\"compiler-supplied\\\":14}}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":0,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":39,\\\"revision\\\":\\\"567a49d1913ce81ac6e9582e3553dd90a955875f\\\",\\\"unresolved\\\":{\\\"compiler-supplied\\\":14}}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -20220,14 +20212,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RX6CFXJJPWGHSTOZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"0.2.0.1\",\"nixpkgs\":\"0.2.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"567a49d1913ce81ac6e9582e3553dd90a955875f\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GK5JKNLNNOBXIMYA",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RXHFGB4XRQVEBYWC",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QG6R3VMSCSFWENBX",
@@ -20764,14 +20748,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TNBR4B7YHPPG2L4S",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"0.5.0.0\",\"nixpkgs\":\"0.3.0.1\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"567a49d1913ce81ac6e9582e3553dd90a955875f\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5W2V36UEI4RECPRV",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TNVKMFRTK7VTLFTN",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-P6APJQBLYKLW6FFG",
@@ -21239,14 +21215,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-V26MCRCZG7AI3GBI",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WITQ3MBX6GGYUC2P",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-V2H66LM6HIPBJTFE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-version-disagreement\",\"value\":{\"emitted\":\"0.5.0.0\",\"nixpkgs\":\"0.3.0.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"567a49d1913ce81ac6e9582e3553dd90a955875f\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Q5GWXYIZP3KG2IFT",
       "type": "Annotation"
     },
     {
