@@ -23,8 +23,11 @@
 //!
 //! 2. **The project's own packages.** A source tree at `2.15.0.0` against a
 //!    nixpkgs that ships `2.13.0.0` is not a defect — waybill reads the tree,
-//!    which is right. These carry `waybill:nixpkgs-version-disagreement`
-//!    already, so the rule below skips anything waybill has disclosed.
+//!    which is right. Since spec 1666 (#1682) these no longer carry
+//!    `waybill:nixpkgs-version-disagreement` (it is not two sources
+//!    disagreeing about one build), so they are recognised by their
+//!    `waybill:source-type` ending in `main-module`, the test waybill itself
+//!    uses, and reported as their own verdict.
 //!
 //! 3. **GHC package set.** A flake may name several; at the measured revision
 //!    all six agreed, so `haskellPackages` is used and the assumption is
@@ -71,6 +74,9 @@ pub enum Verdict {
     /// waybill already annotated this as disagreeing, with a reason. Not a
     /// finding: the document is honest about it.
     DisclosedByWaybill,
+    /// The project's own package (spec 1666): its version is the working
+    /// tree's, nixpkgs carries the project's last release. Not a finding.
+    ProjectsOwnPackage,
     /// nixpkgs has no such attribute. Not a version defect — it means waybill
     /// emitted a package the package set does not contain, which is #1032.
     AbsentFromNixpkgs,
@@ -96,6 +102,22 @@ struct Claim {
     /// and said why. The document is honest about it, so the oracle has
     /// nothing to add.
     disclosed: bool,
+    /// `waybill:source-type` ends in `main-module`.
+    main_module: bool,
+}
+
+fn classify(c: &Claim, nix_version: Option<&str>) -> Verdict {
+    if c.disclosed {
+        return Verdict::DisclosedByWaybill;
+    }
+    if c.main_module {
+        return Verdict::ProjectsOwnPackage;
+    }
+    match nix_version {
+        None => Verdict::AbsentFromNixpkgs,
+        Some(v) if v == c.version => Verdict::Agree,
+        Some(_) => Verdict::Disagree,
+    }
 }
 
 /// Components waybill says it resolved from nixpkgs, and the revision it used.
@@ -135,6 +157,7 @@ fn read_sbom(sbom: &serde_json::Value) -> R<(Vec<Claim>, String)> {
             version: version.to_string(),
             origin: Some(origin),
             disclosed,
+            main_module: prop(c, "waybill:source-type").is_some_and(|t| t.ends_with("main-module")),
         });
     }
     let revision = revision.ok_or(
@@ -217,17 +240,10 @@ pub fn run(args: NixOracleArgs) -> R<()> {
     let versions = eval_versions(&names, &revision, &system)?;
 
     let mut rows = Vec::new();
-    for Claim { name, version: waybill_version, origin, disclosed } in claims {
-        let nix_version = versions.get(&name).cloned().flatten();
-        let verdict = if disclosed {
-            Verdict::DisclosedByWaybill
-        } else {
-            match &nix_version {
-                None => Verdict::AbsentFromNixpkgs,
-                Some(v) if *v == waybill_version => Verdict::Agree,
-                Some(_) => Verdict::Disagree,
-            }
-        };
+    for claim in claims {
+        let nix_version = versions.get(&claim.name).cloned().flatten();
+        let verdict = classify(&claim, nix_version.as_deref());
+        let Claim { name, version: waybill_version, origin, .. } = claim;
         rows.push(Row { name, waybill_version, nix_version, origin, verdict });
     }
 
@@ -235,6 +251,7 @@ pub fn run(args: NixOracleArgs) -> R<()> {
     let disagree = count(&Verdict::Disagree);
     println!("agree                  {}", count(&Verdict::Agree));
     println!("disclosed by waybill   {}", count(&Verdict::DisclosedByWaybill));
+    println!("project's own package  {}   (spec 1666, working tree vs last release)", count(&Verdict::ProjectsOwnPackage));
     println!("absent from nixpkgs    {}   (issue #1032, not a version defect)", count(&Verdict::AbsentFromNixpkgs));
     println!("DISAGREE               {disagree}");
     for r in rows.iter().filter(|r| r.verdict == Verdict::Disagree) {
@@ -258,4 +275,43 @@ pub fn run(args: NixOracleArgs) -> R<()> {
         .into());
     }
     Ok(())
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+
+    fn claim(version: &str, disclosed: bool, main_module: bool) -> Claim {
+        Claim { name: "waybill-fixture-a".into(), version: version.into(), origin: None, disclosed, main_module }
+    }
+
+    /// Spec 1666: a main module ahead of its nixpkgs release is the
+    /// project's own package, not an undisclosed disagreement.
+    #[test]
+    fn a_main_module_is_its_own_verdict() {
+        assert_eq!(classify(&claim("2.15.0.0", false, true), Some("2.13.0.0")), Verdict::ProjectsOwnPackage);
+    }
+
+    /// The control: the same disagreement on a dependency still fails.
+    #[test]
+    fn an_undisclosed_dependency_disagreement_still_fails() {
+        assert_eq!(classify(&claim("2.15.0.0", false, false), Some("2.13.0.0")), Verdict::Disagree);
+        assert_eq!(classify(&claim("2.15.0.0", true, false), Some("2.13.0.0")), Verdict::DisclosedByWaybill);
+        assert_eq!(classify(&claim("2.13.0.0", false, false), Some("2.13.0.0")), Verdict::Agree);
+    }
+
+    #[test]
+    fn read_sbom_reads_the_source_type() {
+        let doc = serde_json::json!({"components": [{
+            "name": "waybill-fixture-a", "version": "2.15.0.0",
+            "properties": [
+                {"name": "waybill:nixpkgs-component-origin", "value": "declared"},
+                {"name": "waybill:source-type", "value": "hackage-main-module"},
+                {"name": "waybill:nixpkgs-resolved-via", "value": r#"{"revision":"r"}"#}
+            ]}]});
+        let (claims, rev) = read_sbom(&doc).unwrap();
+        assert_eq!(rev, "r");
+        assert!(claims[0].main_module);
+    }
 }
