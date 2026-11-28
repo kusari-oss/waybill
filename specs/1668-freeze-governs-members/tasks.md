@@ -66,7 +66,7 @@
 
 ## Phase 4: US2, the corpus changes only where explained (P2)
 
-- [ ] T009 [US2] After the PR is open:
+- [X] T009 [US2] After the PR is open:
   - dispatch `gh workflow run public-corpus.yml -f branch=1668-freeze-governs-members -f regen_goldens=true`, then `gh run download <id> -n corpus-goldens-regen`;
   - run `corpus.sh` as `branch`, and `fixture.sh` into `measurements/branch/`;
   - compare with `main` using a normalized, sorted diff, and explain every difference in `measurements/branch.md`;
@@ -82,7 +82,7 @@
 
   Each mutation must fail at least one test. Record the results in `measurements/mutations.md`.
 - [X] T011 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' --expect '^ +Summary \[ *[0-9.]+s\] [1-9][0-9]* tests? run: [1-9][0-9]* passed( \([0-9]+ slow\))?(, [0-9]+ skipped)?$' prepr -- ./scripts/pre-pr.sh`. Confirm `GATE_RESULT=pass` and the Summary line.
-- [ ] T012 Commit with the trailer `Assisted-by: Claude:claude-opus-5-5`, and open the PR with "Refs #1744, #1741".
+- [X] T012 Commit with the trailer `Assisted-by: Claude:claude-opus-5-5`, and open the PR with "Refs #1744, #1741".
 - [X] T013 Add the `CLAUDE.md` Recent Changes line by hand. Tick each task only after checking its claim.
 
 ## Dependencies
