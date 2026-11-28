@@ -480,18 +480,23 @@ fn source_dir_for(
         .ok()
         .map(PathBuf::from)
         .unwrap_or(abs);
-    // If the path looks like a manifest file (`Cargo.toml`, `package.json`,
-    // `pyproject.toml`, etc.), return its parent. Otherwise (already a dir)
-    // return as-is.
-    if rel
-        .file_name()
-        .and_then(|n| n.to_str())
-        .map(is_manifest_basename)
-        .unwrap_or(false)
-    {
+    subproject_dir(&rel, scan_root)
+}
+
+/// Spec 1667 (#1691): a subproject's directory, relative to the scan root.
+/// The one rule `--split` and `--project-discovery` share.
+///
+/// The parent when `rel` names a listed manifest (`Cargo.toml`,
+/// `package.json`, …), which holds whether or not it exists on disk, or when
+/// `scan_root.join(rel)` is a file, which covers `package.yaml`, `*.cabal` and
+/// any manifest the list does not name. Otherwise `rel` is already the
+/// directory.
+pub(crate) fn subproject_dir(rel: &std::path::Path, scan_root: &std::path::Path) -> PathBuf {
+    let listed = rel.file_name().and_then(|n| n.to_str()).is_some_and(is_manifest_basename);
+    if listed || scan_root.join(rel).is_file() {
         rel.parent().map(PathBuf::from).unwrap_or_default()
     } else {
-        rel
+        rel.to_path_buf()
     }
 }
 
@@ -1972,4 +1977,43 @@ mod tests {
             TestOnlySplitMode::Directory.group_key(&r2),
         );
     }
+
+    // ---------------- spec 1667: `subproject_dir` (#1691) ----------------
+
+    fn s1667_tree() -> tempfile::TempDir {
+        let t = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(t.path().join("a")).unwrap();
+        std::fs::create_dir_all(t.path().join("crates/api")).unwrap();
+        std::fs::write(t.path().join("package.yaml"), "name: waybill-fixture-root\n").unwrap();
+        std::fs::write(t.path().join("a/a.cabal"), "name: waybill-fixture-a\n").unwrap();
+        t
+    }
+
+    #[test]
+    fn s1667_a_root_package_yaml_is_the_root() {
+        let t = s1667_tree();
+        assert_eq!(subproject_dir(std::path::Path::new("package.yaml"), t.path()), PathBuf::new());
+    }
+
+    #[test]
+    fn s1667_a_cabal_file_on_disk_is_its_directory() {
+        let t = s1667_tree();
+        assert_eq!(subproject_dir(std::path::Path::new("a/a.cabal"), t.path()), PathBuf::from("a"));
+    }
+
+    #[test]
+    fn s1667_a_listed_manifest_absent_from_disk_is_still_its_directory() {
+        let t = s1667_tree();
+        assert_eq!(
+            subproject_dir(std::path::Path::new("crates/api/Cargo.toml"), t.path()),
+            PathBuf::from("crates/api")
+        );
+    }
+
+    #[test]
+    fn s1667_a_directory_is_kept() {
+        let t = s1667_tree();
+        assert_eq!(subproject_dir(std::path::Path::new("crates/api"), t.path()), PathBuf::from("crates/api"));
+    }
+
 }

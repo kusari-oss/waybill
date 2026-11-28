@@ -1,0 +1,5 @@
+local-packages-d.multi.cdx.json
+split-manifest.json
+waybill-fixture-a.hackage.cdx.json
+waybill-fixture-c.hackage.cdx.json
+waybill-fixture-root.hackage.cdx.json

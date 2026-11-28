@@ -802,9 +802,9 @@ impl HaskellParseSummary {
     /// Spec 1652 (FR-006, contracts/wire.md) — C200 names the hpack manifests
     /// whose package `--project-discovery` dropped.
     ///
-    /// `candidates` are those packages' manifest paths, joined to the root the
-    /// reader joined C200's entries to (the canonical one): a scan through a
-    /// symlink is where a raw root would differ. An entry of `manifests-read` equal to a candidate is listed,
+    /// `candidates` are those packages' manifest paths relative to the scan
+    /// root, as C200's own entries are since spec 1667, so the comparison holds
+    /// however the root was spelled. An entry of `manifests-read` equal to a candidate is listed,
     /// sorted, under `manifests-dropped-by-scope`. `manifests-read` itself is
     /// untouched — the manifest WAS read. Nothing matched inserts nothing, so
     /// every other C200 value is byte-identical.
@@ -812,7 +812,8 @@ impl HaskellParseSummary {
         let Some(serde_json::Value::Object(c200)) = self.hpack_read.as_mut() else {
             return;
         };
-        let wanted: BTreeSet<String> = candidates.iter().map(|p| p.display().to_string()).collect();
+        let wanted: BTreeSet<String> =
+            candidates.iter().map(|p| hpack::root_relative(Path::new(""), p)).collect();
         let mut dropped: Vec<String> = c200
             .get("manifests-read")
             .and_then(serde_json::Value::as_array)
@@ -1482,7 +1483,10 @@ pub(crate) fn finalize(
             hpack_read: if hpack_outcome.is_empty() {
                 None
             } else {
-                Some(hpack_outcome.to_document_value())
+                // Spec 1667 (research R2): the readers join paths to the
+                // canonical root; a path spelled from `rootfs` is accepted too.
+                let canonical = std::fs::canonicalize(rootfs).unwrap_or_else(|_| rootfs.to_path_buf());
+                Some(hpack_outcome.to_document_value(&[&canonical, rootfs]))
             },
             hpack_unread: hpack_outcome.unreadable.len(),
             root_declared_member_dirs,
@@ -4307,31 +4311,47 @@ mod root_declared_members_tests {
 
     #[test]
     fn amend_with_nothing_matched_is_byte_identical() {
-        let mut s = summary_with_read(&["/r/a/package.yaml"]);
+        let mut s = summary_with_read(&["a/package.yaml"]);
         let before = s.hpack_read.as_ref().unwrap().to_string();
         s.amend_scope_dropped(&[]);
-        s.amend_scope_dropped(&[PathBuf::from("/r/zzz/package.yaml")]);
+        s.amend_scope_dropped(&[PathBuf::from("zzz/package.yaml")]);
         assert_eq!(s.hpack_read.as_ref().unwrap().to_string(), before);
     }
 
     #[test]
     fn amend_lists_the_dropped_subset_sorted_and_keeps_read() {
-        let mut s = summary_with_read(&["/r/a/package.yaml", "/r/b/package.yaml", "/r/c/package.yaml"]);
+        let mut s = summary_with_read(&["a/package.yaml", "b/package.yaml", "c/package.yaml"]);
         s.amend_scope_dropped(&[
-            PathBuf::from("/r/c/package.yaml"),
-            PathBuf::from("/private/r/c/package.yaml"),
-            PathBuf::from("/r/a/package.yaml"),
+            PathBuf::from("c/package.yaml"),
+            PathBuf::from("zzz/c/package.yaml"),
+            PathBuf::from("a").join("package.yaml"),
         ]);
         let v = s.hpack_read.as_ref().unwrap();
-        assert_eq!(v["manifests-dropped-by-scope"], serde_json::json!(["/r/a/package.yaml", "/r/c/package.yaml"]));
+        assert_eq!(v["manifests-dropped-by-scope"], serde_json::json!(["a/package.yaml", "c/package.yaml"]));
         assert_eq!(v["manifests-read"].as_array().unwrap().len(), 3, "read is untouched");
     }
 
     #[test]
     fn amend_without_c200_is_a_no_op() {
         let mut s = HaskellParseSummary::default();
-        s.amend_scope_dropped(&[PathBuf::from("/r/a/package.yaml")]);
+        s.amend_scope_dropped(&[PathBuf::from("a/package.yaml")]);
         assert!(s.hpack_read.is_none());
+    }
+
+    /// Spec 1667 (research R2, U1): every C200 path `finalize` writes is
+    /// relative, with no host prefix and no `..`. On macOS the tempdir is
+    /// `/var/…`, a symlink to `/private/var/…`, and the paths here are spelled
+    /// from the uncanonical root, so this also pins the second-spelling case.
+    #[test]
+    fn s1667_finalize_writes_every_c200_path_under_the_canonical_root() {
+        let tr = tree(&["local-packages/a"], None, None, &[]);
+        let pkg = tr.package_dirs[0].join("package.yaml");
+        std::fs::write(&pkg, "name: waybill-fixture-a\nversion: 0.1.0\nlibrary:\n  dependencies: [base]\n")
+            .unwrap();
+        let paths = HaskellDiscoveredPaths { package_yaml_paths: vec![pkg], ..Default::default() };
+        let (_, summary) = finalize(tr.t.path(), paths, false, &ExclusionSet::new_empty());
+        let v = summary.and_then(|s| s.hpack_read).expect("a package.yaml was seen");
+        assert_eq!(v["manifests-read"], serde_json::json!(["local-packages/a/package.yaml"]), "{v}");
     }
 }
 
